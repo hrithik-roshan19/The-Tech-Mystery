@@ -96,3 +96,4 @@ export const ParticipantLayout = () => {
 };
 
 export default ParticipantLayout;
+

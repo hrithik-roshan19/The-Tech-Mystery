@@ -20,3 +20,4 @@ router.use('/leaderboard', leaderboardRoutes);
 router.use('/admin', adminRoutes);
 
 module.exports = router;
+

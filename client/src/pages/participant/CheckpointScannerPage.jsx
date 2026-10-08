@@ -123,3 +123,4 @@ export const CheckpointScannerPage = () => {
 };
 
 export default CheckpointScannerPage;
+

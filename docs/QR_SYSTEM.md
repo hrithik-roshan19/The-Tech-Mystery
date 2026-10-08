@@ -62,3 +62,4 @@ Organizers print waterproof 4x6" laminated placard cards featuring:
 - High-contrast QR barcode
 - Fallback manual checkpoint code (e.g. `CP-A7F92B`) for devices with camera issues
 - Instructions: *"Scan with your smartphone camera to authenticate operative location."*
+

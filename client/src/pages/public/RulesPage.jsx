@@ -64,3 +64,4 @@ export const RulesPage = () => {
 };
 
 export default RulesPage;
+

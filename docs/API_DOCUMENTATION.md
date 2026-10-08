@@ -273,3 +273,4 @@ Authorization: Bearer <jwt_access_token>
 - `POST /admin/checkpoints`: Register physical campus checkpoint beacon.
 - `GET /admin/submissions`: Paginated forensic submission logs.
 - `PATCH /admin/event-config`: Update master state (`LIVE`, `PAUSED`, `CONCLUDED`) or toggle `isLeaderboardFrozen`.
+

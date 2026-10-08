@@ -15,3 +15,4 @@ const submitFlagValidator = [
 module.exports = {
   submitFlagValidator
 };
+

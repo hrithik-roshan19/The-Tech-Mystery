@@ -8,3 +8,4 @@ const router = express.Router();
 router.get('/', optionalAuth, leaderboardController.getLiveLeaderboard);
 
 module.exports = router;
+

@@ -49,3 +49,13 @@ This document logs significant architectural and design choices, their context, 
 - **Context**: Standard string equality (`a === b`) short-circuits on the first mismatched character, allowing attackers to deduce characters via timing latency analysis.
 - **Decision**: Use Node's built-in `crypto.timingSafeEqual` after length normalization.
 - **Consequences**: Prevents timing side-channel attacks against flag verification.
+
+---
+
+## ADR-0009: Visual Source of Truth Homepage Integration
+- **Status**: ACCEPTED
+- **Context**: The landing page design identity was finalized with a specific aesthetic (dark palette, electric-lime accent `#b8ff3d`, Manrope + Geist Mono typography, and authentic Tula's University campus hero imagery).
+- **Decision**: Integrate the reference `HomePage.jsx` and `HomePage.css` directly as the visual source of truth without redesigning or altering the visual direction. Mount `HomePage` as a dedicated standalone route at `/` while connecting existing SPA routes (`/login`, `/register`, `/leaderboard`) and preserving in-page anchor navigation.
+- **Consequences**: Preserves full-bleed hero aesthetics and prevents duplicate headers/footers with `PublicLayout`, while maintaining complete compatibility with existing application routes.
+
+

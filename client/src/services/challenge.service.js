@@ -16,3 +16,4 @@ export const challengeService = {
     return res.data;
   }
 };
+

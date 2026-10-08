@@ -77,3 +77,4 @@ export const TeamProfilePage = () => {
 };
 
 export default TeamProfilePage;
+

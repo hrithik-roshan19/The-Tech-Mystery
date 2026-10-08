@@ -55,3 +55,4 @@ Buttons and cards utilize corner border ticks to emulate hardware displays:
 
 ### B. Subtle Scanlines & Cyber Grid
 Subtle, performance-conscious grid patterns and CRT scanlines are rendered through `ScanlineOverlay.jsx` with `pointer-events-none` to guarantee zero interaction interference.
+

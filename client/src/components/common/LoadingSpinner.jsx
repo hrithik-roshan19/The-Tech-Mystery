@@ -15,3 +15,4 @@ export const LoadingSpinner = ({ text = 'INITIALIZING SYSTEM...' }) => {
 };
 
 export default LoadingSpinner;
+

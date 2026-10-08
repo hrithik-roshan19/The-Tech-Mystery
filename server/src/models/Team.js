@@ -84,3 +84,4 @@ teamSchema.index({ totalScore: -1, lastSolveTimestamp: 1 });
 
 const Team = mongoose.model('Team', teamSchema);
 module.exports = Team;
+

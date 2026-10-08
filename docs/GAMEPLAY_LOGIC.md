@@ -92,3 +92,4 @@ The team that reached the tied score **first in real time** takes precedence.
   - The public `/leaderboard` endpoint returns cached score standings frozen at `frozenAt`.
   - Backend validation and scoring continue uninterrupted.
   - Final results are revealed in real time during the closing de-cloaking ceremony.
+

@@ -53,3 +53,4 @@ scoreSchema.index({ currentScore: -1, lastSolveTimestamp: 1 });
 
 const Score = mongoose.model('Score', scoreSchema);
 module.exports = Score;
+

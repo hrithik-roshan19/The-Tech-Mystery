@@ -113,3 +113,4 @@ sequenceDiagram
    - The API server maintains no in-memory session state, allowing horizontal scaling across multiple instances (Render/Railway/AWS).
 4. **Performance Optimized Scoring**:
    - Leaderboard standings are served from pre-indexed snapshots in the `scores` collection (`{ currentScore: -1, lastSolveTimestamp: 1 }`), preventing heavy table scans during high-traffic competition bursts.
+

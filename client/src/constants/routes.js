@@ -31,3 +31,4 @@ export const ROUTES = {
   ADMIN_SUBMISSIONS: '/admin/submissions',
   ADMIN_CONTROLS: '/admin/controls'
 };
+

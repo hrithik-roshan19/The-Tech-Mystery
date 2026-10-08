@@ -61,3 +61,4 @@ const checkpointSchema = new mongoose.Schema(
 
 const Checkpoint = mongoose.model('Checkpoint', checkpointSchema);
 module.exports = Checkpoint;
+

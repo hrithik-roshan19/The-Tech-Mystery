@@ -12,3 +12,4 @@ router.use(requireTeamMembership);
 router.post('/scan', qrScanLimiter, checkpointController.scanCheckpoint);
 
 module.exports = router;
+

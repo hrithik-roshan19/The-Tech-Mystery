@@ -14,3 +14,4 @@ const SUBMISSION_STATUS = {
 module.exports = {
   SUBMISSION_STATUS
 };
+

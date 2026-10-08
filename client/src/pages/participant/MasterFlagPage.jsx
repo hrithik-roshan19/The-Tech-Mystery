@@ -69,3 +69,4 @@ export const MasterFlagPage = () => {
 };
 
 export default MasterFlagPage;
+

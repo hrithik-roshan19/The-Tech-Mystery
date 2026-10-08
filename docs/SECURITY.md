@@ -65,3 +65,4 @@ Every interaction with the flag submission endpoint is permanently recorded in t
 - Verification outcome (`CORRECT`, `INCORRECT`, `RATE_LIMITED`)
 
 Organizers can review anomalous submission velocity directly in the Admin Command SOC.
+

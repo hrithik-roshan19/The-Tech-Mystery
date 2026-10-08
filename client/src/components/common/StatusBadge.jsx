@@ -31,3 +31,4 @@ export const StatusBadge = ({ status, variant = 'cyan', size = 'sm' }) => {
 };
 
 export default StatusBadge;
+

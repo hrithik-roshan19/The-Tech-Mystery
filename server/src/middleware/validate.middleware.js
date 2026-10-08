@@ -26,3 +26,4 @@ const validate = (validations) => {
 };
 
 module.exports = validate;
+

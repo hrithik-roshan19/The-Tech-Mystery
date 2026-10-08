@@ -50,3 +50,4 @@ server/
    ```
 
 *Note: Database connection and route controllers are prepared as architectural foundations for Phase 2–13 development.*
+

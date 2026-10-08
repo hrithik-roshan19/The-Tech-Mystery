@@ -69,3 +69,4 @@ const eventConfigSchema = new mongoose.Schema(
 
 const EventConfig = mongoose.model('EventConfig', eventConfigSchema);
 module.exports = EventConfig;
+

@@ -29,3 +29,4 @@ class CheckpointController {
 }
 
 module.exports = new CheckpointController();
+

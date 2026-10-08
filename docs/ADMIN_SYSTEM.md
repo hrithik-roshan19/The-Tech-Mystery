@@ -34,3 +34,4 @@ graph LR
 - **Emergency Halt**: If a physical campus issue occurs (e.g. weather, power), toggle `PAUSED`. All flag submissions and checkpoint scans will temporarily halt.
 - **Leaderboard Freeze**: 30 minutes before cutoff, toggle `FREEZE SCOREBOARD`. Participant and public views lock to the frozen snapshot.
 - **Lockdown**: At conclusion, toggle `CONCLUDED`. All flag submission endpoints lock permanently.
+

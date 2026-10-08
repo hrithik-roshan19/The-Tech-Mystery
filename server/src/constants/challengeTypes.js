@@ -27,3 +27,4 @@ module.exports = {
   ALL_CHALLENGE_TYPES,
   CHALLENGE_DIFFICULTY
 };
+

@@ -43,9 +43,11 @@ import NotFoundPage from '../pages/NotFoundPage';
 export const AppRoutes = () => {
   return (
     <Routes>
-      {/* 1. Public Routes */}
+      {/* 1. Standalone Home Page (Preserves full-bleed hero, navigation & footer) */}
+      <Route path={ROUTES.HOME} element={<HomePage />} />
+
+      {/* 2. Public Pages using Shared Layout */}
       <Route element={<PublicLayout />}>
-        <Route path={ROUTES.HOME} element={<HomePage />} />
         <Route path={ROUTES.ABOUT} element={<AboutPage />} />
         <Route path={ROUTES.HOW_IT_WORKS} element={<HowItWorksPage />} />
         <Route path={ROUTES.RULES} element={<RulesPage />} />
@@ -55,6 +57,7 @@ export const AppRoutes = () => {
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       </Route>
+
 
       {/* 2. Participant Portal Protected Routes */}
       <Route
@@ -100,3 +103,4 @@ export const AppRoutes = () => {
 };
 
 export default AppRoutes;
+

@@ -334,15 +334,19 @@ Key variables: `MONGODB_URI`, `JWT_SECRET`, `QR_SECRET_SALT`, `PORT`, `CORS_ORIG
 ---
 
 ## 23. Current Development Status
-- **Phase**: **PHASE 1 COMPLETE (Architecture, Design System & Scaffolding)**
+- **Phase**: **PHASE 2 COMPLETE (Frontend UI & Design System - Homepage Integration)**
 - **Completed**:
   1. Monorepo folder and file structure initialized.
   2. Full backend API scaffolded: Express server, Mongoose models (9 models), controllers, routes, middleware, validation rules, cryptographic helpers.
-  3. Full frontend client scaffolded: Vite + React 19 + Tailwind CSS cyber theme, layouts, public pages, auth pages, participant portal pages, admin portal pages, routing, and Axios service layer.
-  4. Core logic engines drafted: Question pool assignment service, checkpoint service, scoring service.
-  5. Exhaustive documentation suite created in `docs/`.
-- **In Progress**: Transitioning to Phase 2 (Frontend UI refinement and component styling validation).
-- **Pending**: Phases 2 through 13.
+  3. Integrated visual source of truth homepage:
+     - `client/src/pages/public/HomePage.jsx` with full typography, 10 levels, stats, mission, and how-it-works sections.
+     - `client/src/styles/HomePage.css` with dark + electric-lime theme (`#b8ff3d`).
+     - Authentic university hero image `client/public/campus-hero.png`.
+     - Direct client-side links to `/login`, `/register`, and `/leaderboard`.
+  4. Verified zero compilation errors with `npm run build` and zero console/runtime errors on Vite dev server.
+  5. Exhaustive documentation suite maintained across `docs/`.
+- **In Progress**: Preparing for Phase 3 (Authentication & Registration End-to-End System).
+- **Pending**: Phases 3 through 13.
 - **Blockers**: None.
 
 ---
@@ -351,12 +355,12 @@ Key variables: `MONGODB_URI`, `JWT_SECRET`, `QR_SECRET_SALT`, `PORT`, `CORS_ORIG
 - Root configuration files: `package.json`, `.gitignore`, `.env.example`, `README.md`.
 - Server foundation: `server/package.json`, `server/src/server.js`, 9 database models, 8 controllers, 8 route files, 4 middleware modules, 5 services.
 - Client foundation: `client/package.json`, `client/vite.config.js`, `client/tailwind.config.js`, `client/src/App.jsx`, `client/src/routes/AppRoutes.jsx`, 21 pages and components.
+- Integrated Homepage: Reference implementation with hero, stats, mission, process, 10-level challenge list, live leaderboard preview, and final CTA.
 - Complete documentation suite in `docs/`.
 
 ---
 
 ## 25. Pending Work (By Phase)
-- **Phase 2**: Frontend UI / Design System polish and asset integration.
 - **Phase 3**: Authentication & Registration end-to-end integration with live database.
 - **Phase 4**: Team Management (team creation, invite code validation, roster limits).
 - **Phase 5**: Challenge Engine (markdown rendering, asset downloads).
@@ -372,8 +376,7 @@ Key variables: `MONGODB_URI`, `JWT_SECRET`, `QR_SECRET_SALT`, `PORT`, `CORS_ORIG
 ---
 
 ## 26. Known Issues / Considerations
-- Currently in Phase 1 setup mode; database connection and backend server are structurally complete, waiting for real MongoDB Atlas credentials to execute live queries.
-- Mock challenge pools and sample question seeds need to be added during Phase 5/6.
+- Currently running in local development mode; MongoDB connection requires valid Atlas URI in `.env` to execute live auth/submission queries.
 
 ---
 
@@ -384,6 +387,7 @@ Documented in detail in `docs/DECISIONS.md`:
 - **ADR-0003**: Opaque Physical QR Codes with HMAC Token Authentication.
 - **ADR-0004**: Strict Zero-Leakage Architecture (`flag: { select: false }` and constant-time string comparison).
 - **ADR-0005**: Compound Indexes for Leaderboard Query Performance.
+- **ADR-0009**: Visual Source of Truth Homepage Integration (Electric-lime + Tula's University campus hero).
 
 ---
 
@@ -400,22 +404,23 @@ Documented in detail in `docs/DECISIONS.md`:
 3. **Do not deviate from the tech stack**: React 19 + Vite + Tailwind on client; Node.js + Express + Mongoose on server.
 4. **Never hardcode challenge answers or flags in the client codebase**.
 5. **Always update `docs/PROJECT_CONTEXT.md`, `docs/DEVELOPMENT_PROGRESS.md`, `docs/DECISIONS.md`, and `docs/TODO.md`** when completing a task or changing architecture.
-6. **Next Development Target**: Proceed with **Phase 2: Frontend UI & Component Verification** (install node modules, test build, verify cyber SOC theme rendering).
+6. **Next Development Target**: Proceed with **Phase 3: Authentication & Registration System** (wire up MongoDB instance, test `/api/v1/auth/register` and `/api/v1/auth/login`, link client forms to API).
 
 ---
 
 ```text
 ================================================================================
 CURRENT STATUS:
-- Phase: Phase 1 (Architecture + Project Setup) COMPLETE
-- Completed: Full monorepo scaffolding, backend architecture, frontend architecture,
-             database models, routing, services, and complete documentation suite.
-- In Progress: Ready for Phase 2 (Frontend UI / Design System Polish & Module Verification)
-- Pending: Phases 2 through 13
+- Phase: Phase 2 (Frontend UI & Design System - Homepage Integration) COMPLETE
+- Completed: Full monorepo setup, backend architecture, reference Homepage UI,
+             campus hero asset, routing integration, build & dev server verification.
+- In Progress: Ready for Phase 3 (Authentication & Registration End-to-End System)
+- Pending: Phases 3 through 13
 - Blockers: None
 ================================================================================
 NEXT STEP:
-- Install dependencies (npm install --workspaces or in client/ and server/),
-  verify compilation and development server startup, and begin Phase 2.
+- Begin Phase 3: Connect MongoDB instance, verify backend registration/login API,
+  and connect frontend auth pages to live backend tokens.
 ================================================================================
 ```
+

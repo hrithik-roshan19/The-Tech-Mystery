@@ -90,3 +90,4 @@ class CheckpointService {
 }
 
 module.exports = new CheckpointService();
+

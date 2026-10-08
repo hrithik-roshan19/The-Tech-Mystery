@@ -88,3 +88,4 @@ class ScoringService {
 }
 
 module.exports = new ScoringService();
+

@@ -12,3 +12,4 @@ router.post('/login', authLimiter, validate(loginValidator), authController.logi
 router.get('/me', authenticate, authController.getMe);
 
 module.exports = router;
+

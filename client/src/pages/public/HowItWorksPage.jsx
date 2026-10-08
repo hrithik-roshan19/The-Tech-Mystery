@@ -70,3 +70,4 @@ export const HowItWorksPage = () => {
 };
 
 export default HowItWorksPage;
+

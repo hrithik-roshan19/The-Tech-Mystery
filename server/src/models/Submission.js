@@ -82,3 +82,4 @@ submissionSchema.index({ submittedAt: -1 }); // Global activity stream for admin
 
 const Submission = mongoose.model('Submission', submissionSchema);
 module.exports = Submission;
+

@@ -43,3 +43,4 @@ class LeaderboardController {
 }
 
 module.exports = new LeaderboardController();
+

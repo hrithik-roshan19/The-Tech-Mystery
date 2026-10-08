@@ -25,3 +25,4 @@ export const storage = {
     localStorage.removeItem(USER_KEY);
   }
 };
+

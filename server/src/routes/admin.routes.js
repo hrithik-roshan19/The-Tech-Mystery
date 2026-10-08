@@ -30,3 +30,4 @@ router.get('/submissions', adminController.getSubmissionLogs);
 router.patch('/event-config', adminController.updateEventConfig);
 
 module.exports = router;
+

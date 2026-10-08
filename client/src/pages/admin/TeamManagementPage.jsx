@@ -102,3 +102,4 @@ export const TeamManagementPage = () => {
 };
 
 export default TeamManagementPage;
+

@@ -91,3 +91,4 @@ teamChallengeSchema.index({ teamId: 1, levelNumber: 1 }, { unique: true });
 
 const TeamChallenge = mongoose.model('TeamChallenge', teamChallengeSchema);
 module.exports = TeamChallenge;
+

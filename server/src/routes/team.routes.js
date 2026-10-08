@@ -14,3 +14,4 @@ router.get('/me', teamController.getMyTeam);
 router.get('/:id', teamController.getTeamById);
 
 module.exports = router;
+

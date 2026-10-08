@@ -12,3 +12,4 @@ router.get('/mission-map', challengeController.getMissionMap);
 router.get('/current', challengeController.getCurrentChallenge);
 
 module.exports = router;
+

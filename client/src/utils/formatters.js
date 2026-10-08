@@ -30,3 +30,4 @@ export const formatTimeRemaining = (ms) => {
     seconds.toString().padStart(2, '0')
   ].join(':');
 };
+

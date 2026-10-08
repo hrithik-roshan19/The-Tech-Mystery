@@ -238,3 +238,4 @@ Global singleton event control document.
 | `frozenAt` | Date | Default: `null` | Freeze start timestamp |
 | `maxTeamSize` | Number | Default: `4` | Maximum allowable squad size |
 | `minTeamSize` | Number | Default: `2` | Minimum allowable squad size |
+
