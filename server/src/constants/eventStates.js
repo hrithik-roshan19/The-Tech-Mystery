@@ -1,0 +1,15 @@
+/**
+ * Event Lifecycle States
+ */
+const EVENT_STATES = {
+  DRAFT: 'DRAFT',
+  REGISTRATION_OPEN: 'REGISTRATION_OPEN',
+  REGISTRATION_CLOSED: 'REGISTRATION_CLOSED',
+  LIVE: 'LIVE',
+  PAUSED: 'PAUSED',
+  CONCLUDED: 'CONCLUDED'
+};
+
+module.exports = {
+  EVENT_STATES
+};

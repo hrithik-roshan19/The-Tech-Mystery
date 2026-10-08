@@ -1,0 +1,32 @@
+const express = require('express');
+const adminController = require('../controllers/admin.controller');
+const { authenticate } = require('../middleware/auth.middleware');
+const { requireAdmin } = require('../middleware/role.middleware');
+
+const router = express.Router();
+
+router.use(authenticate);
+router.use(requireAdmin);
+
+// Dashboard stats
+router.get('/dashboard-stats', adminController.getDashboardStats);
+
+// Teams
+router.get('/teams', adminController.getAllTeams);
+router.patch('/teams/:teamId/disqualify', adminController.disqualifyTeam);
+
+// Challenges & Pool
+router.post('/challenges', adminController.createChallenge);
+router.post('/questions', adminController.createQuestion);
+
+// Checkpoints
+router.get('/checkpoints', adminController.getCheckpoints);
+router.post('/checkpoints', adminController.createCheckpoint);
+
+// Audit logs
+router.get('/submissions', adminController.getSubmissionLogs);
+
+// Event Control
+router.patch('/event-config', adminController.updateEventConfig);
+
+module.exports = router;

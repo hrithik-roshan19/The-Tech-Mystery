@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #05070A;
+    color: #F5F7FA;
+    overflow-x: hidden;
+  }
+
+  /* Custom Cyber Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B1017;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1B2A38;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00E5FF;
+  }
+}
+
+/* Background Cyber Grid Pattern */
+.bg-cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(27, 42, 56, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(27, 42, 56, 0.25) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Terminal Glow Utility */
+.glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.7);
+}
+
+.glow-green {
+  text-shadow: 0 0 10px rgba(57, 255, 136, 0.7);
+}
+
+.glow-orange {
+  text-shadow: 0 0 10px rgba(255, 106, 0, 0.7);
+}
+
+/* CRT Scanline Effect (Subtle) */
+.scanline-effect::before {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 4px;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.15;
+}
