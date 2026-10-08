@@ -74,10 +74,18 @@
 - [x] Routing Integration:
   - [x] Mounted `ROUTES.LOGIN` as a top-level standalone full-bleed route in `AppRoutes.jsx` to prevent double navbars or footer overlap with `PublicLayout`.
   - [x] Connected React Router `Link` navigation between Home (`/`), Login (`/login`), Register (`/register`), and Leaderboard (`/leaderboard`).
+- [x] Responsive Design Optimization & Viewport Fixes:
+  - [x] Replaced `overflow: hidden` with `overflow-x: hidden; min-height: 100dvh;` allowing smooth vertical scrolling on all mobile screens.
+  - [x] Added responsive hamburger menu button and mobile drawer for navigation on screens <= 900px.
+  - [x] Adjusted background position to `50% 18%` on mobile devices to keep Tula's University campus building recognizable.
+  - [x] Implemented fluid clamp typography for title `HACK THE GRID` preventing text clipping on ultra-small screens.
+  - [x] Compacted login card padding and tab buttons for 320px–389px viewports.
+  - [x] Validated across all 12 target viewport sizes (1440x900, 1366x768, 1280x800, 1024x768, 900x800, 768x1024, 600x900, 480x932, 430x932, 390x844, 360x800, 320x740).
 - [x] Verification:
   - [x] Production build clean (`npm run build --workspace=client`).
   - [x] Runtime HTTP 200 OK verified on `/login`, `/campus-hero.png`, and component modules.
   - [x] Zero console warnings or CSS conflicts.
+
 
 
 

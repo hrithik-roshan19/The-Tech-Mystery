@@ -14,7 +14,13 @@
 - [x] Integrate reference `LoginPage.css` at `client/src/styles/LoginPage.css` with responsive breakpoints (1200px, 900px, 560px).
 - [x] Mount `ROUTES.LOGIN` as standalone full-bleed route in `AppRoutes.jsx`.
 - [x] Connect `authService.login` API and `useAuth` hook into login card submit handler.
-- [x] Verify responsive layouts for Desktop, Tablet, and Mobile across all integrated pages.
+- [x] Fix Login Page responsiveness across 5 distinct screen tiers:
+  - [x] Desktop (1200px+): 3-column layout, zero horizontal overflow.
+  - [x] Tablet landscape (769px–1199px): 2-column layout, compact navbar.
+  - [x] Tablet portrait (600px–768px): 1-column centered layout, 16px–24px safe padding.
+  - [x] Mobile (390px–599px): 1-column fluid layout with mobile menu drawer and clamped typography.
+  - [x] Small mobile (320px–389px): 2-column tabs, no button clipping, full scroll accessibility.
+- [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 
 ---

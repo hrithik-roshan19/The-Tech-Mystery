@@ -70,5 +70,22 @@ This document logs significant architectural and design choices, their context, 
   - Wire internal SPA navigation to `/`, `/login`, `/register`, and `/leaderboard` using React Router `Link`.
 - **Consequences**: Preserves pixel-perfect fidelity of the dark + electric-lime design system, delivers full-bleed responsiveness across desktop/tablet/mobile, eliminates layout duplication, and provides seamless authentication state transitions.
 
+---
+
+## ADR-0011: Multi-Tier Responsive Architecture for Login Experience
+- **Status**: ACCEPTED
+- **Context**: Viewport sizes ranging from 320px ultra-compact phones to 1440px+ ultra-wide desktops require seamless accessibility. A single mobile breakpoint caused cut-off vertical scrolling (due to `overflow: hidden`), clipped `HACK THE GRID` headers, overlapping nav items, and tab overflow on narrow cards.
+- **Decision**:
+  - Established a 5-tier responsive design system:
+    1. **Desktop (>=1200px)**: 3-column layout (Intro + Card + Highlights), fluid `clamp()` gaps and typography.
+    2. **Tablet Landscape (769px–1199px)**: 2-column layout (Intro + Card), feature highlights hidden, compact navbar.
+    3. **Tablet Portrait (600px–768px)**: 1-column centered layout (Nav -> Intro -> Card), 16px–24px safe padding, card `width: min(100%, 560px)`.
+    4. **Mobile (390px–599px)**: Fluid 1-column layout, hamburger menu with backdrop blur drawer, `HACK THE GRID` clamped heading, card padding `28px 20px`.
+    5. **Small Mobile (320px–389px)**: Ultra-compact layout tested specifically at 320px, 360px, 375px. 2-equal-column tabs with 11px font, touch-friendly 44px+ inputs, compact register button, and card padding `22px 14px`.
+  - Replaced root `overflow: hidden` with `overflow-x: hidden; min-height: 100dvh;` allowing smooth, natural vertical scrolling on all touch devices.
+  - Adjusted mobile campus hero background position to `50% 18%` to retain prominent visibility of the university architecture.
+- **Consequences**: Validated across all 12 target viewports (1440x900, 1366x768, 1280x800, 1024x768, 900x800, 768x1024, 600x900, 480x932, 430x932, 390x844, 360x800, 320x740). Zero horizontal overflow, no clipped text, no overlapping elements.
+
+
 
 

@@ -113,6 +113,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -175,6 +176,31 @@ export default function LoginPage() {
           <Link className="login-nav-btn active" to={ROUTES.LOGIN}>LOGIN</Link>
           <Link className="login-nav-btn register" to={ROUTES.REGISTER}>REGISTER</Link>
         </div>
+
+        <button
+          type="button"
+          className="htg-login-mobile-menu"
+          aria-label="Toggle navigation menu"
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+        >
+          <span /><span /><span />
+        </button>
+
+        {mobileMenuOpen && (
+          <div className="htg-login-drawer">
+            <a href="/#mission" onClick={() => setMobileMenuOpen(false)}>MISSION</a>
+            <a href="/#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</a>
+            <a href="/#challenges" onClick={() => setMobileMenuOpen(false)}>CHALLENGES</a>
+            <a href="/#rules" onClick={() => setMobileMenuOpen(false)}>RULES</a>
+            <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
+            <div className="htg-login-drawer-actions">
+              <Link className="login-nav-btn register" to={ROUTES.REGISTER} onClick={() => setMobileMenuOpen(false)}>
+                REGISTER
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="htg-login-main">
@@ -241,7 +267,8 @@ export default function LoginPage() {
                   fontSize: "13px",
                   marginBottom: "16px",
                   fontFamily: "Inter, sans-serif",
-                  lineHeight: 1.4
+                  lineHeight: 1.4,
+                  wordBreak: "break-word"
                 }}
               >
                 {error}
