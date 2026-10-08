@@ -17,7 +17,7 @@ import SchedulePage from '../pages/public/SchedulePage';
 import FAQPage from '../pages/public/FAQPage';
 
 // Auth Pages
-import LoginPage from '../pages/auth/LoginPage';
+import LoginPage from '../pages/public/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
 
 // Participant Pages
@@ -43,8 +43,9 @@ import NotFoundPage from '../pages/NotFoundPage';
 export const AppRoutes = () => {
   return (
     <Routes>
-      {/* 1. Standalone Home Page (Preserves full-bleed hero, navigation & footer) */}
+      {/* 1. Standalone Full-Bleed Pages (Preserves custom hero navigation, overlays & glass panels) */}
       <Route path={ROUTES.HOME} element={<HomePage />} />
+      <Route path={ROUTES.LOGIN} element={<LoginPage />} />
 
       {/* 2. Public Pages using Shared Layout */}
       <Route element={<PublicLayout />}>
@@ -54,7 +55,6 @@ export const AppRoutes = () => {
         <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />
         <Route path={ROUTES.FAQ} element={<FAQPage />} />
         <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
-        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       </Route>
 

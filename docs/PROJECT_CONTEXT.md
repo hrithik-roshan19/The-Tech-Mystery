@@ -388,6 +388,7 @@ Documented in detail in `docs/DECISIONS.md`:
 - **ADR-0004**: Strict Zero-Leakage Architecture (`flag: { select: false }` and constant-time string comparison).
 - **ADR-0005**: Compound Indexes for Leaderboard Query Performance.
 - **ADR-0009**: Visual Source of Truth Homepage Integration (Electric-lime + Tula's University campus hero).
+- **ADR-0010**: Standalone Full-Bleed Login Page UI Integration (Hero glass card, Team/Admin tabs, responsive breakpoints).
 
 ---
 
@@ -400,7 +401,7 @@ Documented in detail in `docs/DECISIONS.md`:
 
 ## 29. Exact Instructions for the Next AI / Developer
 1. **Read `docs/PROJECT_CONTEXT.md` (this file)** and `docs/DEVELOPMENT_PROGRESS.md` before writing code.
-2. **Review `docs/DECISIONS.md`** to understand the architectural rules (especially question assignment persistence and QR token validation).
+2. **Review `docs/DECISIONS.md`** to understand the architectural rules (especially question assignment persistence, QR token validation, and standalone full-bleed routes).
 3. **Do not deviate from the tech stack**: React 19 + Vite + Tailwind on client; Node.js + Express + Mongoose on server.
 4. **Never hardcode challenge answers or flags in the client codebase**.
 5. **Always update `docs/PROJECT_CONTEXT.md`, `docs/DEVELOPMENT_PROGRESS.md`, `docs/DECISIONS.md`, and `docs/TODO.md`** when completing a task or changing architecture.
@@ -411,9 +412,10 @@ Documented in detail in `docs/DECISIONS.md`:
 ```text
 ================================================================================
 CURRENT STATUS:
-- Phase: Phase 2 (Frontend UI & Design System - Homepage Integration) COMPLETE
+- Phase: Phase 2 (Frontend UI & Design System - Homepage & Login Page Integration) COMPLETE
 - Completed: Full monorepo setup, backend architecture, reference Homepage UI,
-             campus hero asset, routing integration, build & dev server verification.
+             reference Login Page UI, campus hero asset, standalone full-bleed routing,
+             build & dev server verification.
 - In Progress: Ready for Phase 3 (Authentication & Registration End-to-End System)
 - Pending: Phases 3 through 13
 - Blockers: None

@@ -4,13 +4,17 @@
 
 ---
 
-## Phase 2: Frontend UI & Design System (Homepage Integration) (COMPLETED)
+## Phase 2: Frontend UI & Design System (Homepage & Login Page Integration) (COMPLETED)
 - [x] Run `npm install` across workspaces and verify Vite development server startup.
 - [x] Integrate reference `HomePage.jsx` with full typography, 10 levels, stats, mission, and how-it-works sections.
 - [x] Integrate reference `HomePage.css` preserving dark + electric-lime visual identity.
 - [x] Integrate authentic campus hero image `client/public/campus-hero.png`.
 - [x] Connect active routes (`/login`, `/register`, `/leaderboard`) and in-page anchor navigation.
-- [x] Verify responsive layouts for Desktop, Tablet, and Mobile.
+- [x] Integrate reference `LoginPage.jsx` at `client/src/pages/public/LoginPage.jsx`.
+- [x] Integrate reference `LoginPage.css` at `client/src/styles/LoginPage.css` with responsive breakpoints (1200px, 900px, 560px).
+- [x] Mount `ROUTES.LOGIN` as standalone full-bleed route in `AppRoutes.jsx`.
+- [x] Connect `authService.login` API and `useAuth` hook into login card submit handler.
+- [x] Verify responsive layouts for Desktop, Tablet, and Mobile across all integrated pages.
 - [x] Verify zero build or console errors.
 
 ---
