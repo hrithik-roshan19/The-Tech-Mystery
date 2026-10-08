@@ -390,6 +390,7 @@ Documented in detail in `docs/DECISIONS.md`:
 - **ADR-0009**: Visual Source of Truth Homepage Integration (Electric-lime + Tula's University campus hero).
 - **ADR-0010**: Standalone Full-Bleed Login Page UI Integration (Hero glass card, Team/Admin tabs, responsive breakpoints).
 - **ADR-0011**: Multi-Tier Responsive Architecture for Login Experience (12 viewports tested, natural vertical scrolling, mobile menu drawer).
+- **ADR-0012**: Standalone Full-Bleed Multi-Step Register Page UI Integration (4-step team enrollment wizard, responsive drawer).
 
 ---
 
@@ -413,9 +414,10 @@ Documented in detail in `docs/DECISIONS.md`:
 ```text
 ================================================================================
 CURRENT STATUS:
-- Phase: Phase 2 (Frontend UI & Design System - Homepage & Login Page Integration) COMPLETE
+- Phase: Phase 2 (Frontend UI & Design System - Homepage, Login & Register Integration) COMPLETE
 - Completed: Full monorepo setup, backend architecture, reference Homepage UI,
-             reference Login Page UI, campus hero asset, standalone full-bleed routing,
+             reference Login Page UI, reference Register Page UI (4-step wizard),
+             campus hero asset, standalone full-bleed routing for /, /login, /register,
              5-tier responsive design (tested on 12 viewports: 320px to 1440px),
              build & dev server verification.
 - In Progress: Ready for Phase 3 (Authentication & Registration End-to-End System)

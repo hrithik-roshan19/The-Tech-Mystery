@@ -1,0 +1,983 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap");
+
+:root {
+  --rg-lime: #b8ff3d;
+  --rg-soft: #d8ff91;
+  --rg-white: #f5f5f0;
+  --rg-muted: #b4bab6;
+  --rg-line: rgba(245, 245, 240, 0.17);
+}
+
+/* ==========================================================================
+   Base Container & Global Layout
+   ========================================================================== */
+.htg-register {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #060907;
+  color: var(--rg-white);
+  font-family: Inter, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.htg-register * {
+  box-sizing: border-box;
+}
+
+.htg-register a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ==========================================================================
+   Full-Bleed Background & Overlays
+   ========================================================================== */
+.htg-register-bg {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+  background: url("/campus-hero.png") center/cover no-repeat;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.htg-register-overlay {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+  background:
+    linear-gradient(90deg, rgba(2, 7, 5, 0.91), rgba(2, 7, 5, 0.57) 40%, rgba(2, 7, 5, 0.38)),
+    linear-gradient(0deg, rgba(3, 7, 5, 0.9), rgba(3, 7, 5, 0.22) 55%, rgba(3, 7, 5, 0.7));
+  z-index: 1;
+  pointer-events: none;
+}
+
+.htg-register-grid {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+  opacity: 0.16;
+  background-image:
+    linear-gradient(rgba(184, 255, 61, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184, 255, 61, 0.2) 1px, transparent 1px);
+  background-size: 76px 76px;
+  mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.45) 82%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.45) 82%, transparent);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Top Navigation
+   ========================================================================== */
+.htg-register-nav {
+  height: 86px;
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(20px, 5.3vw, 80px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(4, 7, 6, 0.64);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  flex-shrink: 0;
+}
+
+.htg-register-brand {
+  min-width: 240px;
+  display: inline-block;
+}
+
+.htg-register-brand > div {
+  font: 800 clamp(22px, 2.2vw, 29px)/1 Manrope, sans-serif;
+  letter-spacing: -1.8px;
+}
+
+.htg-register-brand span {
+  color: var(--rg-lime);
+}
+
+.htg-register-brand small {
+  display: block;
+  margin-top: 7px;
+  font: 10px/1 "Geist Mono", monospace;
+  letter-spacing: 2.5px;
+  color: rgba(245, 245, 240, 0.68);
+}
+
+.htg-register-nav nav {
+  display: flex;
+  gap: clamp(18px, 2.8vw, 38px);
+  margin: auto;
+}
+
+.htg-register-nav nav a {
+  font: 500 12px "Geist Mono", monospace;
+  letter-spacing: 0.8px;
+  transition: color 0.2s ease;
+}
+
+.htg-register-nav nav a:hover {
+  color: var(--rg-lime);
+}
+
+.htg-register-nav-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.register-nav-login,
+.register-nav-register {
+  height: 48px;
+  min-width: 100px;
+  padding: 0 23px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(245, 245, 240, 0.55);
+  font: 500 12px "Geist Mono", monospace;
+  letter-spacing: 1px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.register-nav-register {
+  background: var(--rg-lime);
+  border-color: var(--rg-lime);
+  color: #080b07;
+  min-width: 124px;
+  font-weight: 700;
+}
+
+.register-nav-login:hover,
+.register-nav-register:hover {
+  transform: translateY(-1px);
+}
+
+/* Mobile Hamburger Menu */
+.htg-register-mobile-menu {
+  display: none;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid var(--rg-line);
+  border-radius: 6px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  margin-left: 10px;
+  padding: 0;
+}
+
+.htg-register-mobile-menu span {
+  display: block;
+  width: 20px;
+  height: 1.5px;
+  background: var(--rg-white);
+  transition: 0.2s;
+}
+
+.htg-register-drawer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(5, 7, 6, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--rg-line);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 30;
+}
+
+.htg-register-drawer a {
+  font: 500 13px/1 "Geist Mono", monospace;
+  letter-spacing: 1.1px;
+  color: rgba(245, 245, 240, 0.88);
+  padding: 8px 0;
+}
+
+.htg-register-drawer a:hover {
+  color: var(--rg-lime);
+}
+
+.htg-register-drawer-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rg-line);
+}
+
+/* ==========================================================================
+   Main Grid Layout (Desktop)
+   ========================================================================== */
+.htg-register-main {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  min-height: calc(100vh - 86px);
+  min-height: calc(100dvh - 86px);
+  display: grid;
+  grid-template-columns: minmax(310px, 1fr) minmax(500px, 570px) minmax(260px, 1fr);
+  align-items: center;
+  gap: clamp(28px, 3.5vw, 48px);
+  max-width: 1540px;
+  width: 100%;
+  margin: auto;
+  padding: clamp(35px, 4vh, 45px) clamp(20px, 4.5vw, 4.7vw) clamp(40px, 5vh, 55px);
+  box-sizing: border-box;
+}
+
+/* Left Introduction */
+.htg-register-intro {
+  align-self: center;
+  min-width: 0;
+}
+
+.register-eyebrow {
+  font: 500 clamp(11px, 1vw, 12px) "Geist Mono", monospace;
+  letter-spacing: 1.7px;
+  color: rgba(245, 245, 240, 0.82);
+  margin: 0 0 20px;
+}
+
+.register-eyebrow span {
+  color: var(--rg-lime);
+  margin: 0 7px;
+}
+
+.htg-register-intro h1 {
+  font: 800 clamp(64px, 6.5vw, 108px)/0.8 Manrope, sans-serif;
+  letter-spacing: -5px;
+  margin: 0;
+  word-break: break-word;
+}
+
+.htg-register-intro h1 span {
+  color: var(--rg-lime);
+}
+
+.htg-register-intro h2 {
+  font: 700 clamp(18px, 1.5vw, 20px)/1.22 Manrope, sans-serif;
+  margin: 27px 0 0;
+}
+
+.register-accent {
+  width: 49px;
+  height: 2px;
+  background: var(--rg-lime);
+  margin: 22px 0 14px;
+}
+
+.register-description {
+  max-width: 400px;
+  color: rgba(245, 245, 240, 0.8);
+  font-size: clamp(14px, 1vw, 15px);
+  line-height: 1.63;
+  margin: 0;
+}
+
+.register-stats {
+  display: flex;
+  gap: clamp(16px, 2vw, 27px);
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.register-stats > div {
+  display: grid;
+  grid-template-columns: 34px auto;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  min-width: 0;
+}
+
+.register-stats svg {
+  width: 28px;
+  height: 28px;
+  grid-row: 1/3;
+  color: var(--rg-lime);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.register-stats strong {
+  font: 800 clamp(22px, 2vw, 26px)/1 Manrope, sans-serif;
+}
+
+.register-stats small {
+  font: 9px/1.3 "Geist Mono", monospace;
+  color: rgba(245, 245, 240, 0.7);
+  letter-spacing: 1px;
+}
+
+.register-side-copy {
+  margin-top: 58px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font: 10px "Geist Mono", monospace;
+  letter-spacing: 1.7px;
+  color: rgba(245, 245, 240, 0.68);
+}
+
+.register-side-copy i {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--rg-lime);
+  margin-top: 5px;
+}
+
+/* Center Register Card */
+.htg-register-card {
+  width: 100%;
+  max-width: 570px;
+  min-width: 0;
+  padding: 39px 41px 28px;
+  background: linear-gradient(145deg, rgba(10, 22, 19, 0.87), rgba(5, 12, 10, 0.78));
+  border: 1px solid rgba(245, 245, 240, 0.23);
+  border-radius: 16px;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-sizing: border-box;
+}
+
+.register-card-heading h2 {
+  font: 800 clamp(30px, 3vw, 38px)/1 Manrope, sans-serif;
+  letter-spacing: -1.6px;
+  margin: 0;
+}
+
+.register-card-heading h2 span {
+  color: var(--rg-lime);
+}
+
+.register-card-heading p {
+  margin: 10px 0 25px;
+  color: #c1c7c3;
+  font-size: clamp(13px, 1vw, 14px);
+}
+
+/* Multi-Step Progress Indicator */
+.register-progress {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0 0 27px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.register-progress:before {
+  content: "";
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 15px;
+  height: 2px;
+  background: rgba(245, 245, 240, 0.22);
+}
+
+.register-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #9da49f;
+  font-size: 10px;
+  text-align: center;
+}
+
+.register-step-node {
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #1b2220;
+  border: 2px solid #53605a;
+  font: 600 12px "Geist Mono", monospace;
+  transition: 0.2s;
+}
+
+.register-step.active {
+  color: var(--rg-lime);
+}
+
+.register-step.active .register-step-node {
+  background: var(--rg-lime);
+  border-color: var(--rg-lime);
+  color: #080c07;
+  box-shadow: 0 0 20px rgba(184, 255, 61, 0.2);
+}
+
+/* Step Content & Inputs */
+.register-section-title {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 20px;
+}
+
+.register-section-icon {
+  width: 39px;
+  height: 39px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: var(--rg-lime);
+  background: rgba(184, 255, 61, 0.12);
+  flex-shrink: 0;
+}
+
+.register-section-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.register-section-title h3 {
+  margin: 0;
+  font: 700 17px Manrope, sans-serif;
+}
+
+.register-section-title p {
+  margin: 3px 0 0;
+  color: #9fa7a2;
+  font-size: 11px;
+}
+
+.htg-register-card form > label,
+.register-step-content > label {
+  display: block;
+  margin: 0 0 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.htg-register-card label b {
+  color: var(--rg-lime);
+}
+
+.htg-register-card label em {
+  font-style: normal;
+  color: #808984;
+  font-weight: 400;
+}
+
+.register-input {
+  height: 47px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 13px;
+  border: 1px solid rgba(245, 245, 240, 0.16);
+  background: rgba(0, 0, 0, 0.23);
+  border-radius: 7px;
+  margin-bottom: 5px;
+  box-sizing: border-box;
+}
+
+.register-input svg {
+  width: 19px;
+  height: 19px;
+  color: #d5dbd7;
+  flex: 0 0 19px;
+}
+
+.register-input input,
+.register-input select {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #e9ecea;
+  font: 13px Inter, sans-serif;
+  box-sizing: border-box;
+}
+
+.register-input input::placeholder {
+  color: #858d88;
+}
+
+.register-input select {
+  appearance: auto;
+  cursor: pointer;
+}
+
+.register-input select:invalid,
+.register-input select option[value=""] {
+  color: #858d88;
+}
+
+.register-input select option {
+  background: #0d1411;
+  color: #e9ecea;
+}
+
+.register-counter {
+  text-align: right;
+  height: 16px;
+  color: #727a75;
+  font: 9px "Geist Mono", monospace;
+  margin-bottom: 8px;
+}
+
+.register-next {
+  width: 100%;
+  height: 51px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--rg-lime);
+  color: #080b07;
+  font: 700 13px Inter, sans-serif;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.register-next:hover {
+  background: var(--rg-soft);
+  transform: translateY(-1px);
+}
+
+.register-next > span {
+  font-size: 18px;
+  margin-left: 8px;
+}
+
+.register-back {
+  width: 100%;
+  margin-top: 12px;
+  background: transparent;
+  border: 0;
+  color: #aeb5b1;
+  font: 11px "Geist Mono", monospace;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.2s ease;
+}
+
+.register-back:hover {
+  color: var(--rg-lime);
+}
+
+.login-prompt {
+  text-align: center;
+  margin: 19px 0 0;
+  color: #aeb4b0;
+  font-size: 11px;
+}
+
+.login-prompt a {
+  color: var(--rg-lime);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.login-prompt a:hover {
+  text-decoration: underline;
+}
+
+/* Step 2: Member Rows */
+.member-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.member-number {
+  width: 31px;
+  height: 47px;
+  display: grid;
+  place-items: center;
+  color: var(--rg-lime);
+  font: 11px "Geist Mono", monospace;
+  border: 1px solid rgba(184, 255, 61, 0.18);
+  border-radius: 7px;
+  background: rgba(184, 255, 61, 0.05);
+  flex-shrink: 0;
+}
+
+.member-fields {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-width: 0;
+}
+
+.member-fields input {
+  width: 100%;
+  min-width: 0;
+  height: 47px;
+  border: 1px solid rgba(245, 245, 240, 0.16);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.23);
+  color: #fff;
+  padding: 0 13px;
+  outline: 0;
+  font: 13px Inter, sans-serif;
+  box-sizing: border-box;
+}
+
+.member-fields input::placeholder {
+  color: #858d88;
+}
+
+/* Step 3: Review Box */
+.review-box {
+  border: 1px solid rgba(245, 245, 240, 0.13);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.review-box div {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(245, 245, 240, 0.09);
+  align-items: center;
+}
+
+.review-box div:last-child {
+  border-bottom: 0;
+}
+
+.review-box span {
+  color: #7f8782;
+  font: 9px "Geist Mono", monospace;
+  letter-spacing: 0.5px;
+}
+
+.review-box strong {
+  font-size: 11.5px;
+  text-align: right;
+  word-break: break-word;
+}
+
+.terms {
+  display: flex !important;
+  gap: 8px;
+  align-items: flex-start;
+  color: #aeb4b0 !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  line-height: 1.45;
+  cursor: pointer;
+  user-select: none;
+}
+
+.terms input {
+  accent-color: var(--rg-lime);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Right Feature Benefits */
+.htg-register-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-width: 0;
+}
+
+.benefit {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+
+.benefit-icon {
+  width: 61px;
+  height: 61px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--rg-lime);
+  background: linear-gradient(145deg, rgba(184, 255, 61, 0.2), rgba(184, 255, 61, 0.03));
+  border: 1px solid rgba(184, 255, 61, 0.17);
+  box-shadow: 0 0 25px rgba(184, 255, 61, 0.06);
+  flex: 0 0 61px;
+}
+
+.benefit-icon svg {
+  width: 31px;
+  height: 31px;
+}
+
+.benefit h3 {
+  margin: 0 0 5px;
+  font: 700 14px Manrope, sans-serif;
+}
+
+.benefit p {
+  margin: 0;
+  max-width: 235px;
+  color: #c0c6c2;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.htg-register-benefits blockquote {
+  border-left: 2px solid var(--rg-lime);
+  margin: 15px 0 0 21px;
+  padding: 4px 0 4px 21px;
+  color: #d9ddd9;
+}
+
+.htg-register-benefits blockquote > span {
+  color: var(--rg-lime);
+  font: 35px Georgia;
+}
+
+.htg-register-benefits blockquote p {
+  font: italic 16px/1.4 Manrope, sans-serif;
+  margin: 0;
+}
+
+.htg-register-benefits blockquote footer {
+  margin-top: 10px;
+  color: #8f9892;
+  font: 9px "Geist Mono", monospace;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 1250px) {
+  .htg-register-main {
+    grid-template-columns: 1fr minmax(480px, 550px);
+    gap: 42px;
+  }
+  .htg-register-benefits {
+    display: none;
+  }
+  .htg-register-nav nav {
+    gap: 22px;
+  }
+  .htg-register-brand {
+    min-width: 240px;
+  }
+}
+
+@media (max-width: 900px) {
+  .htg-register-nav {
+    padding: 0 24px;
+  }
+  .htg-register-nav nav {
+    display: none;
+  }
+  .htg-register-mobile-menu {
+    display: flex;
+  }
+  .htg-register-brand {
+    margin-right: auto;
+  }
+  .htg-register-main {
+    grid-template-columns: 1fr;
+    max-width: 650px;
+    padding: 48px 24px 60px;
+  }
+  .htg-register-intro {
+    text-align: center;
+  }
+  .register-description {
+    margin: auto;
+  }
+  .register-stats {
+    justify-content: center;
+  }
+  .register-side-copy {
+    display: none;
+  }
+  .htg-register-card {
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 560px) {
+  .htg-register-bg {
+    background-position: 50% 18%;
+  }
+  .htg-register-nav {
+    height: 74px;
+    padding: 0 16px;
+  }
+  .htg-register-brand > div {
+    font-size: 23px;
+  }
+  .htg-register-brand small {
+    font-size: 8px;
+  }
+  .register-nav-login {
+    display: none; /* Hide redundant Login in header so Register + Menu fit cleanly */
+  }
+  .register-nav-register {
+    height: 40px;
+    min-width: 90px;
+    padding: 0 14px;
+    font-size: 11px;
+  }
+  .htg-register-main {
+    padding: 38px 15px 50px;
+    gap: 28px;
+  }
+  .htg-register-intro h1 {
+    font-size: clamp(42px, 11vw, 62px);
+    letter-spacing: -3px;
+  }
+  .htg-register-intro h2 {
+    font-size: 16px;
+  }
+  .register-description {
+    font-size: 14px;
+  }
+  .register-stats {
+    gap: 12px;
+  }
+  .register-stats strong {
+    font-size: 22px;
+  }
+  .register-stats small {
+    font-size: 7px;
+  }
+  .htg-register-card {
+    padding: 28px 18px 24px;
+    border-radius: 13px;
+  }
+  .register-card-heading h2 {
+    font-size: 31px;
+  }
+  .register-card-heading p {
+    font-size: 13px;
+  }
+  .register-progress {
+    margin-bottom: 23px;
+  }
+  .register-step {
+    font-size: 8px;
+  }
+  .register-step-node {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
+  .register-progress:before {
+    top: 13px;
+  }
+  .member-fields {
+    grid-template-columns: 1fr;
+  }
+  .member-row {
+    align-items: flex-start;
+  }
+  .member-number {
+    height: 47px;
+  }
+  .review-box div {
+    align-items: flex-start;
+  }
+  .review-box strong {
+    max-width: 58%;
+  }
+}
+
+@media (max-width: 380px) {
+  .htg-register-nav {
+    height: 64px;
+    padding: 0 12px;
+  }
+  .htg-register-brand > div {
+    font-size: 19px;
+    letter-spacing: -1px;
+  }
+  .htg-register-brand small {
+    letter-spacing: 1.5px;
+    font-size: 7.5px;
+  }
+  .register-nav-register {
+    height: 36px;
+    min-width: 78px;
+    padding: 0 10px;
+    font-size: 10px;
+  }
+  .htg-register-main {
+    padding: 24px 10px 42px;
+    gap: 20px;
+  }
+  .htg-register-intro h1 {
+    font-size: clamp(34px, 11vw, 44px);
+    letter-spacing: -2px;
+  }
+  .htg-register-intro h2 {
+    font-size: 14px;
+  }
+  .register-stats {
+    gap: 7px;
+  }
+  .register-stats > div {
+    grid-template-columns: 24px auto;
+    column-gap: 5px;
+  }
+  .register-stats svg {
+    width: 20px;
+    height: 20px;
+  }
+  .register-stats strong {
+    font-size: 19px;
+  }
+  .register-stats small {
+    font-size: 6.5px;
+  }
+  .htg-register-card {
+    padding: 22px 12px 20px;
+    border-radius: 12px;
+  }
+  .register-card-heading h2 {
+    font-size: 26px;
+  }
+  .register-step span {
+    font-size: 7px;
+  }
+  .register-input {
+    height: 45px;
+    padding: 0 10px;
+  }
+  .register-next {
+    height: 48px;
+    font-size: 12.5px;
+  }
+  .member-fields input {
+    height: 45px;
+    font-size: 12.5px;
+  }
+}

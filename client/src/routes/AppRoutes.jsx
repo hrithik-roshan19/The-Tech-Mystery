@@ -18,7 +18,7 @@ import FAQPage from '../pages/public/FAQPage';
 
 // Auth Pages
 import LoginPage from '../pages/public/LoginPage';
-import RegisterPage from '../pages/auth/RegisterPage';
+import RegisterPage from '../pages/public/RegisterPage';
 
 // Participant Pages
 import TeamDashboardPage from '../pages/participant/TeamDashboardPage';
@@ -46,6 +46,7 @@ export const AppRoutes = () => {
       {/* 1. Standalone Full-Bleed Pages (Preserves custom hero navigation, overlays & glass panels) */}
       <Route path={ROUTES.HOME} element={<HomePage />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
 
       {/* 2. Public Pages using Shared Layout */}
       <Route element={<PublicLayout />}>
@@ -55,7 +56,6 @@ export const AppRoutes = () => {
         <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />
         <Route path={ROUTES.FAQ} element={<FAQPage />} />
         <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
-        <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       </Route>
 
 

@@ -84,7 +84,18 @@ This document logs significant architectural and design choices, their context, 
     5. **Small Mobile (320px–389px)**: Ultra-compact layout tested specifically at 320px, 360px, 375px. 2-equal-column tabs with 11px font, touch-friendly 44px+ inputs, compact register button, and card padding `22px 14px`.
   - Replaced root `overflow: hidden` with `overflow-x: hidden; min-height: 100dvh;` allowing smooth, natural vertical scrolling on all touch devices.
   - Adjusted mobile campus hero background position to `50% 18%` to retain prominent visibility of the university architecture.
-- **Consequences**: Validated across all 12 target viewports (1440x900, 1366x768, 1280x800, 1024x768, 900x800, 768x1024, 600x900, 480x932, 430x932, 390x844, 360x800, 320x740). Zero horizontal overflow, no clipped text, no overlapping elements.
+---
+
+## ADR-0012: Standalone Full-Bleed Multi-Step Register Page UI Integration
+- **Status**: ACCEPTED
+- **Context**: Hack the Grid requires an intuitive 4-step squad registration wizard (Team Details, Team Leader, Team Members, Review & Terms). The reference UI includes its own full-bleed header (`.htg-register-nav`), campus background overlay (`campus-hero.png`), and 3-column layout (event intro, central progress card, and right-side benefits blockquote).
+- **Decision**:
+  - Integrate `RegisterPage.jsx` under `client/src/pages/public/` and import `client/src/styles/RegisterPage.css`.
+  - Mount `ROUTES.REGISTER` as a top-level standalone full-bleed route alongside `ROUTES.HOME` and `ROUTES.LOGIN` in `AppRoutes.jsx`, eliminating duplicate headers/footers from `PublicLayout`.
+  - Preserve UI-only multi-step state progression (`step` 0 to 3) without connecting backend APIs prematurely.
+  - Wire client-side SPA navigation to `/`, `/login`, `/register`, and `/leaderboard` with responsive hamburger menu support.
+- **Consequences**: Delivers seamless 4-step enrollment UX, responsive fidelity from 320px to 1440px+, and leaves `HomePage` and `LoginPage` completely untouched.
+
 
 
 
