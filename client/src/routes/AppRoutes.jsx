@@ -23,6 +23,7 @@ import LoginPage from '../pages/public/LoginPage';
 import RegisterPage from '../pages/public/RegisterPage';
 
 // Participant Pages
+import ParticipantDashboard from '../pages/participant/ParticipantDashboard';
 import TeamDashboardPage from '../pages/participant/TeamDashboardPage';
 import MissionMapPage from '../pages/participant/MissionMapPage';
 import ChallengeViewPage from '../pages/participant/ChallengeViewPage';
@@ -49,6 +50,7 @@ export const AppRoutes = () => {
       <Route path={ROUTES.HOME} element={<HomePage />} />
       <Route path={ROUTES.MISSION} element={<MissionPage />} />
       <Route path={ROUTES.CHALLENGES} element={<ChallengeLevelsPage />} />
+      <Route path={ROUTES.DASHBOARD} element={<ParticipantDashboard />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />
@@ -56,16 +58,18 @@ export const AppRoutes = () => {
       {/* 2. Public Pages using Shared Layout */}
       <Route element={<PublicLayout />}>
         <Route path={ROUTES.ABOUT} element={<AboutPage />} />
-        <Route path="/dashboard" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
         <Route path={ROUTES.HOW_IT_WORKS} element={<Navigate to="/mission#how-it-works" replace />} />
         <Route path="/mission-map" element={<Navigate to={ROUTES.MISSION_MAP} replace />} />
         <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />
         <Route path={ROUTES.FAQ} element={<FAQPage />} />
         <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
+        <Route path="/team" element={<Navigate to={ROUTES.TEAM_PROFILE} replace />} />
+        <Route path="/profile" element={<Navigate to={ROUTES.TEAM_PROFILE} replace />} />
+        <Route path="/resources" element={<Navigate to={ROUTES.FAQ} replace />} />
       </Route>
 
 
-      {/* 2. Participant Portal Protected Routes */}
+      {/* 3. Participant Portal Protected Routes */}
       <Route
         path="/portal"
         element={
@@ -74,7 +78,7 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+        <Route index element={<Navigate to={ROUTES.PORTAL_DASHBOARD} replace />} />
         <Route path="dashboard" element={<TeamDashboardPage />} />
         <Route path="missions" element={<MissionMapPage />} />
         <Route path="challenge" element={<ChallengeViewPage />} />

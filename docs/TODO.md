@@ -67,6 +67,14 @@
   - [x] Update `CHALLENGES` links across `HomePage.jsx`, `MissionPage.jsx`, `RulesPage.jsx`, `LoginPage.jsx`, and `RegisterPage.jsx` to `ROUTES.CHALLENGES`.
   - [x] Map `/dashboard` route alias to `/portal/dashboard` in `AppRoutes.jsx`.
   - [x] Integrate `useAuth` dynamic CTA buttons (Login/Register vs Dashboard) on `ChallengeLevelsPage.jsx`.
+- [x] Standalone Participant Dashboard UI Integration:
+  - [x] Integrate reference `ParticipantDashboard.jsx` at `client/src/pages/participant/ParticipantDashboard.jsx`.
+  - [x] Integrate reference `ParticipantDashboard.css` at `client/src/styles/ParticipantDashboard.css` with responsive breakpoints (1400px, 1120px, 700px, 390px).
+  - [x] Decouple routes in `routes.js`: `DASHBOARD: '/dashboard'` and `PORTAL_DASHBOARD: '/portal/dashboard'`.
+  - [x] Mount `ROUTES.DASHBOARD` as standalone full-bleed route in `AppRoutes.jsx`.
+  - [x] Add route aliases for `/team`, `/profile`, and `/resources` to prevent 404s.
+  - [x] Integrate `useAuth` hook for operative identity, team initials, and explicit `[PREVIEW MODE // SAMPLE DATA]` badge.
+  - [x] Preserve existing protected `TeamDashboardPage.jsx` and `/portal/dashboard` workflow intact.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

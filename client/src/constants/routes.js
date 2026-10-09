@@ -17,7 +17,8 @@ export const ROUTES = {
   REGISTER: '/register',
 
   // Participant
-  DASHBOARD: '/portal/dashboard',
+  DASHBOARD: '/dashboard',
+  PORTAL_DASHBOARD: '/portal/dashboard',
   MISSION_MAP: '/portal/missions',
   CHALLENGE: '/portal/challenge',
   CHECKPOINT: '/portal/checkpoint',

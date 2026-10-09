@@ -283,6 +283,36 @@
   - Production build clean (`npm run build --workspace=client` completed in 6.67s with 0 errors).
   - Runtime HTTP 200 OK verified across `/challenges`, `/dashboard`, `/mission-map`, `/how-it-works`, `/rules`, `/login`, `/register`.
 
+---
+
+## Phase 2 UI Integration — Standalone Participant Dashboard UI Complete (Completed)
+- [x] Integrated reference `ParticipantDashboard.jsx` at `client/src/pages/participant/ParticipantDashboard.jsx`:
+  - [x] Full-bleed topbar with operative avatar/initials, dynamic team title, event sub-branding, and mobile drawer toggle button.
+  - [x] Collapsible sidebar with active navigation state (`Dashboard`, `Challenges`, `Team`, `Leaderboard`, `Rules`, `Resources`, `Profile`), live sample countdown timer, and event quote.
+  - [x] Welcome banner displaying authenticated operative's team name with explicit `[PREVIEW MODE // SAMPLE DATA]` badge.
+  - [x] Telemetry stat cards: Challenges Solved (6/10), Total Points (1250), Team Members stack (3/4), Time Remaining.
+  - [x] Current challenge highlight card: Level 07 Binary Exploitation with quick action buttons.
+  - [x] 10-level challenge progression grid with completion indicators (`done`, `active`, `locked`).
+  - [x] Category completion progress donut & difficulty bar distribution breakdown (Easy, Medium, Hard, Expert).
+  - [x] Top 5 leaderboard standings preview with active team highlighting.
+  - [x] Chronological activity feed showing recent solves and team events.
+- [x] Integrated reference `ParticipantDashboard.css` at `client/src/styles/ParticipantDashboard.css`:
+  - [x] Fully scoped under `.pd-page` with `--pd-lime: #b8ff3d` and `--pd-bg: #070b0a` cyber aesthetic tokens.
+  - [x] Reused existing `/campus-hero.png` asset with layered gradients and cyber grid background overlay.
+  - [x] Configured `overflow-x: hidden` for smooth vertical scrolling across all screen heights.
+  - [x] Complete responsive breakpoints across Desktop (1400px), Tablet (1120px), Mobile (700px), and Small Mobile (390px).
+  - [x] Added mobile navigation drawer overlay when `.is-open` is toggled.
+- [x] Routing Integration:
+  - [x] Decoupled route constants in `client/src/constants/routes.js`: `DASHBOARD: '/dashboard'` and `PORTAL_DASHBOARD: '/portal/dashboard'`.
+  - [x] Mounted `ROUTES.DASHBOARD` as a top-level Standalone Full-Bleed route in `AppRoutes.jsx`.
+  - [x] Added routing aliases for `/team` -> `/portal/team`, `/profile` -> `/portal/team`, and `/resources` -> `/faq` to avoid 404s.
+  - [x] Updated `ParticipantLayout.jsx` to navigate internal dashboard links to `ROUTES.PORTAL_DASHBOARD`.
+  - [x] Preserved existing tactical squad formation & mission workflows in `TeamDashboardPage.jsx` untouched.
+- [x] Verification:
+  - [x] Production build clean (`npm run build --workspace=client` completed in 25.19s with 0 errors).
+  - [x] Runtime HTTP 200 OK verified across `/dashboard`, `/challenges`, `/team`, `/profile`, `/resources`, `/rules`, `/portal/dashboard`.
+
+
 
 
 

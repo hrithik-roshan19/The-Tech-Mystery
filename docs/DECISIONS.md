@@ -177,6 +177,23 @@ This document logs significant architectural and design choices, their context, 
   - In `AppRoutes.jsx`: Map `/dashboard` to `<Navigate to={ROUTES.DASHBOARD} replace />`.
 - **Consequences**: Eliminates dead ends, connects all pages to `/challenges` via SPA `<Link>` navigation with zero page reloads, and prevents 404s on `/dashboard`.
 
+---
+
+## ADR-0018: Standalone Participant Dashboard UI Integration & Route Decoupling
+- **Status**: ACCEPTED
+- **Context**: The hackathon experience required integrating a dedicated, full-bleed standalone Participant Dashboard UI (`ParticipantDashboard.jsx` & `ParticipantDashboard.css`) featuring a custom dark + electric-lime theme, quick stat cards, interactive current challenge focus, a 10-level challenge progression overview, progress donut breakdown, Top 5 leaderboard preview, and activity feed. The codebase also contained an existing protected tactical squad cockpit (`TeamDashboardPage.jsx`) inside `ParticipantLayout` at `/portal/dashboard`.
+- **Decision**:
+  - Integrate `ParticipantDashboard.jsx` at `client/src/pages/participant/ParticipantDashboard.jsx` and styling at `client/src/styles/ParticipantDashboard.css`.
+  - Update `client/src/constants/routes.js` to decouple `DASHBOARD: '/dashboard'` (standalone participant overview dashboard) and `PORTAL_DASHBOARD: '/portal/dashboard'` (tactical squad cockpit).
+  - Mount `ROUTES.DASHBOARD` as a top-level Standalone Full-Bleed Page in `AppRoutes.jsx`, allowing its custom topbar (`.pd-topbar`), collapsable sidebar (`.pd-sidebar`), and layered campus background (`/campus-hero.png`) to render unconstrained without nested layout conflicts.
+  - Retain `/portal/dashboard` and nested portal routes under `ParticipantLayout` for team creation, join codes, and live challenge submission cockpits.
+  - In `ParticipantLayout.jsx`, update the internal navigation item to `ROUTES.PORTAL_DASHBOARD`.
+  - Add fallback redirects in `AppRoutes.jsx` for `/team` -> `/portal/team`, `/profile` -> `/portal/team`, and `/resources` -> `/faq` to ensure all sidebar links navigate cleanly without 404s.
+  - Connect `useAuth` hook in `ParticipantDashboard.jsx` to dynamically display operative team name and initials, while clearly flagging sample telemetry with a `[PREVIEW MODE // SAMPLE DATA]` badge to avoid misrepresenting mock metrics as live server state.
+  - Set root `.pd-page` `overflow-x: hidden` with responsive drawer toggles for mobile viewports.
+- **Consequences**: Provides participants with a high-fidelity overview dashboard, preserves live squad flows intact, avoids route conflicts, and ensures seamless responsive cross-page navigation.
+
+
 
 
 

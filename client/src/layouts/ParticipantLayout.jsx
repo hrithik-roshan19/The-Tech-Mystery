@@ -31,7 +31,7 @@ export const ParticipantLayout = () => {
   }, [user]);
 
   const navItems = [
-    { label: 'DASHBOARD', path: ROUTES.DASHBOARD, icon: LayoutDashboard },
+    { label: 'DASHBOARD', path: ROUTES.PORTAL_DASHBOARD, icon: LayoutDashboard },
     { label: 'MISSION MAP', path: ROUTES.MISSION_MAP, icon: Map },
     { label: 'CHALLENGES', path: ROUTES.CHALLENGES, icon: Target },
     { label: 'ACTIVE CHALLENGE', path: ROUTES.CHALLENGE, icon: Terminal },
