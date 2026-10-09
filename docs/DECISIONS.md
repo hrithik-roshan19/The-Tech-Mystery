@@ -148,6 +148,22 @@ This document logs significant architectural and design choices, their context, 
   - "How It Works" consistently routes to `/mission#how-it-works` and auto-scrolls directly to the 6-stage operational walkthrough.
   - Zero side effects on `HomePage`, `LoginPage`, `RegisterPage`, or `RulesPage` styling.
 
+---
+
+## ADR-0016: Standalone Full-Bleed Challenge Levels & Mission Map UI Integration
+- **Status**: ACCEPTED
+- **Context**: Hack the Grid requires a dedicated Challenge Levels / Mission Map discovery page (`/challenges`). The design includes its own full-bleed header (`.htg-levels-nav`), layered campus background overlay (`/campus-hero.png`), stats counter bar, an interactive 10-level Mission Map panel with accordion click-to-expand briefings, difficulty badges, and a 4-pillar benefits showcase with event quotation.
+- **Decision**:
+  - Integrate `ChallengeLevelsPage.jsx` directly under `client/src/pages/public/` and import `client/src/styles/ChallengeLevelsPage.css`.
+  - Add `CHALLENGES: '/challenges'` to `client/src/constants/routes.js`.
+  - Mount `ROUTES.CHALLENGES` as a standalone full-bleed route in `AppRoutes.jsx`, preserving custom overlays and avoiding layout duplication.
+  - Retain the UI-only 10-challenge matrix with interactive click-to-expand state (`selectedLevel`), without exposing actual challenge flags, answers, or secrets in frontend code.
+  - Reuse the existing `client/public/campus-hero.png` asset without adding new redundant image files.
+  - Set `overflow-x: hidden` on root `.htg-levels-page` and `flex-wrap: wrap` on stats chips to guarantee zero horizontal overflow and smooth vertical scrolling across all viewports (320px to 1440px+).
+  - Wire React Router `Link` navigation to `/mission`, `/mission#how-it-works`, `/challenges`, `/rules`, `/leaderboard`, `/login`, `/register`, and `/`.
+- **Consequences**: Delivers high-fidelity challenge discovery, interactive level briefings, visual consistency with dark + electric-lime aesthetics, and zero side effects on existing routes.
+
+
 
 
 

@@ -52,6 +52,14 @@
   - [x] Point `HOW IT WORKS` to `/mission#how-it-works` with smooth hash scroll.
   - [x] Update `Navbar.jsx` to map `MISSION` and `HOW IT WORKS` to `/mission` and `/mission#how-it-works`.
   - [x] Add fallback redirects for `/how-it-works` and `/mission-map` in `AppRoutes.jsx`.
+- [x] Integrate reference `ChallengeLevelsPage.jsx` at `client/src/pages/public/ChallengeLevelsPage.jsx`:
+  - [x] 10 challenge rows with interactive accordion click-to-expand briefings.
+  - [x] UI-only presentation (zero sensitive flags/secrets exposed).
+  - [x] Full-bleed header and 4-pillar benefits showcase.
+- [x] Integrate reference `ChallengeLevelsPage.css` at `client/src/styles/ChallengeLevelsPage.css`:
+  - [x] Scoped `--htg-lime` variables and `/campus-hero.png` reuse.
+  - [x] Responsive `overflow-x: hidden` and stats wrapping.
+- [x] Register `ROUTES.CHALLENGES` (`/challenges`) and mount as standalone route in `AppRoutes.jsx`.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

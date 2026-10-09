@@ -394,6 +394,7 @@ Documented in detail in `docs/DECISIONS.md`:
 - **ADR-0013**: Standalone Full-Bleed Rules Page UI Integration (Participant handbook, 6-category accordion, acknowledgment checkbox gate, zero horizontal overflow down to 320px).
 - **ADR-0014**: Standalone Full-Bleed Mission & How It Works Page UI Integration (Mission Playbook, 6-stage interactive process, orbital animations, expandable challenge map).
 - **ADR-0015**: Cross-Page Mission and How It Works Navigation Routing Fix (React Router `<Link>` transitions to `/mission` and `/mission#how-it-works`, multi-tier hash scroll retries, legacy redirect fallbacks).
+- **ADR-0016**: Standalone Full-Bleed Challenge Levels & Mission Map UI Integration (10-level challenge matrix, accordion briefings, UI-only secrets preservation, /campus-hero.png asset reuse).
 
 ---
 
@@ -417,13 +418,14 @@ Documented in detail in `docs/DECISIONS.md`:
 ```text
 ================================================================================
 CURRENT STATUS:
-- Phase: Phase 2 (Frontend UI & Design System - Homepage, Login, Register, Rules, Mission Navigation) COMPLETE
+- Phase: Phase 2 (Frontend UI & Design System - Homepage, Login, Register, Rules, Mission, Challenges) COMPLETE
 - Completed: Full monorepo setup, backend architecture, reference Homepage UI,
              reference Login Page UI, reference Register Page UI (4-step wizard),
              reference Rules Page UI (6-category accordion + ack gate),
              reference Mission Page UI (6-stage playbook + interactive challenge map),
-             cross-page navigation routing fix for /mission and /mission#how-it-works,
-             campus hero asset, standalone full-bleed routing for /, /login, /register, /rules, /mission,
+             reference Challenge Levels UI (10-level interactive Mission Map matrix),
+             cross-page navigation routing for /mission, /challenges, /rules,
+             campus hero asset, standalone full-bleed routing for /, /login, /register, /rules, /mission, /challenges,
              multi-tier responsive design (tested on viewports: 320px to 1440px),
              build & dev server verification.
 - In Progress: Ready for Phase 3 (Authentication & Registration End-to-End System)

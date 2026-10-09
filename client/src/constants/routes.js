@@ -7,6 +7,7 @@ export const ROUTES = {
   MISSION: '/mission',
   ABOUT: '/about',
   HOW_IT_WORKS: '/how-it-works',
+  CHALLENGES: '/challenges',
   RULES: '/rules',
   SCHEDULE: '/schedule',
   FAQ: '/faq',
