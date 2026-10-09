@@ -125,7 +125,15 @@ export default function HomePage() {
 
       <section className="htg-final-cta" id="rules"><p className="htg-kicker">READY TO ENTER THE GRID?</p><h2>Your team.<br /><span>Your strategy. Your flag.</span></h2><div className="htg-final-cta__actions"><Link to="/register" className="htg-button htg-button--lime htg-button--large">Register your team <Arrow /></Link><Link to="/rules" className="htg-button htg-button--glass htg-button--large">Read the rules <Arrow /></Link></div></section>
 
-      <footer className="htg-footer"><Link className="htg-brand htg-brand--footer" to="/"><span className="htg-brand__name">HACK THE <b>GRID</b></span><span className="htg-brand__tag">CODESPHERE <i>×</i> UTKRISHT 2026</span></Link><p>Built for curious minds and bold teams.</p><span className="htg-footer-credit">Built with <b>♥</b> by Hrithik Roshan</span><span>© 2026 Hack the Grid · CodeSphere</span></footer>
+      <footer className="htg-footer">
+        <Link className="htg-brand htg-brand--footer" to="/" aria-label="Hack the Grid home">
+          <span className="htg-brand__name">HACK THE <b>GRID</b></span>
+          <span className="htg-brand__tag">CODESPHERE <i>×</i> UTKRISHT 2026</span>
+        </Link>
+        <p className="htg-footer-tagline">Built for curious minds and bold teams.</p>
+        <span className="htg-footer-credit">Built with <b>♥</b> by Hrithik Roshan</span>
+        <span className="htg-footer-copy">© 2026 Hack the Grid · CodeSphere</span>
+      </footer>
     </main>
   );
 }

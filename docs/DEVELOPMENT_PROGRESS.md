@@ -501,6 +501,37 @@
 
 ---
 
+## Phase 2 Milestone — Sticky Navbar & Enlarged Footer Root Cause Resolution (Completed)
+- [x] **Empirical Root Cause Identification**:
+  - [x] Identified that `.htg-header` was failing sticky positioning because ancestor `.htg-home` had `overflow: clip;`, which cancels sticky behavior in modern CSS specs.
+  - [x] Identified that `html, body, #root` had `overflow-x: hidden;` in `index.css`, which triggered automatic `overflow-y: auto` on `#root`, creating an internal scroll container and desynchronizing viewport scroll.
+- [x] **Sticky Navbar Fixes**:
+  - [x] Replaced `overflow-x: hidden;` on `html, body, #root` with `overflow-x: clip;` on `html, body` and clean `min-height: 100vh; display: flex; flex-direction: column;` on `#root` in `index.css`.
+  - [x] Removed `overflow: clip;` from `.htg-home` in `HomePage.css`.
+  - [x] Styled `.htg-header` with `position: sticky; top: 0; z-index: 1000; height: 82px; background: #040806; box-shadow: 0 4px 24px rgba(0,0,0,0.6);`.
+  - [x] Added `html { scroll-behavior: smooth; scroll-padding-top: 88px; }` (and `80px` on mobile) to guarantee anchor links (`#mission`, `#how-it-works`, `#challenges`, `#team`, `#rules`) do not get obscured behind the sticky navbar.
+  - [x] Preserved canonical 7-item navigation order (Home, Leaderboard, Mission, Challenges, QR Checkpoint, Final Flag, Rules) and mobile hamburger menu.
+- [x] **Footer Fixes & Enlargement**:
+  - [x] Kept footer in normal document flow at the bottom of the page (`position: relative; z-index: 10;`).
+  - [x] Eliminated fixed hero background bleed-through with solid opaque `#030706` background.
+  - [x] Enlarged vertical padding to `38px clamp(24px, 5.5vw, 94px)` (desktop) and `34px 22px` (mobile).
+  - [x] Increased footer brand size to `24px` with clear tagline and spacing.
+  - [x] Added exact creator credit: `Built with ♥ by Hrithik Roshan` with `#ff4d64` red heart and glowing hover effect.
+- [x] **Empirical Verification & Testing**:
+  - [x] Verified with headless Chrome CDP automated testing:
+    - Stickiness confirmed at 7 scroll steps (0, 400, 1000, 1800, 2600, 3400, 4200px) with `headerTop === 0`.
+    - Anchor headings tested for safe top offsets.
+    - Verified mobile sticky scroll and stacked footer layout at 390×844.
+  - [x] Visual artifacts saved:
+    - `homepage-sticky-scrolled-desktop.png`: Sticky navbar over scrolled content.
+    - `homepage-footer-enlarged-desktop.png`: Enlarged desktop footer with exact credit and solid background.
+    - `homepage-sticky-scrolled-mobile.png`: Mobile sticky navbar during scrolling.
+    - `homepage-footer-mobile-bottom.png`: Stacked mobile footer at bottom of viewport.
+  - [x] Verified clean production build: `npm run build --workspace=client` (1,745 modules transformed, 0 errors in 9.53s).
+
+
+---
+
 ## Phase 2 Milestone — Homepage Refinements: Compact Spacing, Sticky Navbar, Team Section & Footer Credit (Completed)
 - [x] **Integration of Updated Homepage Package (`Hack-The-Grid-Homepage-Updated-Spacing-Team.zip`)**:
   - [x] Extracted and verified `README-INTEGRATION.md` specifications.

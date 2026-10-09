@@ -122,6 +122,15 @@
   - [x] Add dedicated Team section (`#team`) with faculty and student coordinator cards and styled placeholder photos.
   - [x] Add footer credit: `Built with ♥ by Hrithik Roshan`.
   - [x] Verify zero build errors on `npm run build --workspace=client`.
+- [x] Fix Homepage Sticky Navbar & Enlarged Footer Root Causes:
+  - [x] Remove `overflow: clip;` on `.htg-home` that prevented child elements from sticking to the viewport.
+  - [x] Remove `overflow-x: hidden;` on `#root` in `index.css` that created an unintended internal scroll container.
+  - [x] Apply `position: sticky; top: 0; z-index: 1000; height: 82px; background: #040806; box-shadow: 0 4px 24px rgba(0,0,0,0.6);` to `.htg-header`.
+  - [x] Add `html { scroll-behavior: smooth; scroll-padding-top: 88px; }` to keep anchor headings visible beneath sticky header.
+  - [x] Fix footer document flow below CTA section with solid `#030706; z-index: 10;` background preventing fixed campus hero bleed-through.
+  - [x] Enlarge footer padding to `38px clamp(24px, 5.5vw, 94px)` (desktop) and `34px 22px` (mobile).
+  - [x] Enlarge footer brand logo to `24px` and set exact credit: `Built with ♥ by Hrithik Roshan` with `#ff4d64` red heart.
+  - [x] Verify across desktop, tablet, and mobile with automated CDP tests and clean production build.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 
