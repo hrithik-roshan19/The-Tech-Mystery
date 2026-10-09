@@ -125,6 +125,30 @@ This document logs significant architectural and design choices, their context, 
   - Update cross-page navigation links (`LoginPage.jsx`, `RegisterPage.jsx`, `RulesPage.jsx`) to point Mission to `/mission` and How It Works to `/mission#how-it-works`, while preserving Home Page's existing in-page anchors.
 - **Consequences**: Delivers complete mission operational discovery, responsive fidelity from 320px to 1440px+, and zero regressions across existing routes.
 
+---
+
+## ADR-0015: Cross-Page Mission and How It Works Navigation Routing Fix
+- **Status**: ACCEPTED
+- **Context**: In the existing application, clicking "Mission" or "How It Works" from various pages (`HomePage`, `LoginPage`, `RegisterPage`, `RulesPage`, and shared `Navbar`) either resulted in in-page anchor jumps (`#mission`, `#how-it-works`) remaining on the home page, or did not open the dedicated Mission page (`/mission` and `/mission#how-it-works`). Furthermore, `Navbar.jsx` referenced `ABOUT` and an unstyled stub route `/how-it-works`.
+- **Decision**:
+  - Update all desktop navbars and mobile drawer links across `HomePage.jsx`, `LoginPage.jsx`, `RegisterPage.jsx`, `RulesPage.jsx`, and `Navbar.jsx`:
+    - Point `MISSION` to React Router `<Link to={ROUTES.MISSION}>MISSION</Link>`.
+    - Point `HOW IT WORKS` to React Router `<Link to="/mission#how-it-works">HOW IT WORKS</Link>`.
+  - In `MissionPage.jsx`:
+    - Implement robust hash scrolling in `useEffect` with multi-tier timeout retry (0ms, 60ms, 200ms) keyed to `[location.hash, location.pathname]`.
+    - Support clicking `MISSION` while on the Mission page to smoothly scroll to the top (`window.scrollTo({ top: 0, behavior: "smooth" })`).
+    - Support clicking `HOW IT WORKS` while on the Mission page to trigger direct smooth scrolling to `#how-it-works` without page reloading.
+  - In `AppRoutes.jsx`:
+    - Mount `ROUTES.MISSION` (`/mission`) as a standalone full-bleed route.
+    - Redirect deprecated `ROUTES.HOW_IT_WORKS` (`/how-it-works`) to `/mission#how-it-works`.
+    - Redirect `/mission-map` to `ROUTES.MISSION_MAP` (`/portal/missions`).
+- **Consequences**:
+  - Single-page application navigation is completely preserved without full browser reloads.
+  - "Mission" consistently routes to `/mission` across all entry points.
+  - "How It Works" consistently routes to `/mission#how-it-works` and auto-scrolls directly to the 6-stage operational walkthrough.
+  - Zero side effects on `HomePage`, `LoginPage`, `RegisterPage`, or `RulesPage` styling.
+
+
 
 
 

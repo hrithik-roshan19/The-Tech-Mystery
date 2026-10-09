@@ -40,12 +40,34 @@ export default function MissionPage() {
 
   useEffect(() => {
     if (location.hash) {
-      const el = document.querySelector(location.hash);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-      }
+      const scrollToHash = () => {
+        const el = document.querySelector(location.hash);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      };
+      scrollToHash();
+      const t1 = setTimeout(scrollToHash, 60);
+      const t2 = setTimeout(scrollToHash, 200);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [location.hash]);
+  }, [location.hash, location.pathname]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const scrollToSection = (id) => {
+    const el = document.querySelector(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const s = steps[active];
 
@@ -62,8 +84,16 @@ export default function MissionPage() {
         </Link>
 
         <nav>
-          <Link className="current" to={ROUTES.MISSION}>MISSION</Link>
-          <a href="#how-it-works">HOW IT WORKS</a>
+          <Link className="current" to={ROUTES.MISSION} onClick={scrollToTop}>MISSION</Link>
+          <a
+            href="#how-it-works"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToSection("#how-it-works");
+            }}
+          >
+            HOW IT WORKS
+          </a>
           <a href="/#challenges">CHALLENGES</a>
           <Link to={ROUTES.RULES}>RULES</Link>
           <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
@@ -86,8 +116,26 @@ export default function MissionPage() {
 
         {mobileMenuOpen && (
           <div className="mp-mobile-drawer">
-            <Link className="current" to={ROUTES.MISSION} onClick={() => setMobileMenuOpen(false)}>MISSION</Link>
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</a>
+            <Link
+              className="current"
+              to={ROUTES.MISSION}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                scrollToTop();
+              }}
+            >
+              MISSION
+            </Link>
+            <a
+              href="#how-it-works"
+              onClick={(e) => {
+                e.preventDefault();
+                setMobileMenuOpen(false);
+                scrollToSection("#how-it-works");
+              }}
+            >
+              HOW IT WORKS
+            </a>
             <a href="/#challenges" onClick={() => setMobileMenuOpen(false)}>CHALLENGES</a>
             <Link to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
             <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
@@ -284,3 +332,4 @@ export default function MissionPage() {
     </div>
   );
 }
+

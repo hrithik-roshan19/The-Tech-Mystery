@@ -196,6 +196,36 @@
   - [x] Mission step selector and Next Step looping verified.
   - [x] Challenge map level expansion verified (5 to 10 levels toggle).
 
+---
+
+## Phase 2 Navigation Fix — Mission & How It Works Cross-Page Routing Complete (Completed)
+- [x] Audited navigation links across all pages and layouts:
+  - Identified in-page `#mission` and `#how-it-works` links on `HomePage.jsx` that failed to navigate to the dedicated Mission playbook page.
+  - Identified standard anchor `<a>` tags on `LoginPage.jsx`, `RegisterPage.jsx`, and `RulesPage.jsx` that triggered full browser reloads.
+  - Identified `Navbar.jsx` routing `ABOUT` and pointing `HOW IT WORKS` to deprecated stub `/how-it-works`.
+- [x] Updated all navigation bars and mobile drawers to React Router `<Link>`:
+  - `client/src/pages/public/HomePage.jsx`: Updated desktop `<nav>` and mobile drawer:
+    - `MISSION` -> `<Link to={ROUTES.MISSION}>MISSION</Link>`
+    - `HOW IT WORKS` -> `<Link to="/mission#how-it-works">HOW IT WORKS</Link>`
+  - `client/src/pages/public/LoginPage.jsx`: Converted `HOW IT WORKS` anchor tag to `<Link to="/mission#how-it-works">`.
+  - `client/src/pages/public/RegisterPage.jsx`: Converted `HOW IT WORKS` anchor tag to `<Link to="/mission#how-it-works">`.
+  - `client/src/pages/public/RulesPage.jsx`: Converted `HOW IT WORKS` anchor tag to `<Link to="/mission#how-it-works">`.
+  - `client/src/components/navigation/Navbar.jsx`: Updated `navLinks` list to `{ label: 'MISSION', path: ROUTES.MISSION }` and `{ label: 'HOW IT WORKS', path: '/mission#how-it-works' }`.
+- [x] Enhanced `MissionPage.jsx` navigation handling:
+  - Replaced single `useEffect` scroll with multi-tier retry (`0ms`, `60ms`, `200ms`) keyed to `[location.hash, location.pathname]`, guaranteeing accurate layout settling on SPA navigation.
+  - Added `scrollToTop` handler when clicking `MISSION` while already on the Mission page.
+  - Added direct `scrollToSection("#how-it-works")` handler when clicking `HOW IT WORKS` while already on the Mission page.
+- [x] Configured fallback & redirect routes in `AppRoutes.jsx`:
+  - Mounted `<Route path={ROUTES.MISSION} element={<MissionPage />} />`.
+  - Redirected `<Route path={ROUTES.HOW_IT_WORKS} element={<Navigate to="/mission#how-it-works" replace />} />`.
+  - Redirected `<Route path="/mission-map" element={<Navigate to={ROUTES.MISSION_MAP} replace />} />`.
+- [x] Verification:
+  - Tested clicking `MISSION` from `/`, `/login`, `/register`, `/rules` -> navigates to `/mission`.
+  - Tested clicking `HOW IT WORKS` from `/`, `/login`, `/register`, `/rules` -> navigates to `/mission#how-it-works` and scrolls to Section 03 (`id="how-it-works"`).
+  - Production build clean (`npm run build --workspace=client` built in 5.49s with 0 errors).
+  - Dev server HTTP 200 OK verified across `/`, `/mission`, `/rules`, `/login`, `/register`, `/leaderboard`.
+
+
 
 
 

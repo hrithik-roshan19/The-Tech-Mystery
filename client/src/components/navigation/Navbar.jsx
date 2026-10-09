@@ -12,8 +12,8 @@ export const Navbar = () => {
 
   const navLinks = [
     { label: 'HOME', path: ROUTES.HOME },
-    { label: 'ABOUT', path: ROUTES.ABOUT },
-    { label: 'HOW IT WORKS', path: ROUTES.HOW_IT_WORKS },
+    { label: 'MISSION', path: ROUTES.MISSION },
+    { label: 'HOW IT WORKS', path: '/mission#how-it-works' },
     { label: 'RULES', path: ROUTES.RULES },
     { label: 'SCHEDULE', path: ROUTES.SCHEDULE },
     { label: 'FAQ', path: ROUTES.FAQ },

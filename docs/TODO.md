@@ -46,7 +46,12 @@
   - [x] Scoped `--lime`, `--white`, `--muted` variables and campus background integration.
   - [x] Responsive breakpoints (1200px, 900px, 600px, 360px, 330px) verified down to 320px width.
 - [x] Mount `ROUTES.MISSION` (`/mission`) as standalone full-bleed route in `AppRoutes.jsx`.
-- [x] Update cross-page nav links: Mission to `/mission` and How It Works to `/mission#how-it-works`.
+- [x] Fix cross-page Mission and How It Works navigation:
+  - [x] Convert anchor tags to React Router `<Link>` across `HomePage`, `LoginPage`, `RegisterPage`, and `RulesPage`.
+  - [x] Point `MISSION` to `/mission` across all desktop and mobile navbars.
+  - [x] Point `HOW IT WORKS` to `/mission#how-it-works` with smooth hash scroll.
+  - [x] Update `Navbar.jsx` to map `MISSION` and `HOW IT WORKS` to `/mission` and `/mission#how-it-works`.
+  - [x] Add fallback redirects for `/how-it-works` and `/mission-map` in `AppRoutes.jsx`.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 
