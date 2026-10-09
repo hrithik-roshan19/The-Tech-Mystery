@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../../styles/RulesPage.css";
 import { ROUTES } from "../../constants/routes";
+import Navbar from "../../components/navigation/Navbar";
 
 const groups = [
   {
@@ -110,49 +111,7 @@ export default function RulesPage() {
       <div className="rp-overlay" />
       <div className="rp-grid" />
 
-      <header className="rp-nav">
-        <Link className="rp-brand" to="/">
-          <strong>HACK THE <span>GRID</span></strong>
-          <small>CODESPHERE × UTKRISHT 2026</small>
-        </Link>
-
-        <nav>
-          <Link to={ROUTES.MISSION}>MISSION</Link>
-          <Link to="/mission#how-it-works">HOW IT WORKS</Link>
-          <Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>
-          <Link className="current" to={ROUTES.RULES}>RULES</Link>
-          <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
-        </nav>
-
-        <div className="rp-nav-actions">
-          <Link className="rp-login" to={ROUTES.LOGIN}>LOGIN</Link>
-          <Link className="rp-register" to={ROUTES.REGISTER}>REGISTER</Link>
-        </div>
-
-        <button
-          type="button"
-          className="rp-mobile-menu"
-          aria-label="Toggle navigation menu"
-          aria-expanded={mobileMenuOpen}
-          onClick={() => setMobileMenuOpen((prev) => !prev)}
-        >
-          <span /><span /><span />
-        </button>
-
-        {mobileMenuOpen && (
-          <div className="rp-mobile-drawer">
-            <Link to={ROUTES.MISSION} onClick={() => setMobileMenuOpen(false)}>MISSION</Link>
-            <Link to="/mission#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</Link>
-            <Link to={ROUTES.CHALLENGES} onClick={() => setMobileMenuOpen(false)}>CHALLENGES</Link>
-            <Link className="current" to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
-            <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
-            <div className="rp-mobile-drawer-actions">
-              <Link className="rp-login" to={ROUTES.LOGIN} onClick={() => setMobileMenuOpen(false)}>LOGIN</Link>
-              <Link className="rp-register" to={ROUTES.REGISTER} onClick={() => setMobileMenuOpen(false)}>REGISTER</Link>
-            </div>
-          </div>
-        )}
-      </header>
+      <Navbar />
 
       <main className="rp-main">
         <section className="rp-hero">

@@ -2,160 +2,164 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../constants/routes';
-import { CyberButton } from '../common/CyberButton';
-import { Terminal, Trophy, Shield, Menu, X, LogIn, LayoutDashboard } from 'lucide-react';
+import '../../styles/Navbar.css';
 
-export const Navbar = () => {
-  const { isAuthenticated, isAdmin, user, logout } = useAuth();
+/**
+ * Standardized Hack the Grid Navigation Links
+ * Exactly 7 links in the required sequence:
+ * 1. HOME
+ * 2. LEADERBOARD
+ * 3. MISSION
+ * 4. CHALLENGES
+ * 5. QR CHECKPOINT
+ * 6. FINAL FLAG
+ * 7. RULES
+ */
+const NAVBAR_LINKS = [
+  { label: 'HOME', path: ROUTES.HOME },
+  { label: 'LEADERBOARD', path: ROUTES.LEADERBOARD },
+  { label: 'MISSION', path: ROUTES.MISSION },
+  { label: 'CHALLENGES', path: ROUTES.CHALLENGES },
+  { label: 'QR CHECKPOINT', path: ROUTES.QR_CHECKPOINT },
+  { label: 'FINAL FLAG', path: ROUTES.FINAL_FLAG },
+  { label: 'RULES', path: ROUTES.RULES },
+];
+
+export const Navbar = ({ activeOverride }) => {
+  const { isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
-    { label: 'HOME', path: ROUTES.HOME },
-    { label: 'MISSION', path: ROUTES.MISSION },
-    { label: 'HOW IT WORKS', path: '/mission#how-it-works' },
-    { label: 'CHALLENGES', path: ROUTES.CHALLENGES },
-    { label: 'QR CHECKPOINT', path: ROUTES.QR_CHECKPOINT },
-    { label: 'RULES', path: ROUTES.RULES },
-    { label: 'SCHEDULE', path: ROUTES.SCHEDULE },
-    { label: 'FAQ', path: ROUTES.FAQ },
-    { label: 'LEADERBOARD', path: ROUTES.LEADERBOARD, icon: Trophy },
-  ];
+  /**
+   * Determine if a given link is active based on location path and optional override.
+   * Root route "/" matches strictly exact "/" to avoid highlighting HOME on all subroutes.
+   * /mission handles both "/mission" and "/mission#how-it-works".
+   */
+  const checkIsActive = (path, label) => {
+    if (activeOverride) {
+      return activeOverride.toUpperCase() === label.toUpperCase();
+    }
+    const currentPath = location.pathname;
+    if (path === ROUTES.HOME) {
+      return currentPath === '/' || currentPath === '';
+    }
+    if (path === ROUTES.MISSION) {
+      return currentPath === '/mission';
+    }
+    return currentPath === path || currentPath.startsWith(`${path}/`);
+  };
 
   return (
-    <nav className="sticky top-0 z-50 bg-cyber-bg/90 backdrop-blur-md border-b border-cyber-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand Logo */}
-          <Link to={ROUTES.HOME} className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 bg-cyber-cyan/10 border border-cyber-cyan flex items-center justify-center text-cyber-cyan group-hover:shadow-neon-cyan transition-all">
-              <Terminal className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-heading font-bold text-lg text-cyber-text tracking-wider block leading-none">
-                HACK THE <span className="text-cyber-cyan">GRID</span>
-              </span>
-              <span className="text-[10px] font-mono text-cyber-muted block uppercase tracking-widest mt-0.5">
-                CODESPHERE // TULA'S
-              </span>
-            </div>
+    <header className="htg-site-navbar">
+      <div className="htg-nav-container">
+        {/* Brand Logo */}
+        <Link to={ROUTES.HOME} className="htg-nav-brand" aria-label="Hack the Grid home">
+          <span className="htg-nav-brand-title">
+            HACK THE <span className="htg-brand-lime">GRID</span>
+          </span>
+          <span className="htg-nav-brand-sub">CODESPHERE × UTKRISHT 2026</span>
+        </Link>
+
+        {/* Desktop Navigation Links */}
+        <nav className="htg-nav-links" aria-label="Main navigation">
+          {NAVBAR_LINKS.map((item) => {
+            const isActive = checkIsActive(item.path, item.label);
+            return (
+              <Link
+                key={item.label}
+                to={item.path}
+                className={`site-navbar__link ${isActive ? 'active' : ''}`}
+              >
+                {item.label}
+                {isActive && <span className="site-navbar__active-bar" />}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Action Controls */}
+        <div className="htg-nav-actions">
+          <Link to={ROUTES.DASHBOARD} className="htg-nav-btn htg-nav-btn-dash">
+            DASHBOARD
           </Link>
-
-          {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-4">
-            {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`px-3 py-1.5 text-xs font-mono tracking-wider transition-colors flex items-center gap-1.5 ${
-                    isActive
-                      ? 'text-cyber-cyan border-b-2 border-cyber-cyan'
-                      : 'text-cyber-muted hover:text-cyber-text'
-                  }`}
-                >
-                  {link.icon && <link.icon className="w-3.5 h-3.5" />}
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Auth Action Buttons */}
-          <div className="hidden md:flex items-center space-x-3">
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
-                {isAdmin ? (
-                  <Link to={ROUTES.ADMIN_DASHBOARD}>
-                    <CyberButton variant="orange" size="sm" icon={Shield}>
-                      ADMIN SOC
-                    </CyberButton>
-                  </Link>
-                ) : (
-                  <Link to={ROUTES.DASHBOARD}>
-                    <CyberButton variant="cyan" size="sm" icon={LayoutDashboard}>
-                      PORTAL
-                    </CyberButton>
-                  </Link>
-                )}
-                <CyberButton variant="ghost" size="sm" onClick={logout}>
-                  DISCONNECT
-                </CyberButton>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <Link to={ROUTES.LOGIN}>
-                  <CyberButton variant="ghost" size="sm" icon={LogIn}>
-                    LOGIN
-                  </CyberButton>
-                </Link>
-                <Link to={ROUTES.REGISTER}>
-                  <CyberButton variant="cyan" size="sm">
-                    REGISTER
-                  </CyberButton>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Menu Trigger */}
-          <div className="md:hidden flex items-center">
+          {isAuthenticated ? (
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-cyber-muted hover:text-cyber-cyan p-2"
+              type="button"
+              className="htg-nav-btn htg-nav-btn-reg"
+              onClick={() => logout && logout()}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              DISCONNECT
             </button>
-          </div>
+          ) : (
+            <Link to={ROUTES.REGISTER} className="htg-nav-btn htg-nav-btn-reg">
+              REGISTER
+            </Link>
+          )}
         </div>
+
+        {/* Mobile Menu Trigger */}
+        <button
+          type="button"
+          className={`htg-nav-mobile-toggle ${mobileMenuOpen ? 'is-open' : ''}`}
+          aria-label="Toggle navigation menu"
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((prev) => !prev)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </div>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-cyber-panel border-b border-cyber-border px-4 pt-3 pb-6 space-y-3 font-mono text-sm">
-          {navLinks.map((link) => (
+        <div className="htg-nav-mobile-drawer">
+          {NAVBAR_LINKS.map((item) => {
+            const isActive = checkIsActive(item.path, item.label);
+            return (
+              <Link
+                key={item.label}
+                to={item.path}
+                className={`htg-mobile-link ${isActive ? 'active' : ''}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+          <div className="htg-mobile-drawer-actions">
             <Link
-              key={link.path}
-              to={link.path}
+              to={ROUTES.DASHBOARD}
+              className="htg-nav-btn htg-nav-btn-dash"
               onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-cyber-muted hover:text-cyber-cyan border-b border-cyber-border/40"
             >
-              {link.label}
+              DASHBOARD
             </Link>
-          ))}
-          <div className="pt-3 flex flex-col gap-2">
             {isAuthenticated ? (
-              <>
-                <Link to={ROUTES.DASHBOARD} onClick={() => setMobileMenuOpen(false)}>
-                  <CyberButton variant="cyan" size="sm" className="w-full">
-                    OPEN PORTAL
-                  </CyberButton>
-                </Link>
-                <CyberButton variant="ghost" size="sm" onClick={() => { logout(); setMobileMenuOpen(false); }} className="w-full">
-                  LOGOUT
-                </CyberButton>
-              </>
+              <button
+                type="button"
+                className="htg-nav-btn htg-nav-btn-reg"
+                onClick={() => {
+                  if (logout) logout();
+                  setMobileMenuOpen(false);
+                }}
+              >
+                DISCONNECT
+              </button>
             ) : (
-              <>
-                <Link to={ROUTES.LOGIN} onClick={() => setMobileMenuOpen(false)}>
-                  <CyberButton variant="ghost" size="sm" className="w-full">
-                    LOGIN
-                  </CyberButton>
-                </Link>
-                <Link to={ROUTES.REGISTER} onClick={() => setMobileMenuOpen(false)}>
-                  <CyberButton variant="cyan" size="sm" className="w-full">
-                    REGISTER
-                  </CyberButton>
-                </Link>
-              </>
+              <Link
+                to={ROUTES.REGISTER}
+                className="htg-nav-btn htg-nav-btn-reg"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                REGISTER
+              </Link>
             )}
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 };
 
 export default Navbar;
-

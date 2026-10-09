@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../constants/routes";
+import Navbar from "../../components/navigation/Navbar";
 import "../../styles/LeaderboardPage.css";
 
 const teams = [
@@ -59,55 +60,7 @@ export default function LeaderboardPage() {
       <div className="htg-lb-background" aria-hidden="true" />
 
       {/* Top Navbar */}
-      <header className="htg-lb-navbar">
-        <Link to={ROUTES.HOME} className="htg-lb-brand" aria-label="Hack the Grid home">
-          <span>HACK THE <b>GRID</b></span>
-          <small>CODESPHERE × UTKRISHT 2026</small>
-        </Link>
-        <nav className="htg-lb-navlinks" aria-label="Main navigation">
-          {navLinks.map(([label, href]) => (
-            <Link
-              key={label}
-              to={href}
-              className={label === "Leaderboard" ? "active" : ""}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="htg-lb-nav-actions">
-          <Link to={ROUTES.DASHBOARD} className="htg-lb-dashboard">Dashboard</Link>
-          <Link to={ROUTES.REGISTER} className="htg-lb-register">Register</Link>
-        </div>
-        <button
-          type="button"
-          className="htg-lb-mobile-menu"
-          aria-label="Toggle navigation menu"
-          aria-expanded={mobileMenuOpen}
-          onClick={() => setMobileMenuOpen((prev) => !prev)}
-        >
-          <span /><span /><span />
-        </button>
-
-        {mobileMenuOpen && (
-          <div className="htg-lb-mobile-drawer">
-            {navLinks.map(([label, href]) => (
-              <Link
-                key={label}
-                to={href}
-                className={label === "Leaderboard" ? "active" : ""}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {label}
-              </Link>
-            ))}
-            <div className="htg-lb-drawer-actions">
-              <Link to={ROUTES.DASHBOARD} className="htg-lb-dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
-              <Link to={ROUTES.REGISTER} className="htg-lb-register" onClick={() => setMobileMenuOpen(false)}>Register</Link>
-            </div>
-          </div>
-        )}
-      </header>
+      <Navbar />
 
       {/* 3-Column Desktop Layout */}
       <div className="htg-lb-layout">

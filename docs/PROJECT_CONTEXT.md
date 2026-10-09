@@ -41,11 +41,12 @@ The primary objective of Hack the Grid is to provide a cheat-resilient, scalable
 ## 5. Complete Feature List
 - **Public Event Portal**:
   - Tactical landing page with cyber HUD aesthetics, mission narrative, and event countdown.
-  - Interactive "How It Works" operational walkthrough.
-  - Rules of Engagement & Code of Conduct.
+  - Standardized Global Navigation Bar: Unified `Navbar.jsx` with strict 7-link sequence across all pages: `HOME` (`/`), `LEADERBOARD` (`/leaderboard`), `MISSION` (`/mission`), `CHALLENGES` (`/challenges`), `QR CHECKPOINT` (`/qr-checkpoint`), `FINAL FLAG` (`/final-flag`), `RULES` (`/rules`). Includes dynamic active route indicators (`#b8ff3d`), responsive mobile drawer, and dynamic auth CTAs (`DASHBOARD`, `REGISTER`).
+  - Interactive "How It Works" operational walkthrough (`/mission#how-it-works`).
+  - Rules of Engagement & Code of Conduct (`/rules`).
   - Event day timeline and schedule breakdown.
   - Frequently Asked Questions (FAQ).
-  - Public view of live / frozen leaderboard.
+  - Public view of live / frozen leaderboard (`/leaderboard`).
 - **Authentication & Team Management**:
   - JWT-based authentication (access token + refresh token workflow).
   - bcrypt password hashing with automatic salt generation.
@@ -147,7 +148,7 @@ hack-the-grid/
 │   │   │   └── NotFoundPage.jsx
 │   │   ├── routes/             # AppRoutes.jsx, ProtectedRoute.jsx
 │   │   ├── services/           # api.js, auth.service.js, challenge.service.js, team.service.js, etc.
-│   │   ├── styles/             # HomePage.css, LoginPage.css, RegisterPage.css, RulesPage.css, MissionPage.css, ChallengeLevelsPage.css, ParticipantDashboard.css, QRCheckpointPage.css, LeaderboardPage.css, FinalFlagPage.css, index.css
+│   │   ├── styles/             # Navbar.css, HomePage.css, LoginPage.css, RegisterPage.css, RulesPage.css, MissionPage.css, ChallengeLevelsPage.css, ParticipantDashboard.css, QRCheckpointPage.css, LeaderboardPage.css, FinalFlagPage.css, index.css
 │   │   ├── utils/              # storage.js, formatters.js
 │   │   ├── App.jsx
 │   │   └── main.jsx

@@ -101,6 +101,14 @@
   - [x] Display "MISSION ACCOMPLISHED" strictly after server confirms flag validity or confirms previous solve.
   - [x] Enforce progression requirements and prevent client-side scoring simulation.
   - [x] Add navigation links from `ParticipantDashboard.jsx`, `ChallengeLevelsPage.jsx`, and `ParticipantLayout.jsx`.
+- [x] Standardize Shared Navbar Navigation Across All Pages:
+  - [x] Enforce canonical 7-item navigation order: HOME (`/`), LEADERBOARD (`/leaderboard`), MISSION (`/mission`), CHALLENGES (`/challenges`), QR CHECKPOINT (`/qr-checkpoint`), FINAL FLAG (`/final-flag`), RULES (`/rules`).
+  - [x] Remove standalone HOW IT WORKS link (preserved at `/mission#how-it-works`).
+  - [x] Add HOME and RULES to shared navigation link sequence.
+  - [x] Replace duplicate inlined `<header>` implementations with single shared `Navbar.jsx` across 9 pages (`HomePage`, `LeaderboardPage`, `MissionPage`, `ChallengeLevelsPage`, `QRCheckpointPage`, `FinalFlagPage`, `RulesPage`, `LoginPage`, `RegisterPage`).
+  - [x] Implement standardized `Navbar.css` with 13px uppercase typography, 600 weight, electric lime `#b8ff3d` active underline, and responsive hamburger drawer.
+  - [x] Fix mobile horizontal overflow with `overflow-x: hidden` in `index.css`.
+  - [x] Verify zero build errors on `npm run build --workspace=client` and HTTP 200 on all routes.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

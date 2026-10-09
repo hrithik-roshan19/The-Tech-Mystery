@@ -4,6 +4,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { useAuth } from "../../hooks/useAuth";
 import { checkpointService } from "../../services/checkpoint.service";
 import { ROUTES } from "../../constants/routes";
+import Navbar from "../../components/navigation/Navbar";
 import "../../styles/QRCheckpointPage.css";
 
 const checkpointData = [
@@ -315,23 +316,7 @@ export default function QRCheckpointPage() {
   return (
     <main className="htg-qr-page">
       <div className="htg-qr-background" aria-hidden="true" />
-      <header className="htg-qr-navbar">
-        <Link to={ROUTES.HOME} className="htg-qr-brand" aria-label="Hack the Grid home">
-          <span>HACK THE <b>GRID</b></span>
-          <small>CODESPHERE × UTKRISHT 2026</small>
-        </Link>
-        <nav className="htg-qr-navlinks" aria-label="Main navigation">
-          {navLinks.map(([label, to]) => (
-            <Link key={label} to={to} className={label === "QR Checkpoint" ? "active" : ""}>
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="htg-qr-nav-actions">
-          <Link to={ROUTES.DASHBOARD} className="htg-qr-dashboard-link">Dashboard</Link>
-          <Link to={ROUTES.REGISTER} className="htg-qr-register-link">Register</Link>
-        </div>
-      </header>
+      <Navbar />
 
       <div className="htg-qr-layout">
         <section className="htg-qr-intro">

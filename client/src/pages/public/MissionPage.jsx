@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "../../styles/MissionPage.css";
 import { ROUTES } from "../../constants/routes";
+import Navbar from "../../components/navigation/Navbar";
 
 const steps = [
   ["01", "START HERE", "Register Your Team", "Create your team, add members and get ready to enter the Grid.", "Teams contain 2–4 participants. Use accurate details and keep team credentials private."],
@@ -77,75 +78,7 @@ export default function MissionPage() {
       <div className="mp-overlay" />
       <div className="mp-grid" />
 
-      <header className="mp-nav">
-        <Link className="mp-brand" to="/">
-          <strong>HACK THE <span>GRID</span></strong>
-          <small>CODESPHERE × UTKRISHT 2026</small>
-        </Link>
-
-        <nav>
-          <Link className="current" to={ROUTES.MISSION} onClick={scrollToTop}>MISSION</Link>
-          <a
-            href="#how-it-works"
-            onClick={(e) => {
-              e.preventDefault();
-              scrollToSection("#how-it-works");
-            }}
-          >
-            HOW IT WORKS
-          </a>
-          <Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>
-          <Link to={ROUTES.RULES}>RULES</Link>
-          <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
-        </nav>
-
-        <div className="mp-nav-actions">
-          <Link className="mp-login" to={ROUTES.LOGIN}>LOGIN</Link>
-          <Link className="mp-register" to={ROUTES.REGISTER}>REGISTER</Link>
-        </div>
-
-        <button
-          type="button"
-          className="mp-mobile-menu"
-          aria-label="Toggle navigation menu"
-          aria-expanded={mobileMenuOpen}
-          onClick={() => setMobileMenuOpen((prev) => !prev)}
-        >
-          <span /><span /><span />
-        </button>
-
-        {mobileMenuOpen && (
-          <div className="mp-mobile-drawer">
-            <Link
-              className="current"
-              to={ROUTES.MISSION}
-              onClick={() => {
-                setMobileMenuOpen(false);
-                scrollToTop();
-              }}
-            >
-              MISSION
-            </Link>
-            <a
-              href="#how-it-works"
-              onClick={(e) => {
-                e.preventDefault();
-                setMobileMenuOpen(false);
-                scrollToSection("#how-it-works");
-              }}
-            >
-              HOW IT WORKS
-            </a>
-            <Link to={ROUTES.CHALLENGES} onClick={() => setMobileMenuOpen(false)}>CHALLENGES</Link>
-            <Link to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
-            <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
-            <div className="mp-mobile-drawer-actions">
-              <Link className="mp-login" to={ROUTES.LOGIN} onClick={() => setMobileMenuOpen(false)}>LOGIN</Link>
-              <Link className="mp-register" to={ROUTES.REGISTER} onClick={() => setMobileMenuOpen(false)}>REGISTER</Link>
-            </div>
-          </div>
-        )}
-      </header>
+      <Navbar />
 
       <main className="mp-main">
         <section className="mp-hero" id="mission">

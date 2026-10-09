@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { challengeService } from "../../services/challenge.service";
 import { teamService } from "../../services/team.service";
 import { ROUTES } from "../../constants/routes";
+import Navbar from "../../components/navigation/Navbar";
 import {
   Target,
   Users,
@@ -135,96 +136,7 @@ export default function FinalFlagPage() {
       </div>
 
       {/* Navigation Header */}
-      <header className="ff-navbar">
-        <div className="ff-nav-inner">
-          <Link to={ROUTES.HOME} className="ff-brand" aria-label="Hack the Grid home">
-            <span className="ff-brand-title">
-              HACK THE <span className="ff-lime-text">GRID</span>
-            </span>
-            <span className="ff-brand-sub">CODESPHERE × UTKRISHT 2026</span>
-          </Link>
-
-          <nav className="ff-nav-links" aria-label="Primary navigation">
-            {navLinks.map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                className={`ff-nav-link ${item.active ? "active" : ""}`}
-              >
-                {item.label}
-                {item.active && <span className="ff-nav-active-bar" />}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="ff-nav-actions">
-            {isAuthenticated ? (
-              <>
-                <Link to={ROUTES.DASHBOARD} className="ff-btn-dashboard">
-                  DASHBOARD
-                </Link>
-                <button
-                  type="button"
-                  className="ff-btn-register"
-                  onClick={() => logout && logout()}
-                >
-                  DISCONNECT
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to={ROUTES.DASHBOARD} className="ff-btn-dashboard">
-                  DASHBOARD
-                </Link>
-                <Link to={ROUTES.REGISTER} className="ff-btn-register">
-                  REGISTER
-                </Link>
-              </>
-            )}
-          </div>
-
-          <button
-            type="button"
-            className="ff-mobile-menu-btn"
-            onClick={() => setMobileMenuOpen((v) => !v)}
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile Dropdown Drawer */}
-        {mobileMenuOpen && (
-          <div className="ff-mobile-drawer">
-            {navLinks.map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                className={`ff-mobile-link ${item.active ? "active" : ""}`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <div className="ff-mobile-drawer-actions">
-              <Link
-                to={ROUTES.DASHBOARD}
-                className="ff-btn-dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                DASHBOARD
-              </Link>
-              <Link
-                to={ROUTES.REGISTER}
-                className="ff-btn-register"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                REGISTER
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
+      <Navbar />
 
       {/* Main Content Container */}
       <main className="ff-content-container">

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../../styles/RegisterPage.css";
 import { ROUTES } from "../../constants/routes";
+import Navbar from "../../components/navigation/Navbar";
 
 const steps = ["Team Details", "Team Leader", "Team Members", "Review"];
 
@@ -62,50 +63,7 @@ export default function RegisterPage() {
       <div className="htg-register-overlay" />
       <div className="htg-register-grid" />
 
-      <header className="htg-register-nav">
-        <Link className="htg-register-brand" to="/">
-          <div>HACK THE <span>GRID</span></div>
-          <small>CODESPHERE × UTKRISHT 2026</small>
-        </Link>
-
-        <nav>
-          <Link to={ROUTES.MISSION}>MISSION</Link>
-          <Link to="/mission#how-it-works">HOW IT WORKS</Link>
-          <Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>
-          <Link to={ROUTES.RULES}>RULES</Link>
-          <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
-        </nav>
-
-        <div className="htg-register-nav-actions">
-          <Link className="register-nav-login" to={ROUTES.LOGIN}>LOGIN</Link>
-          <Link className="register-nav-register" to={ROUTES.REGISTER}>REGISTER</Link>
-        </div>
-
-        <button
-          type="button"
-          className="htg-register-mobile-menu"
-          aria-label="Toggle navigation menu"
-          aria-expanded={mobileMenuOpen}
-          onClick={() => setMobileMenuOpen((prev) => !prev)}
-        >
-          <span /><span /><span />
-        </button>
-
-        {mobileMenuOpen && (
-          <div className="htg-register-drawer">
-            <Link to={ROUTES.MISSION} onClick={() => setMobileMenuOpen(false)}>MISSION</Link>
-            <Link to="/mission#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</Link>
-            <Link to={ROUTES.CHALLENGES} onClick={() => setMobileMenuOpen(false)}>CHALLENGES</Link>
-            <Link to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
-            <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
-            <div className="htg-register-drawer-actions">
-              <Link className="register-nav-login" to={ROUTES.LOGIN} onClick={() => setMobileMenuOpen(false)}>
-                LOGIN
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
+      <Navbar />
 
       <main className="htg-register-main">
         <section className="htg-register-intro">

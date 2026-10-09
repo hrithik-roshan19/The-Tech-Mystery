@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { ROUTES } from "../../constants/routes";
+import Navbar from "../../components/navigation/Navbar";
 import "../../styles/ChallengeLevelsPage.css";
 
 const levels = [
@@ -32,27 +33,7 @@ export default function ChallengeLevelsPage() {
   return (
     <main className="htg-levels-page">
       <div className="htg-levels-backdrop" aria-hidden="true" />
-      <header className="htg-levels-nav">
-        <Link to="/" className="htg-levels-brand" aria-label="Hack the Grid home">
-          <span>HACK THE <b>GRID</b></span>
-          <small>CODESPHERE × UTKRISHT 2026</small>
-        </Link>
-        <nav className="htg-levels-links" aria-label="Main navigation">
-          {navItems.map(([label, href]) => (
-            <Link key={label} className={label === "Challenges" ? "active" : ""} to={href}>{label}</Link>
-          ))}
-        </nav>
-        <div className="htg-levels-nav-actions">
-          {isAuthenticated ? (
-            <Link className="htg-levels-register" to={ROUTES.DASHBOARD}>Dashboard</Link>
-          ) : (
-            <>
-              <Link className="htg-levels-login" to={ROUTES.LOGIN}>Login</Link>
-              <Link className="htg-levels-register" to={ROUTES.REGISTER}>Register</Link>
-            </>
-          )}
-        </div>
-      </header>
+      <Navbar />
 
       <section className="htg-levels-layout">
         <div className="htg-levels-intro">

@@ -1,0 +1,290 @@
+/* ==========================================================================
+   Hack the Grid — Global Standardized Site Navbar Stylesheet
+   Consistent typography, font size (13px), spacing, colors, and responsive behavior
+   ========================================================================== */
+
+.htg-site-navbar {
+  --nav-bg: rgba(6, 9, 7, 0.95);
+  --nav-lime: #b8ff3d;
+  --nav-lime-bright: #caff54;
+  --nav-text: #cbd5e1;
+  --nav-text-hover: #ffffff;
+  --nav-border: rgba(255, 255, 255, 0.08);
+
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
+  max-width: 100vw;
+  background: var(--nav-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--nav-border);
+  box-sizing: border-box;
+}
+
+.htg-site-navbar *,
+.htg-site-navbar *::before,
+.htg-site-navbar *::after {
+  box-sizing: border-box;
+}
+
+.htg-nav-container {
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  height: 70px;
+  padding: 0 clamp(16px, 3.5vw, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* --- Brand Logo --- */
+.htg-nav-brand {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.htg-nav-brand-title {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.htg-nav-brand-title .htg-brand-lime {
+  color: var(--nav-lime);
+}
+
+.htg-nav-brand-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #788579;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* --- Navigation Links (Desktop) --- */
+.htg-nav-links {
+  display: none;
+  align-items: center;
+  gap: clamp(12px, 1.6vw, 24px);
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 1024px) {
+  .htg-nav-links {
+    display: flex;
+  }
+}
+
+.site-navbar__link {
+  position: relative;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--nav-text);
+  text-decoration: none;
+  padding: 12px 2px;
+  transition: color 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.site-navbar__link:hover {
+  color: var(--nav-text-hover);
+}
+
+.site-navbar__link.active {
+  color: var(--nav-lime);
+}
+
+.site-navbar__active-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: var(--nav-lime);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(184, 255, 61, 0.7);
+}
+
+/* --- Action Controls (Dashboard / Register) --- */
+.htg-nav-actions {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .htg-nav-actions {
+    display: flex;
+  }
+}
+
+.htg-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.htg-nav-btn-dash {
+  padding: 8px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.htg-nav-btn-dash:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.htg-nav-btn-reg {
+  padding: 8px 20px;
+  border: none;
+  background: var(--nav-lime);
+  color: #070908;
+  font-weight: 800;
+  box-shadow: 0 0 16px rgba(184, 255, 61, 0.3);
+}
+
+.htg-nav-btn-reg:hover {
+  background: var(--nav-lime-bright);
+  box-shadow: 0 0 22px rgba(184, 255, 61, 0.5);
+  transform: translateY(-1px);
+}
+
+/* --- Mobile Menu Trigger --- */
+.htg-nav-mobile-toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .htg-nav-mobile-toggle {
+    display: none;
+  }
+}
+
+.htg-nav-mobile-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.htg-nav-mobile-toggle.is-open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.htg-nav-mobile-toggle.is-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.htg-nav-mobile-toggle.is-open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* --- Mobile Drawer --- */
+.htg-nav-mobile-drawer {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 24px 28px;
+  background: #090c0a;
+  border-bottom: 1px solid rgba(184, 255, 61, 0.2);
+  gap: 10px;
+  animation: htg-nav-slide-down 0.2s ease-out;
+}
+
+@keyframes htg-nav-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.htg-mobile-link {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #cbd5e1;
+  text-decoration: none;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: color 0.18s;
+}
+
+.htg-mobile-link:hover,
+.htg-mobile-link.active {
+  color: var(--nav-lime);
+}
+
+.htg-mobile-link.active::after {
+  content: '›';
+  font-size: 18px;
+  line-height: 1;
+}
+
+.htg-mobile-drawer-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.htg-mobile-drawer-actions .htg-nav-btn {
+  flex: 1;
+  height: 40px;
+}

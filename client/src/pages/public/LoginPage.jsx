@@ -4,6 +4,7 @@ import "../../styles/LoginPage.css";
 import { authService } from "../../services/auth.service";
 import { useAuth } from "../../hooks/useAuth";
 import { ROUTES } from "../../constants/routes";
+import Navbar from "../../components/navigation/Navbar";
 
 function UserIcon() {
   return (
@@ -158,50 +159,7 @@ export default function LoginPage() {
       <div className="htg-login-overlay" />
       <div className="htg-login-grid" />
 
-      <header className="htg-login-nav">
-        <Link className="htg-login-brand" to="/">
-          <div>HACK THE <span>GRID</span></div>
-          <small>CODESPHERE × UTKRISHT 2026</small>
-        </Link>
-
-        <nav>
-          <Link to={ROUTES.MISSION}>MISSION</Link>
-          <Link to="/mission#how-it-works">HOW IT WORKS</Link>
-          <Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>
-          <Link to={ROUTES.RULES}>RULES</Link>
-          <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
-        </nav>
-
-        <div className="htg-login-nav-actions">
-          <Link className="login-nav-btn active" to={ROUTES.LOGIN}>LOGIN</Link>
-          <Link className="login-nav-btn register" to={ROUTES.REGISTER}>REGISTER</Link>
-        </div>
-
-        <button
-          type="button"
-          className="htg-login-mobile-menu"
-          aria-label="Toggle navigation menu"
-          aria-expanded={mobileMenuOpen}
-          onClick={() => setMobileMenuOpen((prev) => !prev)}
-        >
-          <span /><span /><span />
-        </button>
-
-        {mobileMenuOpen && (
-          <div className="htg-login-drawer">
-            <Link to={ROUTES.MISSION} onClick={() => setMobileMenuOpen(false)}>MISSION</Link>
-            <Link to="/mission#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</Link>
-            <Link to={ROUTES.CHALLENGES} onClick={() => setMobileMenuOpen(false)}>CHALLENGES</Link>
-            <Link to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
-            <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
-            <div className="htg-login-drawer-actions">
-              <Link className="login-nav-btn register" to={ROUTES.REGISTER} onClick={() => setMobileMenuOpen(false)}>
-                REGISTER
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
+      <Navbar />
 
       <main className="htg-login-main">
         <section className="htg-login-intro">

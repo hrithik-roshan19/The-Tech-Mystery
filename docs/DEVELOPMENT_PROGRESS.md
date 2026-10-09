@@ -434,6 +434,44 @@
   - [x] Headless Chrome visual verification: Captured 1536×1024 screenshot (`final-flag-screenshot.png`) and verified visual fidelity against the target reference image.
   - [x] HTTP 200 OK verified on `/final-flag`.
 
+---
+
+## Phase 2 Milestone — Shared Navbar Standardization Across All Pages (Completed)
+- [x] **Single Shared Navbar Component (`client/src/components/navigation/Navbar.jsx`)**:
+  - [x] Enforced strict 7-item navigation order on both desktop and mobile views:
+    1. `HOME` (`/`)
+    2. `LEADERBOARD` (`/leaderboard`)
+    3. `MISSION` (`/mission`)
+    4. `CHALLENGES` (`/challenges`)
+    5. `QR CHECKPOINT` (`/qr-checkpoint`)
+    6. `FINAL FLAG` (`/final-flag`)
+    7. `RULES` (`/rules`)
+  - [x] Removed standalone `HOW IT WORKS` link from navbar (the operational section remains accessible via `/mission#how-it-works`).
+  - [x] Added `HOME` and `RULES` into the global navbar link list.
+  - [x] Implemented exact path matching for `HOME` (`pathname === '/'`) to prevent false-positive active indicators on sub-routes.
+  - [x] Retained authenticated context awareness: dynamic `DASHBOARD` action button leading to `/dashboard` (or `/login`), and `REGISTER` CTA button leading to `/register`.
+- [x] **Unified Stylesheet (`client/src/styles/Navbar.css`)**:
+  - [x] Standardized typography: 13px font size, uppercase letter-spacing (0.05em–0.08em), 600 font weight, and muted state `#a3b899`.
+  - [x] Active page indicator: 2px electric lime `#b8ff3d` underline with glowing box-shadow (`rgba(184, 255, 61, 0.4)`).
+  - [x] Brand lockup: "HACK THE GRID" with neon dot + "CODESPHERE × UTKRISHT 2026" sub-badge.
+  - [x] Responsive layout: full 7 links visible on desktop (≥1024px), hamburger toggle below 1024px opening dark slide-down mobile drawer with all 7 links in identical order.
+  - [x] Fixed mobile horizontal blowout with `overflow-x: hidden` in `client/src/styles/index.css`.
+- [x] **Complete Multi-Page Header Consolidation (Replaced Duplicate Inlined Navbars Across 9 Pages)**:
+  - [x] `client/src/pages/public/HomePage.jsx`
+  - [x] `client/src/pages/public/LeaderboardPage.jsx`
+  - [x] `client/src/pages/public/MissionPage.jsx`
+  - [x] `client/src/pages/public/ChallengeLevelsPage.jsx`
+  - [x] `client/src/pages/participant/QRCheckpointPage.jsx`
+  - [x] `client/src/pages/participant/FinalFlagPage.jsx`
+  - [x] `client/src/pages/public/RulesPage.jsx`
+  - [x] `client/src/pages/public/LoginPage.jsx`
+  - [x] `client/src/pages/public/RegisterPage.jsx`
+- [x] **Empirical Verification & Testing**:
+  - [x] Production build clean: `npm run build --workspace=client` (1,745 modules transformed, 0 errors).
+  - [x] Live route verification: Confirmed HTTP 200 OK across all 9 routes.
+  - [x] Visual validation across Desktop (1536×1024), Tablet (1024×768), and Mobile (390×844 and 800×900) via automated screenshots.
+
+
 
 
 

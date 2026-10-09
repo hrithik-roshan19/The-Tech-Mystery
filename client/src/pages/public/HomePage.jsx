@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import "../../styles/HomePage.css";
 import { ROUTES } from "../../constants/routes";
+import Navbar from "../../components/navigation/Navbar";
 
 const stats = [
   ["10", "CHALLENGE LEVELS", "PROGRESSIVE DIFFICULTY", "grid"],
@@ -32,30 +33,8 @@ function Icon({type}) {
 }
 
 export default function HomePage(){
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return <div className="htg-home">
-    <header className="htg-nav">
-      <Link className="htg-brand" to="/"><div className="htg-brand-title">HACK THE <span>GRID</span></div><div className="htg-brand-sub">CODESPHERE × UTKRISHT 2026</div></Link>
-      <nav className="htg-nav-links">
-        <Link to={ROUTES.MISSION}>MISSION</Link><Link to="/mission#how-it-works">HOW IT WORKS</Link><Link to={ROUTES.CHALLENGES}>CHALLENGES</Link><Link to={ROUTES.RULES}>RULES</Link><a href="#leaderboard">LEADERBOARD</a>
-      </nav>
-      <div className="htg-nav-actions"><Link className="htg-btn htg-btn-outline htg-btn-small" to="/login">LOGIN</Link><Link className="htg-btn htg-btn-lime htg-btn-small" to="/register">REGISTER</Link></div>
-      <button className="htg-mobile-menu" aria-label="Open menu" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}><span/><span/><span/></button>
-      {mobileMenuOpen && (
-        <div className="htg-mobile-drawer">
-          <Link to={ROUTES.MISSION} onClick={() => setMobileMenuOpen(false)}>MISSION</Link>
-          <Link to="/mission#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</Link>
-          <Link to={ROUTES.CHALLENGES} onClick={() => setMobileMenuOpen(false)}>CHALLENGES</Link>
-          <Link to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
-          <a href="#leaderboard" onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</a>
-          <div className="htg-mobile-actions">
-            <Link className="htg-btn htg-btn-outline htg-btn-small" to="/login" onClick={() => setMobileMenuOpen(false)}>LOGIN</Link>
-            <Link className="htg-btn htg-btn-lime htg-btn-small" to="/register" onClick={() => setMobileMenuOpen(false)}>REGISTER</Link>
-          </div>
-        </div>
-      )}
-    </header>
+    <Navbar />
 
     <main>
       <section className="htg-hero">
