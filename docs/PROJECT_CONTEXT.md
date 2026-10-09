@@ -143,11 +143,11 @@ hack-the-grid/
 │   │   │   │                   # ChallengeViewPage, CheckpointScannerPage, LeaderboardPage, TeamProfilePage, MasterFlagPage
 │   │   │   ├── admin/          # AdminDashboardPage, TeamManagementPage, ChallengePoolPage,
 │   │   │   │                   # CheckpointManagerPage, SubmissionLogsPage, EventControlsPage
-│   │   │   ├── public/         # HomePage, MissionPage, ChallengeLevelsPage, RulesPage, AboutPage, SchedulePage, FAQPage
+│   │   │   ├── public/         # HomePage, MissionPage, ChallengeLevelsPage, RulesPage, LeaderboardPage, AboutPage, SchedulePage, FAQPage
 │   │   │   └── NotFoundPage.jsx
 │   │   ├── routes/             # AppRoutes.jsx, ProtectedRoute.jsx
 │   │   ├── services/           # api.js, auth.service.js, challenge.service.js, team.service.js, etc.
-│   │   ├── styles/             # HomePage.css, LoginPage.css, RegisterPage.css, RulesPage.css, MissionPage.css, ChallengeLevelsPage.css, ParticipantDashboard.css, QRCheckpointPage.css, index.css
+│   │   ├── styles/             # HomePage.css, LoginPage.css, RegisterPage.css, RulesPage.css, MissionPage.css, ChallengeLevelsPage.css, ParticipantDashboard.css, QRCheckpointPage.css, LeaderboardPage.css, index.css
 │   │   ├── utils/              # storage.js, formatters.js
 │   │   ├── App.jsx
 │   │   └── main.jsx

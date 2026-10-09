@@ -29,7 +29,7 @@ import TeamDashboardPage from '../pages/participant/TeamDashboardPage';
 import MissionMapPage from '../pages/participant/MissionMapPage';
 import ChallengeViewPage from '../pages/participant/ChallengeViewPage';
 import CheckpointScannerPage from '../pages/participant/CheckpointScannerPage';
-import LeaderboardPage from '../pages/participant/LeaderboardPage';
+import LeaderboardPage from '../pages/public/LeaderboardPage';
 import TeamProfilePage from '../pages/participant/TeamProfilePage';
 import MasterFlagPage from '../pages/participant/MasterFlagPage';
 
@@ -52,6 +52,7 @@ export const AppRoutes = () => {
       <Route path={ROUTES.MISSION} element={<MissionPage />} />
       <Route path={ROUTES.CHALLENGES} element={<ChallengeLevelsPage />} />
       <Route path={ROUTES.QR_CHECKPOINT} element={<QRCheckpointPage />} />
+      <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
       <Route path={ROUTES.DASHBOARD} element={<ParticipantDashboard />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
@@ -64,7 +65,6 @@ export const AppRoutes = () => {
         <Route path="/mission-map" element={<Navigate to={ROUTES.MISSION_MAP} replace />} />
         <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />
         <Route path={ROUTES.FAQ} element={<FAQPage />} />
-        <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
         <Route path="/team" element={<Navigate to={ROUTES.TEAM_PROFILE} replace />} />
         <Route path="/profile" element={<Navigate to={ROUTES.TEAM_PROFILE} replace />} />
         <Route path="/resources" element={<Navigate to={ROUTES.FAQ} replace />} />

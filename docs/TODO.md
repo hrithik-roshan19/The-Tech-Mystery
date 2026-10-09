@@ -86,6 +86,13 @@
   - [x] Connect scanned QR payload to backend `checkpointService.scanCheckpoint(code, token)` verification workflow.
   - [x] Flag recent checkpoint status cards as sample preview data.
   - [x] Set `overflow-x: hidden` to allow vertical scrolling down to rules and recent panels while preventing mobile overflow.
+- [x] Standalone Leaderboard UI Integration:
+  - [x] Integrate reference `LeaderboardPage.jsx` at `client/src/pages/public/LeaderboardPage.jsx`.
+  - [x] Integrate reference `LeaderboardPage.css` at `client/src/styles/LeaderboardPage.css` with responsive breakpoints (1200px, 800px, 520px).
+  - [x] Mount `ROUTES.LEADERBOARD` (`/leaderboard`) as standalone full-bleed route in `AppRoutes.jsx`.
+  - [x] Connect working search, filter tabs (All Teams, Top 5, My Team), and sort dropdown over demo data.
+  - [x] Add clear `EVENT RANKINGS DEMO DATA` badge and telemetry notes.
+  - [x] Connect internal links to `ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.QR_CHECKPOINT`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, and `ROUTES.REGISTER`.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

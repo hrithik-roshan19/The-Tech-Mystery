@@ -368,6 +368,32 @@
   - [x] Production build clean (`npm run build --workspace=client` completed in 8.71s with 0 errors).
   - [x] Runtime HTTP 200 OK verified across `/qr-checkpoint` and all 7 core routes.
 
+---
+
+## Phase 2 UI Integration — Standalone Leaderboard Page (`/leaderboard`) Complete (Completed)
+- [x] Integrated reference `LeaderboardPage.jsx` at `client/src/pages/public/LeaderboardPage.jsx`:
+  - [x] Full-bleed top navigation bar (`.htg-lb-navbar`) with brand mark, active nav links, and Dashboard/Register CTAs.
+  - [x] Visual background stack (`.htg-lb-background`) reusing `/campus-hero.png` with cyber matrix grid overlay.
+  - [x] Hero header with live indicator and explicit `EVENT RANKINGS DEMO DATA` badge.
+  - [x] Top-3 podium cards (`.htg-lb-podium`) with gold, silver, and bronze rank styling, medals, team names, solved counts, and point totals.
+  - [x] Live standings panel (`.htg-lb-main-panel`) with search input, filter pills (All Teams, Top 5, My Team), and sort dropdown (Rank, Points, Challenges Solved).
+  - [x] Full standings table with rank medals/numbers, team avatar badges, solve progress bars, point values, timestamps, and trend arrows (up, down, same).
+  - [x] Empty state messaging when searches yield no matches.
+  - [x] Bottom row featuring personal team rank card (`#04 ByteForce`) with link to Dashboard, and Hack the Grid event quotation.
+  - [x] Responsive footer with event copyright and motto.
+- [x] Integrated reference `LeaderboardPage.css` at `client/src/styles/LeaderboardPage.css`:
+  - [x] Electric-lime palette token `--lb-lime: #b8ff3d` on dark `#070b0a` backdrop.
+  - [x] Set `.htg-lb-page` root to `overflow-x: hidden` preventing mobile horizontal clipping while guaranteeing smooth vertical scrolling.
+  - [x] Responsive layout breakpoints (1200px, 800px, 520px) with mobile podium layout conversion (compact horizontal cards) and scrollable navigation links.
+- [x] Connected routing in `AppRoutes.jsx`:
+  - [x] Mounted `<Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />` under Standalone Full-Bleed Pages.
+  - [x] Removed old nested route placeholder inside `PublicLayout` to avoid duplicate header/footer nesting.
+  - [x] Connected all internal links to `ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.QR_CHECKPOINT`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, and `ROUTES.REGISTER`.
+- [x] Verification:
+  - [x] Production build clean (`npm run build --workspace=client` completed in 14.60s with 0 errors).
+  - [x] Runtime HTTP 200 OK verified across `/leaderboard` and all public/participant routes.
+
+
 
 
 

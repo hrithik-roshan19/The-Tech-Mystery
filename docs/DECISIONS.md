@@ -238,6 +238,20 @@ This document logs significant architectural and design choices, their context, 
   - Connect verified QR payloads to `checkpointService.scanCheckpoint(code, token)` while maintaining unverified client-side labeling.
 - **Consequences**: Resolves the "BarcodeDetector is not supported" blocker across all browsers (Chrome, Firefox, Safari, Edge, mobile browsers), preserves the electric-lime cyber UI, guarantees clean camera lifecycle teardown, and maintains build integrity (0 compilation errors).
 
+---
+
+## ADR-0022: Standalone Full-Bleed Leaderboard UI Integration (`/leaderboard`)
+- **Status**: ACCEPTED
+- **Context**: The competition requires an immersive, high-impact public and participant Leaderboard page (`/leaderboard`). The reference design (`Hack-The-Grid-Leaderboard-UI-Full-Code.zip`) provides a standalone cyber layout featuring an integrated top navbar (`.htg-lb-navbar`), layered campus hero backdrop (`/campus-hero.png`), top-3 podium highlight cards (`.htg-lb-podium`), full live standings table with real-time search, filter tabs (All Teams, Top 5, My Team), sort dropdown (Rank, Points, Solved), personal squad ranking snippet, and event quote.
+- **Decision**:
+  - Integrate `LeaderboardPage.jsx` at `client/src/pages/public/LeaderboardPage.jsx` and `LeaderboardPage.css` at `client/src/styles/LeaderboardPage.css`.
+  - Mount `ROUTES.LEADERBOARD` (`/leaderboard`) under Standalone Full-Bleed Pages in `AppRoutes.jsx`, removing the former nested placeholder inside `PublicLayout` to prevent duplicate navigation bars and footers.
+  - Keep the root `.htg-lb-page` set to `overflow-x: hidden` to ensure natural vertical scrolling down to the rankings table and footer across mobile and desktop viewports while eliminating horizontal overflow.
+  - Maintain working client-side search, filtering, and sorting over the demo `teams` dataset, coupled with transparent demo signaling (`"EVENT RANKINGS DEMO DATA"` badge and `"Rankings refresh when connected to live event data"` note).
+  - Connect all action and navigation links to canonical routes (`ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.QR_CHECKPOINT`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, `ROUTES.REGISTER`).
+- **Consequences**: Delivers pixel-perfect electric-lime leaderboard presentation matching the Hack the Grid design system, provides immediate interactive search/filtering, prevents container clipping or scroll locking, preserves build integrity (0 errors), and leaves backend WebSocket/REST score streaming ready for future phase hookup.
+
+
 
 
 
