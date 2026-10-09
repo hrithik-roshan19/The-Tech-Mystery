@@ -108,7 +108,13 @@
   - [x] Replace duplicate inlined `<header>` implementations with single shared `Navbar.jsx` across 9 pages (`HomePage`, `LeaderboardPage`, `MissionPage`, `ChallengeLevelsPage`, `QRCheckpointPage`, `FinalFlagPage`, `RulesPage`, `LoginPage`, `RegisterPage`).
   - [x] Implement standardized `Navbar.css` with 13px uppercase typography, 600 weight, electric lime `#b8ff3d` active underline, and responsive hamburger drawer.
   - [x] Fix mobile horizontal overflow with `overflow-x: hidden` in `index.css`.
-  - [x] Verify zero build errors on `npm run build --workspace=client` and HTTP 200 on all routes.
+  - [x] Integrate Responsive Homepage Full-Code ZIP:
+  - [x] Integrate reference `HomePage.jsx` with BEM architecture, 10 levels, 4 mission steps, and responsive header/footer.
+  - [x] Integrate reference `HomePage.css` preserving static campus hero background (`position: fixed; inset: 86px 0 0`).
+  - [x] Preserve static `client/public/campus-hero.png` asset and verify 200 OK loading.
+  - [x] Maintain canonical 7-link navbar sequence (Home, Leaderboard, Mission, Challenges, QR Checkpoint, Final Flag, Rules).
+  - [x] Verify mobile navigation drawer and interactive hamburger toggle on 390px viewport.
+  - [x] Verify clean build `npm run build --workspace=client` (0 errors).
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

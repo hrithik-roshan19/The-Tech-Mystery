@@ -1,68 +1,116 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../../styles/HomePage.css";
-import { ROUTES } from "../../constants/routes";
-import Navbar from "../../components/navigation/Navbar";
 
-const stats = [
-  ["10", "CHALLENGE LEVELS", "PROGRESSIVE DIFFICULTY", "grid"],
-  ["2–4", "TEAM MEMBERS", "BUILD YOUR SQUAD", "users"],
-  ["90–120", "MINUTES", "RACE AGAINST TIME", "clock"],
-  ["1", "MASTER FLAG", "THE ULTIMATE GOAL", "flag"],
+const NAV_ITEMS = [
+  ["Home", "/"], ["Leaderboard", "/leaderboard"], ["Mission", "/mission"],
+  ["Challenges", "/challenges"], ["QR Checkpoint", "/qr-checkpoint"],
+  ["Final Flag", "/final-flag"], ["Rules", "/rules"],
 ];
 
-const levels = [
-  ["01","WELCOME SIGNAL","Observation & QR"],
-  ["02","BINARY BREAKER","Binary & ASCII"],
-  ["03","CAESAR CIPHER","Cryptography"],
-  ["04","HIDDEN WEB","Web Inspection"],
-  ["05","DEBUG THE SYSTEM","Programming"],
-  ["06","LOGIC LOCK","Logical Reasoning"],
-  ["07","BASE64 VAULT","Encoding"],
-  ["08","STEGANOGRAPHY","Hidden Information"],
-  ["09","MASTER PUZZLE","Multi-stage Reasoning"],
-  ["10","MASTER FLAG","Final Challenge"],
+const STATS = [
+  ["⬡", "10", "Challenge levels", "Progressive difficulty"],
+  ["♧", "2–4", "Team members", "Build your squad"],
+  ["◷", "90–120", "Minutes", "Race against time"],
+  ["⚑", "1", "Master flag", "The ultimate goal"],
 ];
 
-function Icon({type}) {
-  const p={width:34,height:34,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"};
-  if(type==="users") return <svg {...p}><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.5-3.2 2.2-5 5.5-5s5 1.8 5.5 5"/><path d="M15.5 6.5a3 3 0 1 1 0 5.8M17 14c2.2.2 3.5 1.7 4 4"/></svg>;
-  if(type==="clock") return <svg {...p}><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>;
-  if(type==="flag") return <svg {...p}><path d="M6 20V4"/><path d="M6 5c3.5-2.5 6.5 2.5 12 0v9c-5.5 2.5-8.5-2.5-12 0"/></svg>;
-  return <svg {...p}><path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z"/><path d="M10 7.5h4M7.5 10v4M16.5 10v4M10 16.5h4"/></svg>;
-}
+const STEPS = [
+  ["01", "Build your squad", "Register a team of 2–4 players and get ready to collaborate."],
+  ["02", "Scan checkpoints", "Find QR checkpoints and unlock the next stage of the mission."],
+  ["03", "Crack the challenges", "Solve puzzles across cryptography, logic, code and digital forensics."],
+  ["04", "Capture the flag", "Submit the final flag and secure your place on the leaderboard."],
+];
 
-export default function HomePage(){
-  return <div className="htg-home">
-    <Navbar />
+const LEVELS = [
+  ["01", "Welcome Signal", "Warm-up"], ["02", "Binary Breaker", "Binary"],
+  ["03", "Caesar Cipher", "Cryptography"], ["04", "Hidden Web", "Web"],
+  ["05", "Debug the System", "Logic"], ["06", "Base64 Vault", "Encoding"],
+  ["07", "Steganography", "Forensics"], ["08", "Logic Lock", "Reasoning"],
+  ["09", "Master Puzzle", "Teamwork"], ["10", "Master Flag", "Final"],
+];
 
-    <main>
-      <section className="htg-hero">
-        <div className="htg-hero-image"/><div className="htg-hero-overlay"/><div className="htg-grid-overlay"/>
-        <div className="htg-hero-content htg-container">
-          <div className="htg-eyebrow">CODESPHERE CODING CLUB <span>×</span> UTKRISHT 2026</div>
-          <h1>HACK<br/>THE <span>GRID</span></h1>
-          <h2>THE ULTIMATE CAMPUS<br/>CAPTURE-THE-FLAG EXPERIENCE.</h2>
-          <div className="htg-accent-line"/>
-          <p>A team-based challenge combining cybersecurity, cryptography, programming, logical reasoning and creative problem solving.</p>
-          <div className="htg-hero-actions"><Link className="htg-btn htg-btn-lime htg-btn-large" to="/register">REGISTER YOUR TEAM <span>→</span></Link><a className="htg-btn htg-btn-ghost htg-btn-large" href="#challenges">EXPLORE THE GRID</a></div>
+const Arrow = () => <span className="htg-arrow" aria-hidden="true">↗</span>;
+
+export default function HomePage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
+
+  return (
+    <main className="htg-home">
+      <header className="htg-header">
+        <Link className="htg-brand" to="/" aria-label="Hack the Grid home" onClick={closeMenu}>
+          <span className="htg-brand__name">HACK THE <b>GRID</b></span>
+          <span className="htg-brand__tag">CODESPHERE <i>×</i> UTKRISHT 2026</span>
+        </Link>
+        <button className={`htg-menu-toggle ${menuOpen ? "is-open" : ""}`} type="button"
+          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}>
+          <span /><span />
+        </button>
+        <nav className={`htg-nav ${menuOpen ? "is-open" : ""}`} aria-label="Main navigation">
+          {NAV_ITEMS.map(([label, to]) => (
+            <Link key={label} to={to} className={`htg-nav__link ${to === "/" ? "is-active" : ""}`}
+              onClick={closeMenu}>{label}</Link>
+          ))}
+          <div className="htg-nav__mobile-actions">
+            <Link to="/login" className="htg-button htg-button--outline" onClick={closeMenu}>Login</Link>
+            <Link to="/register" className="htg-button htg-button--lime" onClick={closeMenu}>Register <Arrow /></Link>
+          </div>
+        </nav>
+        <div className="htg-header__actions">
+          <Link to="/login" className="htg-button htg-button--outline">Login</Link>
+          <Link to="/register" className="htg-button htg-button--lime">Register <Arrow /></Link>
         </div>
-        <div className="htg-side-copy"><span>PEOPLE</span><span>IDEAS</span><span>TECHNOLOGY</span><span>A STRONGER TOMORROW</span><i/></div>
-        <div className="htg-stats htg-container">{stats.map(([value,label,note,icon])=><div className="htg-stat" key={label}><div className="htg-stat-icon"><Icon type={icon}/></div><div className="htg-stat-copy"><strong>{value}</strong><span>{label}</span><small>{note}</small></div></div>)}</div>
-        <a className="htg-scroll" href="#mission"><span className="htg-scroll-mouse"><i/></span><span>SCROLL TO EXPLORE</span></a>
+      </header>
+
+      <section className="htg-hero" aria-labelledby="htg-hero-title">
+        <div className="htg-hero__background" aria-hidden="true" />
+        <div className="htg-hero__grid" aria-hidden="true" />
+        <div className="htg-hero__vignette" aria-hidden="true" />
+        <div className="htg-hero__content">
+          <p className="htg-eyebrow"><span className="htg-status-dot" /> CODESPHERE CODING CLUB <span className="htg-eyebrow__cross">×</span> UTKRISHT 2026</p>
+          <h1 id="htg-hero-title">HACK<br />THE <span>GRID</span></h1>
+          <p className="htg-hero__subhead">THE ULTIMATE CAMPUS<br className="htg-desktop-break" /> CAPTURE-THE-FLAG EXPERIENCE.</p>
+          <div className="htg-accent-line" />
+          <p className="htg-hero__description">A team-based challenge combining cybersecurity,<br className="htg-desktop-break" /> cryptography, programming, logical reasoning<br className="htg-desktop-break" /> and creative problem solving.</p>
+          <div className="htg-hero__actions">
+            <Link to="/register" className="htg-button htg-button--lime htg-button--large">Register your team <Arrow /></Link>
+            <a href="#how-it-works" className="htg-button htg-button--glass htg-button--large">Explore the grid <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+        <div className="htg-hero__side-note" aria-hidden="true">
+          <span>PEOPLE</span><span>IDEAS</span><span>TECHNOLOGY</span><span>A STRONGER TOMORROW</span><i />
+        </div>
+        <a href="#event-stats" className="htg-scroll-cue"><span className="htg-scroll-cue__mouse"><i /></span><span>Scroll to explore</span></a>
       </section>
 
-      <section id="mission" className="htg-section htg-mission"><div className="htg-container htg-two-col"><div><p className="htg-kicker">THE MISSION</p><h2>HOW FAR CAN YOUR TEAM<br/><em>GO THROUGH THE GRID?</em></h2></div><div className="htg-section-copy"><p>Hack the Grid is an immersive Capture-the-Flag experience where teams progress through a sequence of increasingly challenging puzzles involving cybersecurity, cryptography, programming, logic and creative problem solving.</p><a className="htg-text-link" href="#how-it-works">DISCOVER THE MISSION →</a></div></div></section>
+      <section className="htg-stats" id="event-stats" aria-label="Event facts">
+        {STATS.map(([icon, value, label, detail]) => (
+          <article className="htg-stat" key={label}><span className="htg-stat__icon" aria-hidden="true">{icon}</span>
+            <div><strong>{value}</strong><span className="htg-stat__label">{label}</span><small>{detail}</small></div>
+          </article>
+        ))}
+      </section>
 
-      <section id="how-it-works" className="htg-section htg-process"><div className="htg-container"><p className="htg-kicker">HOW IT WORKS</p><h2>FROM ZERO TO <em>MASTER FLAG.</em></h2><div className="htg-process-grid">{[["01","BUILD YOUR TEAM","Bring 2–4 operators and prepare to solve together."],["02","ENTER THE GRID","Register your squad and enter the competition."],["03","SOLVE THE CHALLENGES","Decode, reason, investigate and submit your answers."],["04","CLAIM THE FLAG","Complete the final challenge and reach the top."]].map(([n,t,d])=><article className="htg-process-card" key={n}><span>{n}</span><h3>{t}</h3><p>{d}</p></article>)}</div></div></section>
+      <section className="htg-section htg-section--mission" id="mission">
+        <div className="htg-section__heading"><p className="htg-kicker">01 / THE MISSION</p><h2>Think sharp.<br /><span>Move together.</span></h2></div>
+        <div className="htg-mission-copy"><p>Hack the Grid turns the campus into a live puzzle trail. Every checkpoint brings a new problem, every solved challenge moves your team closer to the Master Flag.</p><Link to="/mission" className="htg-text-link">Explore the mission <Arrow /></Link></div>
+      </section>
 
-      <section id="challenges" className="htg-section htg-levels"><div className="htg-container"><div className="htg-levels-head"><div><p className="htg-kicker">THE CHALLENGES</p><h2>10 LEVELS.<br/><em>ONE MASTER FLAG.</em></h2></div><p>Progress through ten interconnected challenges, each designed to test a different technical and analytical skill.</p></div><div className="htg-level-list">{levels.map(([n,t,d])=><Link to="/login" className="htg-level" key={n}><span className="htg-level-no">{n}</span><span className="htg-level-title">{t}</span><span className="htg-level-desc">{d}</span><span className="htg-level-arrow">↗</span></Link>)}</div></div></section>
+      <section className="htg-section htg-section--process" id="how-it-works">
+        <div className="htg-section__topline"><p className="htg-kicker">02 / HOW IT WORKS</p><p className="htg-section__aside">One grid. Ten levels. One winning team.</p></div>
+        <div className="htg-steps">{STEPS.map(([number, title, text]) => <article className="htg-step" key={number}><span className="htg-step__number">{number}</span><h3>{title}</h3><p>{text}</p></article>)}</div>
+      </section>
 
-      <section id="leaderboard" className="htg-section htg-leaderboard"><div className="htg-container htg-two-col"><div><p className="htg-kicker">LIVE COMPETITION</p><h2>THE GRID<br/><em>IS LIVE.</em></h2></div><div className="htg-board">{[["01","CYBERX","1475 XP"],["02","ROOTACCESS","1325 XP"],["03","NULLBYTE","1250 XP"],["04","CODERAIDERS","1100 XP"]].map(([r,t,s])=><div className="htg-board-row" key={t}><span>{r}</span><strong>{t}</strong><b>{s}</b></div>)}<Link className="htg-text-link" to="/leaderboard">VIEW LIVE LEADERBOARD →</Link></div></div></section>
+      <section className="htg-section htg-section--levels" id="challenges">
+        <div className="htg-section__topline"><div><p className="htg-kicker">03 / THE GRID</p><h2>Ten levels.<br /><span>One Master Flag.</span></h2></div><Link to="/challenges" className="htg-text-link">Explore challenges <Arrow /></Link></div>
+        <div className="htg-level-grid">{LEVELS.map(([number, title, category]) => <article className="htg-level" key={number}><span className="htg-level__number">{number}</span><div><h3>{title}</h3><p>{category}</p></div><span className="htg-level__arrow" aria-hidden="true">↗</span></article>)}</div>
+      </section>
 
-      <section id="rules" className="htg-cta"><div className="htg-container"><p className="htg-kicker">READY?</p><h2>BREAK<br/><span>THE GRID.</span></h2><p>10 levels. One team. One Master Flag.</p><Link className="htg-btn htg-btn-lime htg-btn-large" to="/register">ENTER THE GRID →</Link></div></section>
+      <section className="htg-final-cta" id="rules"><p className="htg-kicker">READY TO ENTER THE GRID?</p><h2>Your team.<br /><span>Your strategy. Your flag.</span></h2><div className="htg-final-cta__actions"><Link to="/register" className="htg-button htg-button--lime htg-button--large">Register your team <Arrow /></Link><Link to="/rules" className="htg-button htg-button--glass htg-button--large">Read the rules <Arrow /></Link></div></section>
+
+      <footer className="htg-footer"><Link className="htg-brand htg-brand--footer" to="/"><span className="htg-brand__name">HACK THE <b>GRID</b></span><span className="htg-brand__tag">CODESPHERE <i>×</i> UTKRISHT 2026</span></Link><p>Built for curious minds and bold teams.</p><span>© 2026 Hack the Grid · CodeSphere</span></footer>
     </main>
-
-    <footer className="htg-footer"><div className="htg-container htg-footer-inner"><div><div className="htg-brand-title">HACK THE <span>GRID</span></div><div className="htg-brand-sub">CODESPHERE × UTKRISHT 2026</div></div><p>CodeSphere Coding Club · Tula's University, Dehradun</p><p>© 2026 CodeSphere Coding Club</p></div></footer>
-  </div>;
+  );
 }
