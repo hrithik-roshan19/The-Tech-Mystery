@@ -72,7 +72,7 @@ export default function RegisterPage() {
           <a href="/#mission">MISSION</a>
           <a href="/#how-it-works">HOW IT WORKS</a>
           <a href="/#challenges">CHALLENGES</a>
-          <a href="/#rules">RULES</a>
+          <Link to={ROUTES.RULES}>RULES</Link>
           <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
         </nav>
 
@@ -96,7 +96,7 @@ export default function RegisterPage() {
             <a href="/#mission" onClick={() => setMobileMenuOpen(false)}>MISSION</a>
             <a href="/#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</a>
             <a href="/#challenges" onClick={() => setMobileMenuOpen(false)}>CHALLENGES</a>
-            <a href="/#rules" onClick={() => setMobileMenuOpen(false)}>RULES</a>
+            <Link to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
             <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
             <div className="htg-register-drawer-actions">
               <Link className="register-nav-login" to={ROUTES.LOGIN} onClick={() => setMobileMenuOpen(false)}>

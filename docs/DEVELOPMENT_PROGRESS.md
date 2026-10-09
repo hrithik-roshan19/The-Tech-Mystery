@@ -142,6 +142,25 @@
   - [x] Dev server loads `/rules` with status 200 OK and mounts successfully.
   - [x] `HomePage`, `LoginPage`, and `RegisterPage` remain 100% intact and untouched.
 
+---
+
+## Phase 2 Navigation Fix — Cross-Page Rules Routing to `/rules` (Completed)
+- [x] Audited navigation links across all pages and layouts:
+  - Identified anchor `#rules` / `/#rules` links in `HomePage.jsx`, `LoginPage.jsx`, and `RegisterPage.jsx`.
+- [x] Replaced anchor links with React Router `<Link to={ROUTES.RULES}>`:
+  - `client/src/pages/public/HomePage.jsx`: Updated desktop `<nav>` link and mobile drawer link to `ROUTES.RULES`.
+  - `client/src/pages/public/LoginPage.jsx`: Updated desktop `<nav>` link and mobile drawer link to `ROUTES.RULES`.
+  - `client/src/pages/public/RegisterPage.jsx`: Updated desktop `<nav>` link and mobile drawer link to `ROUTES.RULES`.
+- [x] Confirmed `RulesPage.jsx` already routes to `ROUTES.RULES` and `Navbar.jsx` already maps `RULES` to `ROUTES.RULES`.
+- [x] Verification:
+  - Navigating to Rules from `/` opens `/rules` (SPA route transition without hash jump).
+  - Navigating to Rules from `/login` opens `/rules`.
+  - Navigating to Rules from `/register` opens `/rules`.
+  - Navigating to Rules from `/rules` maintains `/rules` active view.
+  - Direct refresh of `/rules` loads cleanly with HTTP 200 OK.
+  - Zero build errors (`npm run build --workspace=client` completed in 7.00s) and zero console warnings.
+
+
 
 
 

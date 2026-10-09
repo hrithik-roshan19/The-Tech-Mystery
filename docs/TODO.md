@@ -36,6 +36,7 @@
   - [x] Fixed campus hero background layer (`/campus-hero.png`) and glassmorphic stats.
   - [x] Responsive breakpoints (1200px, 900px, 600px, 360px, 330px) verified down to 320px width.
 - [x] Mount `ROUTES.RULES` as standalone full-bleed route in `AppRoutes.jsx`.
+- [x] Fix cross-page Rules navigation: replace `#rules` / `/#rules` with dedicated `<Link to={ROUTES.RULES}>` across `HomePage`, `LoginPage`, and `RegisterPage`.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 
