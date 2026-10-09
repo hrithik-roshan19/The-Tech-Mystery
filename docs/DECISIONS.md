@@ -209,6 +209,21 @@ This document logs significant architectural and design choices, their context, 
   - Wire all links to project registry routes: `ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, and `ROUTES.REGISTER`.
 - **Consequences**: Delivers pixel-accurate checkpoint discovery and file preview UI, preserves existing authenticated portal scanner (`/portal/checkpoint`) intact, maintains monorepo build cleanliness (0 errors), and leaves clear architectural requirements for future QR decode integration.
 
+---
+
+## ADR-0020: Functional Live Camera QR Scanning & Backend Verification Integration
+- **Status**: ACCEPTED
+- **Context**: The QR Checkpoint experience required advancing from a static preview UI to functional live QR code detection. Operating in physical environments across campus requires camera access, rear-facing camera preference on mobile, frame-by-frame QR detection, and secure server-side verification without awarding points on the client.
+- **Decision**:
+  - Implement live camera QR scanning in `QRCheckpointPage.jsx` using the browser's native `BarcodeDetector` API (`formats: ["qr_code"]`) and `navigator.mediaDevices.getUserMedia` with `facingMode: { ideal: "environment" }`.
+  - Provide graceful degradation: when `BarcodeDetector` is unsupported (e.g. non-Chromium browsers), surface a clear fallback message while keeping image preview active.
+  - Implement strict stream management: camera tracks are stopped and animation frames are canceled immediately upon QR detection, when the user clicks "Stop Camera", or when the component unmounts.
+  - Integrate server verification: parse scanned URLs (`/checkpoint/scan?code=...&token=...`), JSON payloads, or raw codes and connect authenticated participants to `checkpointService.scanCheckpoint(code, token)`.
+  - Display detection results with clear unverified labeling; require authenticated server response before confirming level unlock.
+  - Provide an inline "Verify with Server" trigger for authenticated users and a "Login to Verify" redirect for unauthenticated guests.
+- **Consequences**: Enables zero-dependency live camera QR decoding on Chromium browsers, eliminates client-side trust vectors, prevents camera resource leaks, and seamlessly bridges the physical checkpoint scanning flow with the backend scoring engine.
+
+
 
 
 

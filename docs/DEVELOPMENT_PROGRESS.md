@@ -335,6 +335,25 @@
   - [x] Production build clean (`npm run build --workspace=client` completed in 5.50s with 0 errors).
   - [x] Runtime HTTP 200 OK verified across `/qr-checkpoint`, `/dashboard`, `/challenges`, `/mission`, `/rules`, `/register`, `/leaderboard`.
 
+---
+
+## Phase 2 / Phase 7 Engineering — Functional Live Camera QR Scanner Complete (Completed)
+- [x] Upgraded `QRCheckpointPage.jsx` with real-time camera scanning:
+  - [x] Integrated browser-native `BarcodeDetector` API for high-performance client-side QR code recognition.
+  - [x] MediaStream acquisition with `{ facingMode: { ideal: "environment" } }` targeting mobile rear cameras.
+  - [x] Live viewfinder with animated bounding corners and camera state indicator.
+  - [x] Graceful fallbacks and comprehensive error handling: `NotAllowedError` (permissions denied), `NotFoundError` (no device camera), and non-Chromium fallback messages.
+  - [x] Strict resource cleanup: camera tracks and requestAnimationFrame loops terminate immediately on detection, user cancel, or unmount.
+- [x] Connected scanning to backend verification workflow:
+  - [x] Intelligent payload parser for URL queries (`code` and `token`), JSON schemas, or raw strings.
+  - [x] Integrated `checkpointService.scanCheckpoint(code, token)` for authenticated operatives.
+  - [x] Unverified detection banner with explicit warning against client-side point awards.
+  - [x] Inline server verification trigger with status feedback and Login redirect for unauthenticated guests.
+- [x] Verification:
+  - [x] Production build clean (`npm run build --workspace=client` completed in 13.78s with 0 errors).
+  - [x] Runtime HTTP 200 OK verified across all routes.
+
+
 
 
 

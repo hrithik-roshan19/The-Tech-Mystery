@@ -1,5 +1,7 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { checkpointService } from "../../services/checkpoint.service";
 import { ROUTES } from "../../constants/routes";
 import "../../styles/QRCheckpointPage.css";
 
@@ -18,11 +20,146 @@ const navLinks = [
   ["Leaderboard", ROUTES.LEADERBOARD],
 ];
 
+/**
+ * Extracts code and token from various QR payload formats:
+ * - URL: /checkpoint/scan?code=CP-01&token=xyz or https://domain/checkpoint/scan?...
+ * - JSON: {"code":"CP-01","token":"xyz"}
+ * - Raw string: CP-01
+ */
+function parseCheckpointPayload(raw) {
+  if (!raw) return { code: "", token: "" };
+
+  try {
+    // 1. Try URL parsing
+    if (raw.includes("?") || raw.startsWith("http://") || raw.startsWith("https://")) {
+      const url = new URL(raw, window.location.origin);
+      const code = url.searchParams.get("code") || "";
+      const token = url.searchParams.get("token") || "";
+      if (code || token) return { code, token };
+    }
+
+    // 2. Try JSON parsing
+    if (raw.trim().startsWith("{")) {
+      const parsed = JSON.parse(raw);
+      if (parsed.code || parsed.token) {
+        return { code: parsed.code || "", token: parsed.token || "" };
+      }
+    }
+  } catch {
+    // fallback to string inspection
+  }
+
+  // 3. Fallback: treat as raw code
+  return { code: raw.trim(), token: "" };
+}
+
 export default function QRCheckpointPage() {
+  const { isAuthenticated, user } = useAuth();
   const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const scanFrameRef = useRef(null);
+  const scanBusyRef = useRef(false);
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [scanMessage, setScanMessage] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
+  const [cameraActive, setCameraActive] = useState(false);
+  const [decodedValue, setDecodedValue] = useState("");
+  const [cameraError, setCameraError] = useState("");
+
+  // Server verification state
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState(null);
+
+  const stopLiveScan = useCallback(() => {
+    if (scanFrameRef.current) cancelAnimationFrame(scanFrameRef.current);
+    scanFrameRef.current = null;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    scanBusyRef.current = false;
+    setCameraActive(false);
+  }, []);
+
+  const startLiveScan = useCallback(async () => {
+    setCameraError("");
+    setDecodedValue("");
+    setVerifyResult(null);
+    setScanMessage("");
+
+    if (!("BarcodeDetector" in window)) {
+      setCameraError(
+        "Live QR decoding via BarcodeDetector is not supported by this browser. Open this page in the latest Chrome or Edge, or use the upload option."
+      );
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Camera access requires a secure connection. Open the app on localhost or HTTPS.");
+      return;
+    }
+
+    try {
+      const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+
+      streamRef.current = stream;
+      if (!videoRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        return;
+      }
+
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+      setCameraActive(true);
+      setSelectedFile(null);
+      setPreviewUrl("");
+      setScanMessage("Camera is live. Hold the QR code steady inside the frame.");
+
+      const scan = async () => {
+        if (!streamRef.current || !videoRef.current) return;
+        if (!scanBusyRef.current && videoRef.current.readyState >= 2) {
+          scanBusyRef.current = true;
+          try {
+            const codes = await detector.detect(videoRef.current);
+            if (codes.length && codes[0].rawValue) {
+              const value = codes[0].rawValue;
+              setDecodedValue(value);
+              setScanMessage("QR code detected. Verify this checkpoint with the event server before awarding points.");
+              stopLiveScan();
+              return;
+            }
+          } catch {
+            // Keep scanning; a single unreadable frame is normal while the camera moves.
+          } finally {
+            scanBusyRef.current = false;
+          }
+        }
+        if (streamRef.current) scanFrameRef.current = requestAnimationFrame(scan);
+      };
+      scanFrameRef.current = requestAnimationFrame(scan);
+    } catch (error) {
+      stopLiveScan();
+      if (error?.name === "NotAllowedError") {
+        setCameraError("Camera permission was denied. Allow camera access in your browser settings and try again.");
+      } else if (error?.name === "NotFoundError") {
+        setCameraError("No camera was found on this device.");
+      } else {
+        setCameraError("Could not start the camera. Check camera permissions and try again.");
+      }
+    }
+  }, [stopLiveScan]);
+
+  useEffect(() => () => {
+    if (scanFrameRef.current) cancelAnimationFrame(scanFrameRef.current);
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    if (videoRef.current) videoRef.current.srcObject = null;
+  }, []);
 
   function handleFileChange(event) {
     const file = event.target.files?.[0];
@@ -36,7 +173,40 @@ export default function QRCheckpointPage() {
       if (oldUrl) URL.revokeObjectURL(oldUrl);
       return URL.createObjectURL(file);
     });
-    setScanMessage("Image selected. QR decoding is not connected yet.");
+    setScanMessage("Image preview ready. Use Start Live Scan for camera-based QR detection.");
+  }
+
+  // Handle server-side checkpoint verification
+  async function handleVerifyWithServer() {
+    if (!decodedValue) return;
+
+    const { code, token } = parseCheckpointPayload(decodedValue);
+    if (!code) {
+      setVerifyResult({
+        success: false,
+        message: "Unable to parse a valid checkpoint code from the scanned payload."
+      });
+      return;
+    }
+
+    setVerifying(true);
+    setVerifyResult(null);
+
+    try {
+      const res = await checkpointService.scanCheckpoint(code, token);
+      setVerifyResult({
+        success: true,
+        message: res.message || `Checkpoint verified! Level ${res.data?.checkpoint?.levelNumber || ""} unlocked.`,
+        data: res.data
+      });
+    } catch (err) {
+      setVerifyResult({
+        success: false,
+        message: err.response?.data?.message || err.message || "Checkpoint verification rejected by server."
+      });
+    } finally {
+      setVerifying(false);
+    }
   }
 
   return (
@@ -96,28 +266,94 @@ export default function QRCheckpointPage() {
             <p className="htg-qr-panel-eyebrow">QR CHECKPOINT</p>
             <h2>Scan <span>the Code</span></h2>
             <p className="htg-qr-panel-subtitle">Find a QR code at a checkpoint and scan it to get your challenge.</p>
-            <button
-              className={`htg-qr-scan-frame ${selectedFile ? "has-image" : ""}`}
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="Choose an image with a QR code"
-            >
+
+            <div className={`htg-qr-scan-frame ${selectedFile ? "has-image" : ""} ${cameraActive ? "camera-active" : ""}`}>
               <i className="corner top-left" />
               <i className="corner top-right" />
               <i className="corner bottom-left" />
               <i className="corner bottom-right" />
-              {previewUrl ? (
-                <img src={previewUrl} alt="Selected QR code image preview" />
-              ) : (
-                <span className="htg-qr-scan-symbol">▣</span>
+              <video
+                ref={videoRef}
+                className="htg-qr-live-video"
+                style={{ display: cameraActive ? "block" : "none" }}
+                muted
+                playsInline
+                aria-label="Live QR scanner camera preview"
+              />
+              {!cameraActive && (
+                previewUrl ? (
+                  <img src={previewUrl} alt="Selected QR code image preview" />
+                ) : (
+                  <span className="htg-qr-scan-symbol">▣</span>
+                )
               )}
-              <strong>{selectedFile ? selectedFile.name : "Scan QR Code"}</strong>
+              <strong>{cameraActive ? "Live camera scanning…" : selectedFile ? selectedFile.name : "Scan QR Code"}</strong>
               <small>
-                {selectedFile
-                  ? "Click to choose a different image"
-                  : "Align the QR code within the frame to scan and get your challenge."}
+                {cameraActive
+                  ? "Move the QR code into view and hold it steady."
+                  : selectedFile
+                  ? "Image selected for preview"
+                  : "Start the camera and align an official checkpoint QR code inside the frame."}
               </small>
-            </button>
+            </div>
+
+            <div className="htg-qr-camera-actions">
+              {!cameraActive ? (
+                <button type="button" className="htg-qr-live-button" onClick={startLiveScan}>
+                  <span>◉</span> Start Live Scan
+                </button>
+              ) : (
+                <button type="button" className="htg-qr-stop-button" onClick={stopLiveScan}>
+                  Stop Camera
+                </button>
+              )}
+            </div>
+
+            {cameraError && <p className="htg-qr-message htg-qr-error" role="alert">{cameraError}</p>}
+
+            {decodedValue && (
+              <div className="htg-qr-result" role="status">
+                <strong>QR detected</strong>
+                <code>{decodedValue}</code>
+                <small>Detection only — checkpoint validation and challenge loading must be handled by the backend.</small>
+                {verifyResult && (
+                  <div className={`htg-qr-verify-status ${verifyResult.success ? "success" : "error"}`}>
+                    {verifyResult.message}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: "10px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
+                  {isAuthenticated ? (
+                    <button
+                      type="button"
+                      className="htg-qr-verify-btn"
+                      onClick={handleVerifyWithServer}
+                      disabled={verifying}
+                    >
+                      {verifying ? "Verifying..." : "Verify with Server →"}
+                    </button>
+                  ) : (
+                    <Link
+                      to={ROUTES.LOGIN}
+                      className="htg-qr-verify-btn"
+                      style={{ textDecoration: "none", display: "inline-block" }}
+                    >
+                      Login to Verify Checkpoint →
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDecodedValue("");
+                      setVerifyResult(null);
+                      setScanMessage("Ready to scan another checkpoint.");
+                    }}
+                  >
+                    Clear result
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="htg-qr-or"><span />OR<span /></div>
             <button type="button" className="htg-qr-upload" onClick={() => fileInputRef.current?.click()}>
               <span className="htg-qr-upload-icon">▧</span>
@@ -175,7 +411,7 @@ export default function QRCheckpointPage() {
                 <span>2</span>
                 <div>
                   <strong>Scan QR Code</strong>
-                  <p>Scan the QR code using your camera or upload an image.</p>
+                  <p>Use Start Live Scan to open your camera, or upload an image.</p>
                 </div>
               </article>
               <article>
