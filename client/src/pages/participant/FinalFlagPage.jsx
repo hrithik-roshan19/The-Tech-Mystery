@@ -1,29 +1,58 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { challengeService } from "../../services/challenge.service";
 import { teamService } from "../../services/team.service";
 import { ROUTES } from "../../constants/routes";
+import {
+  Target,
+  Users,
+  Trophy,
+  Key,
+  Send,
+  QrCode,
+  ChevronRight,
+  FileText,
+  AlertTriangle,
+  Check,
+  Menu,
+  X,
+  Flag,
+  Sparkles,
+} from "lucide-react";
 import "../../styles/FinalFlagPage.css";
 
-/**
- * Hack the Grid — Final Flag / Victory UI
- * Authenticated submission for Stage 10 Master Flag.
- * Connected to live backend endpoint via challengeService.submitFlag(10, flag).
- */
+const navLinks = [
+  { label: "MISSION", path: ROUTES.MISSION },
+  { label: "HOW IT WORKS", path: "/mission#how-it-works" },
+  { label: "CHALLENGES", path: ROUTES.CHALLENGES },
+  { label: "QR CHECKPOINT", path: ROUTES.QR_CHECKPOINT },
+  { label: "LEADERBOARD", path: ROUTES.LEADERBOARD },
+  { label: "FINAL FLAG", path: ROUTES.FINAL_FLAG, active: true },
+];
+
+const timelineCheckpoints = [
+  { id: "CP-01", name: "Main Gate", solved: true },
+  { id: "CP-02", name: "Central Lawn", solved: true },
+  { id: "CP-03", name: "Library Block", solved: true },
+  { id: "CP-04", name: "CSE Block", solved: true },
+  { id: "CP-09", name: "Final Room", solved: true },
+  { id: "CP-10", name: "Final Flag", isTarget: true },
+];
+
 export default function FinalFlagPage() {
-  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
   const [team, setTeam] = useState(null);
   const [flag, setFlag] = useState("");
   const [status, setStatus] = useState("idle"); // idle | checking | success | error
   const [errorMessage, setErrorMessage] = useState("");
-  const [noticeMessage, setNoticeMessage] = useState("");
-  const [showHint, setShowHint] = useState(false);
   const [solveStats, setSolveStats] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const normalizedFlag = useMemo(() => flag.trim(), [flag]);
 
-  // Load team context on mount and verify current progression level
+  // Load team info on mount
   useEffect(() => {
     let isMounted = true;
     async function loadTeam() {
@@ -33,18 +62,12 @@ export default function FinalFlagPage() {
           if (isMounted && res.success && res.data?.team) {
             const teamData = res.data.team;
             setTeam(teamData);
-
-            // If Level 10 was already solved (currentLevel > 10)
             if (teamData.currentLevel > 10) {
               setStatus("success");
-            } else if (teamData.currentLevel < 10) {
-              setNoticeMessage(
-                `Progression Protocol: Your squad is currently on Level ${teamData.currentLevel}. Clear Levels 1 through 9 to unlock verified Master Flag submission.`
-              );
             }
           }
         } catch {
-          // Non-blocking for unauthenticated preview mode
+          // Preview fallback
         }
       }
     }
@@ -60,14 +83,14 @@ export default function FinalFlagPage() {
 
     if (!isAuthenticated) {
       setStatus("error");
-      setErrorMessage("Authentication required. Please log in with your team credentials to submit the Final Flag.");
+      setErrorMessage("Please login with your team account to submit the Final Flag.");
       return;
     }
 
     if (team && team.currentLevel < 10) {
       setStatus("error");
       setErrorMessage(
-        `Access Denied: Your squad is currently at Level ${team.currentLevel}. The Final Gate requires completing all 9 preceding challenge checkpoints first.`
+        `Your squad is currently at Level ${team.currentLevel}. Clear all previous 9 levels first.`
       );
       return;
     }
@@ -76,219 +99,442 @@ export default function FinalFlagPage() {
     setErrorMessage("");
 
     try {
-      // Connect to authenticated backend endpoint: POST /api/v1/submissions/submit
       const result = await challengeService.submitFlag(10, normalizedFlag);
-
       if (result.success && result.data?.isCorrect) {
         setStatus("success");
         setSolveStats(result.data);
       } else {
         setStatus("error");
         setErrorMessage(
-          result.message || "Invalid flag string. Ensure the format matches HTG{...} and character casing is accurate."
+          result.message || "Invalid flag string. Check format HTG{...} and casing."
         );
       }
     } catch (err) {
-      setStatus("error");
       const serverMessage =
-        err.response?.data?.message || err.message || "Flag verification failed. Check server connectivity.";
-
-      // Handle already solved level
-      if (serverMessage.toLowerCase().includes("already been solved") || serverMessage.toLowerCase().includes("already solved")) {
+        err.response?.data?.message || err.message || "Flag verification failed.";
+      if (
+        serverMessage.toLowerCase().includes("already been solved") ||
+        serverMessage.toLowerCase().includes("already solved")
+      ) {
         setStatus("success");
       } else {
+        setStatus("error");
         setErrorMessage(serverMessage);
       }
     }
   }
 
   return (
-    <main className="final-flag-page">
-      <div className="ff-noise" aria-hidden="true" />
-      <div className="ff-grid-glow" aria-hidden="true" />
+    <div className="ff-page-wrapper">
+      {/* Background layer with campus and grid effects */}
+      <div className="ff-bg-canvas" aria-hidden="true">
+        <div className="ff-bg-campus" />
+        <div className="ff-bg-grid" />
+        <div className="ff-bg-vignette" />
+        <div className="ff-bg-glow-flag" />
+      </div>
 
-      <header className="ff-topbar">
-        <Link className="ff-brand" to={ROUTES.HOME} aria-label="Hack the Grid home">
-          <span className="ff-brand-mark"><span /></span>
-          <span className="ff-brand-copy">
-            <strong>HACK THE GRID</strong>
-            <small>CODESPHERE × UTKRISHT 2026</small>
-          </span>
-        </Link>
-        <div className="ff-topbar-right">
-          <span className="ff-live-dot" />
-          <span>MISSION CONTROL</span>
-          <span className="ff-topbar-divider" />
-          <Link to={ROUTES.DASHBOARD}>DASHBOARD <span aria-hidden="true">↗</span></Link>
-        </div>
-      </header>
+      {/* Navigation Header */}
+      <header className="ff-navbar">
+        <div className="ff-nav-inner">
+          <Link to={ROUTES.HOME} className="ff-brand" aria-label="Hack the Grid home">
+            <span className="ff-brand-title">
+              HACK THE <span className="ff-lime-text">GRID</span>
+            </span>
+            <span className="ff-brand-sub">CODESPHERE × UTKRISHT 2026</span>
+          </Link>
 
-      <section className="ff-breadcrumb" aria-label="Breadcrumb">
-        <Link to={ROUTES.DASHBOARD}>PARTICIPANT PORTAL</Link>
-        <span>/</span>
-        <Link to={ROUTES.CHALLENGES}>MISSION MAP</Link>
-        <span>/</span>
-        <strong>FINAL FLAG</strong>
-      </section>
+          <nav className="ff-nav-links" aria-label="Primary navigation">
+            {navLinks.map((item) => (
+              <Link
+                key={item.label}
+                to={item.path}
+                className={`ff-nav-link ${item.active ? "active" : ""}`}
+              >
+                {item.label}
+                {item.active && <span className="ff-nav-active-bar" />}
+              </Link>
+            ))}
+          </nav>
 
-      {status === "success" ? (
-        <section className="ff-success-state" aria-live="polite">
-          <div className="ff-success-orbit">
-            <div className="ff-success-check">✓</div>
-            <span className="ff-orbit orbit-one" />
-            <span className="ff-orbit orbit-two" />
-          </div>
-          <p className="ff-eyebrow"><span /> ALL SYSTEMS VERIFIED</p>
-          <h1>MISSION <em>ACCOMPLISHED.</em></h1>
-          <p className="ff-success-copy">
-            The final master flag has been authenticated and recorded by the server. Your team’s run across the Grid is complete.
-          </p>
-          <div className="ff-success-stats">
-            <div><small>MISSION STATUS</small><strong>COMPLETE</strong></div>
-            <div><small>FINAL LEVEL</small><strong>10 / 10</strong></div>
-            <div><small>TEAM RESULT</small><strong>VERIFIED</strong></div>
-            {solveStats?.pointsAwarded && (
-              <div><small>FINAL SOLVE</small><strong>+{solveStats.pointsAwarded} PTS</strong></div>
+          <div className="ff-nav-actions">
+            {isAuthenticated ? (
+              <>
+                <Link to={ROUTES.DASHBOARD} className="ff-btn-dashboard">
+                  DASHBOARD
+                </Link>
+                <button
+                  type="button"
+                  className="ff-btn-register"
+                  onClick={() => logout && logout()}
+                >
+                  DISCONNECT
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to={ROUTES.DASHBOARD} className="ff-btn-dashboard">
+                  DASHBOARD
+                </Link>
+                <Link to={ROUTES.REGISTER} className="ff-btn-register">
+                  REGISTER
+                </Link>
+              </>
             )}
           </div>
-          <Link className="ff-primary-button" to={ROUTES.LEADERBOARD}>VIEW LEADERBOARD <span>↗</span></Link>
-          <Link className="ff-secondary-link" to={ROUTES.DASHBOARD}>Return to dashboard</Link>
+
+          <button
+            type="button"
+            className="ff-mobile-menu-btn"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Drawer */}
+        {mobileMenuOpen && (
+          <div className="ff-mobile-drawer">
+            {navLinks.map((item) => (
+              <Link
+                key={item.label}
+                to={item.path}
+                className={`ff-mobile-link ${item.active ? "active" : ""}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <div className="ff-mobile-drawer-actions">
+              <Link
+                to={ROUTES.DASHBOARD}
+                className="ff-btn-dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                DASHBOARD
+              </Link>
+              <Link
+                to={ROUTES.REGISTER}
+                className="ff-btn-register"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                REGISTER
+              </Link>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Main Content Container */}
+      <main className="ff-content-container">
+        {/* Success Modal / Celebration Banner if Solved */}
+        {status === "success" && (
+          <div className="ff-victory-alert-banner" role="status" aria-live="polite">
+            <div className="ff-victory-banner-inner">
+              <div className="ff-victory-banner-icon">
+                <Sparkles size={24} />
+              </div>
+              <div className="ff-victory-banner-text">
+                <h3>VICTORY CONFIRMED! THE FINAL GATE HAS BEEN BREACHED.</h3>
+                <p>
+                  Your squad has captured the Master Flag and conquered Hack the Grid 2026.
+                  {solveStats?.pointsAwarded && ` +${solveStats.pointsAwarded} PTS awarded.`}
+                </p>
+              </div>
+              <div className="ff-victory-banner-buttons">
+                <Link to={ROUTES.LEADERBOARD} className="ff-btn-banner-lb">
+                  VIEW LEADERBOARD →
+                </Link>
+                <Link to={ROUTES.DASHBOARD} className="ff-btn-banner-dash">
+                  PORTAL
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* HERO SECTION */}
+        <section className="ff-hero-section">
+          {/* Left Column: Heading, Tagline, Description, 3 Stat Cards */}
+          <div className="ff-hero-left">
+            <div className="ff-hero-badge">
+              <span className="ff-badge-flag">⚑</span>
+              <span className="ff-badge-text">FINAL CHALLENGE</span>
+            </div>
+
+            <h1 className="ff-hero-title">
+              <span className="ff-title-white">THE LAST FLAG</span>
+              <span className="ff-title-lime">AWAITS</span>
+            </h1>
+
+            <p className="ff-hero-subheading">
+              YOU'VE SCANNED. YOU'VE SOLVED. NOW CLAIM VICTORY.
+            </p>
+
+            <p className="ff-hero-description">
+              The final flag is hidden. Only the most persistent, sharpest minds
+              and true problem solvers make it here. Find it, capture it, and
+              etch your team's name on the leaderboard.
+            </p>
+
+            {/* 3 Stat Cards Row */}
+            <div className="ff-hero-stats-row">
+              <div className="ff-stat-card">
+                <div className="ff-stat-icon-wrap">
+                  <Target size={20} className="ff-stat-icon" />
+                </div>
+                <div className="ff-stat-info">
+                  <div className="ff-stat-val">Level 10</div>
+                  <div className="ff-stat-lbl">Final Challenge</div>
+                </div>
+              </div>
+
+              <div className="ff-stat-card">
+                <div className="ff-stat-icon-wrap">
+                  <Users size={20} className="ff-stat-icon" />
+                </div>
+                <div className="ff-stat-info">
+                  <div className="ff-stat-val">1 Flag</div>
+                  <div className="ff-stat-lbl">Ultimate Goal</div>
+                </div>
+              </div>
+
+              <div className="ff-stat-card">
+                <div className="ff-stat-icon-wrap">
+                  <Trophy size={20} className="ff-stat-icon" />
+                </div>
+                <div className="ff-stat-info">
+                  <div className="ff-stat-val">Maximum Points</div>
+                  <div className="ff-stat-lbl ff-stat-pts">500 pts</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: High-Impact Flag & Rocks Artwork */}
+          <div className="ff-hero-right">
+            <div className="ff-art-frame">
+              <img
+                src="/final-flag-hero-art.png"
+                alt="Hack the Grid Final Flag artwork on rocky peak"
+                className="ff-hero-artwork-img"
+              />
+            </div>
+          </div>
         </section>
-      ) : (
-        <>
-          <section className="ff-hero">
-            <div className="ff-hero-copy">
-              <div className="ff-terminal-status"><span /> ENDGAME PROTOCOL <b>LEVEL 10</b></div>
-              <p className="ff-kicker">THE FINAL GATE</p>
-              <h1>SYSTEM<br /><em>BREACHED.</em></h1>
-              <p className="ff-hero-description">
-                You’ve decoded the grid, cleared every checkpoint, and reached the final gate.
-                One last flag stands between your team and victory.
-              </p>
-              <div className="ff-progress-row">
-                <div className="ff-progress-label"><span>MISSION PROGRESS</span><strong>10 / 10 LEVELS</strong></div>
-                <div className="ff-progress-track"><span /></div>
-              </div>
-              <div className="ff-hero-footnote"><span className="ff-mini-lock">⌑</span> FINAL SUBMISSION IS TEAM-LOCKED</div>
-            </div>
 
-            <div className="ff-flag-art" aria-label="Master flag illustration">
-              <div className="ff-art-topline"><span>ROOT ACCESS</span><span>AUTH // 010</span></div>
-              <div className="ff-art-ring ring-a" />
-              <div className="ff-art-ring ring-b" />
-              <div className="ff-art-crosshair cross-x" />
-              <div className="ff-art-crosshair cross-y" />
-              <div className="ff-flag-pole" />
-              <div className="ff-flag-cloth">
-                <div className="ff-flag-corner">HTG</div>
-                <div className="ff-flag-symbol">⚑</div>
-                <div className="ff-flag-code">MASTER_FLAG<br />10.10.10</div>
-              </div>
-              <div className="ff-art-scanline" />
-              <div className="ff-art-caption"><span>MASTER FLAG FOUND</span><small>AWAITING VALIDATION</small></div>
-              <div className="ff-art-coordinate">30.3165° N<br />78.0322° E</div>
-            </div>
-          </section>
-
-          <section className="ff-main-grid">
-            <article className="ff-submit-panel">
-              <div className="ff-panel-heading">
-                <div>
-                  <p className="ff-kicker">FINAL CHECKPOINT // 10.10</p>
-                  <h2>Submit the <em>Master Flag.</em></h2>
+        {/* LOWER SECTION: Two Prominent Panels */}
+        <section className="ff-lower-grid">
+          {/* LEFT PANEL: Submit Final Flag (56%–58% width) */}
+          <article className="ff-card-panel ff-panel-submit">
+            <div className="ff-submit-card-layout">
+              {/* Left Sub-Column: Form & QR scan action */}
+              <div className="ff-submit-subcol-form">
+                <div className="ff-panel-header">
+                  <h2 className="ff-panel-title">
+                    Submit <span className="ff-lime-text">Final Flag</span>
+                  </h2>
+                  <p className="ff-panel-subtitle">
+                    Enter the final flag you found after completing all challenges.
+                  </p>
                 </div>
-                <span className="ff-panel-icon">⌁</span>
+
+                <form onSubmit={onSubmitFlag} className="ff-form">
+                  <div className={`ff-input-container ${errorMessage ? "has-error" : ""}`}>
+                    <Key size={18} className="ff-key-icon" />
+                    <input
+                      type="text"
+                      className="ff-flag-input"
+                      placeholder="Enter your flag here (e.g. HTG{...})"
+                      value={flag}
+                      onChange={(e) => {
+                        setFlag(e.target.value);
+                        if (errorMessage) setErrorMessage("");
+                      }}
+                      disabled={status === "checking" || status === "success"}
+                      autoComplete="off"
+                      spellCheck="false"
+                      aria-label="Final Flag Submission Input"
+                    />
+                  </div>
+
+                  {errorMessage && (
+                    <div className="ff-error-banner" role="alert">
+                      <AlertTriangle size={15} />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="ff-btn-submit"
+                    disabled={status === "checking" || status === "success"}
+                  >
+                    <Send size={16} className="ff-send-icon" />
+                    <span>{status === "checking" ? "Verifying Flag..." : "Submit Flag"}</span>
+                  </button>
+                </form>
+
+                {/* OR Divider */}
+                <div className="ff-or-divider">
+                  <div className="ff-divider-line" />
+                  <span className="ff-divider-text">OR</span>
+                  <div className="ff-divider-line" />
+                </div>
+
+                {/* Scan Final Flag QR Action Card */}
+                <div
+                  className="ff-qr-action-card"
+                  onClick={() => navigate(ROUTES.QR_CHECKPOINT)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") navigate(ROUTES.QR_CHECKPOINT);
+                  }}
+                >
+                  <div className="ff-qr-icon-box">
+                    <QrCode size={22} className="ff-lime-text" />
+                  </div>
+                  <div className="ff-qr-copy">
+                    <strong className="ff-qr-title">Scan Final Flag QR</strong>
+                    <span className="ff-qr-desc">Use camera to scan the final flag</span>
+                  </div>
+                  <ChevronRight size={20} className="ff-qr-chevron" />
+                </div>
               </div>
-              <p className="ff-panel-description">
-                Enter the exact flag discovered by your team. The server will verify your submission
-                and record the result.
-              </p>
 
-              {noticeMessage && (
-                <div className="ff-inline-notice" role="status">
-                  <span>ℹ</span>
-                  {noticeMessage}
-                </div>
-              )}
-
-              <form onSubmit={onSubmitFlag}>
-                <label className="ff-input-label" htmlFor="master-flag">FLAG STRING <span>REQUIRED</span></label>
-                <div className={`ff-input-wrap ${status === "error" ? "has-error" : ""}`}>
-                  <span className="ff-input-prefix">HTG</span>
-                  <input
-                    id="master-flag"
-                    type="text"
-                    autoComplete="off"
-                    spellCheck="false"
-                    placeholder="HTG{enter_your_final_flag}"
-                    value={flag}
-                    onChange={(event) => {
-                      setFlag(event.target.value);
-                      if (status === "error") setStatus("idle");
-                      setErrorMessage("");
-                    }}
-                    disabled={status === "checking"}
-                    aria-describedby="ff-flag-help"
-                  />
-                  <span className="ff-input-cursor" aria-hidden="true" />
-                </div>
-                <p id="ff-flag-help" className="ff-input-help">Flags are case-sensitive. Check every character before submitting.</p>
-
-                {errorMessage && <div className="ff-inline-error" role="alert"><span>!</span>{errorMessage}</div>}
-
-                <button className="ff-primary-button ff-submit-button" type="submit" disabled={!normalizedFlag || status === "checking"}>
-                  {status === "checking" ? <><span className="ff-spinner" /> VERIFYING FLAG…</> : <>SUBMIT FINAL FLAG <span>↗</span></>}
-                </button>
-              </form>
-
-              <div className="ff-panel-separator" />
-              <button className="ff-hint-toggle" type="button" onClick={() => setShowHint((value) => !value)}>
-                <span className="ff-hint-icon">i</span>
-                <span><strong>Before you submit</strong><small>Final checklist and submission rules</small></span>
-                <span className={`ff-chevron ${showHint ? "is-open" : ""}`}>⌄</span>
-              </button>
-              {showHint && (
-                <div className="ff-hint-content">
-                  <ul>
-                    <li>Submit only the flag your team discovered during the event.</li>
-                    <li>Do not share flags or tokens with other teams.</li>
-                    <li>Repeated submissions may be rate-limited by the server.</li>
-                    <li>Victory is confirmed only after server-side validation.</li>
+              {/* Right Sub-Column: Requirements & Important */}
+              <div className="ff-submit-subcol-rules">
+                {/* Requirements */}
+                <div className="ff-rules-block">
+                  <div className="ff-rules-heading">
+                    <FileText size={16} className="ff-rules-header-icon" />
+                    <span>Requirements</span>
+                  </div>
+                  <ul className="ff-rules-list ff-req-list">
+                    <li>
+                      <span className="ff-check-bullet">
+                        <Check size={11} />
+                      </span>
+                      <span>Complete all previous checkpoints</span>
+                    </li>
+                    <li>
+                      <span className="ff-check-bullet">
+                        <Check size={11} />
+                      </span>
+                      <span>Solve all required challenges</span>
+                    </li>
+                    <li>
+                      <span className="ff-check-bullet">
+                        <Check size={11} />
+                      </span>
+                      <span>Obtain the final flag</span>
+                    </li>
+                    <li>
+                      <span className="ff-check-bullet">
+                        <Check size={11} />
+                      </span>
+                      <span>Submit to claim victory</span>
+                    </li>
                   </ul>
                 </div>
-              )}
-            </article>
 
-            <aside className="ff-side-column">
-              <article className="ff-victory-card">
-                <div className="ff-victory-card-top"><span className="ff-trophy">✦</span><span className="ff-card-tag">ENDGAME</span></div>
-                <p className="ff-kicker">YOUR OBJECTIVE</p>
-                <h3>Claim the<br /><em>Grid.</em></h3>
-                <p>One final proof. One team. One place in the leaderboard.</p>
-                <div className="ff-victory-divider" />
-                <div className="ff-victory-row"><span>FINAL LEVEL</span><strong>MASTER FLAG</strong></div>
-                <div className="ff-victory-row"><span>VALIDATION</span><strong><i /> SERVER-SIDE</strong></div>
-              </article>
+                {/* Important */}
+                <div className="ff-rules-block">
+                  <div className="ff-rules-heading ff-important-heading">
+                    <AlertTriangle size={16} className="ff-important-icon" />
+                    <span>Important</span>
+                  </div>
+                  <ul className="ff-rules-list ff-important-list">
+                    <li>
+                      <span className="ff-dot-bullet">•</span>
+                      <span>Flag is case sensitive</span>
+                    </li>
+                    <li>
+                      <span className="ff-dot-bullet">•</span>
+                      <span>Ensure the correct format (e.g. HTG&#123;...&#125;)</span>
+                    </li>
+                    <li>
+                      <span className="ff-dot-bullet">•</span>
+                      <span>You can submit only once</span>
+                    </li>
+                    <li>
+                      <span className="ff-dot-bullet">•</span>
+                      <span>Wrong submission may result in a penalty</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </article>
 
-              <article className="ff-protocol-card">
-                <div className="ff-protocol-heading"><span className="ff-protocol-symbol">⌘</span><span>VICTORY PROTOCOL</span></div>
-                <ol>
-                  <li><span>01</span><div><strong>Submit</strong><small>Enter your final flag</small></div></li>
-                  <li><span>02</span><div><strong>Verify</strong><small>Server validates the token</small></div></li>
-                  <li><span>03</span><div><strong>Celebrate</strong><small>Record your team's finish</small></div></li>
-                </ol>
-                <div className="ff-protocol-note"><span /> NO SHORTCUTS. JUST SKILL.</div>
-              </article>
-            </aside>
-          </section>
-        </>
-      )}
+          {/* RIGHT PANEL: Victory Awaits (42%–44% width) */}
+          <article className="ff-card-panel ff-panel-victory">
+            <div className="ff-victory-header">
+              <div className="ff-trophy-orbit">
+                <Trophy size={32} className="ff-trophy-svg" />
+              </div>
+              <h2 className="ff-victory-title">VICTORY AWAITS</h2>
+              <p className="ff-victory-subtitle">
+                Be the team that captures the final flag and completes the grid.
+              </p>
+            </div>
 
-      <footer className="ff-footer">
-        <span>© 2026 CODESPHERE CODING CLUB</span>
-        <span className="ff-footer-center"><i /> GRID STATUS: ACTIVE</span>
-        <span>BUILT FOR THE CURIOUS <b>↗</b></span>
-      </footer>
-    </main>
+            {/* Checkpoint Progression Timeline */}
+            <div className="ff-timeline-container" aria-label="Checkpoint Timeline">
+              <div className="ff-timeline-track">
+                {timelineCheckpoints.map((cp, idx) => {
+                  const isLast = idx === timelineCheckpoints.length - 1;
+                  return (
+                    <div
+                      key={cp.id}
+                      className={`ff-timeline-node ${cp.isTarget ? "is-target" : "is-solved"}`}
+                    >
+                      {/* Connecting Line to next node */}
+                      {!isLast && (
+                        <div
+                          className={`ff-node-connector ${
+                            idx === timelineCheckpoints.length - 2 ? "to-target" : ""
+                          }`}
+                        />
+                      )}
+
+                      {/* Circle Indicator */}
+                      <div className="ff-node-circle">
+                        {cp.isTarget ? (
+                          <Flag size={14} className="ff-node-flag-icon" />
+                        ) : (
+                          <Check size={12} className="ff-node-check-icon" />
+                        )}
+                      </div>
+
+                      {/* Labels */}
+                      <div className="ff-node-labels">
+                        <span className="ff-node-id">{cp.id}</span>
+                        <span className="ff-node-name">{cp.name}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quotation */}
+            <div className="ff-victory-quote-card">
+              <div className="ff-quote-box">
+                <span className="ff-quote-mark left">“</span>
+                <div className="ff-quote-text-center">
+                  <p className="ff-quote-line-1">It's not just a flag.</p>
+                  <p className="ff-quote-line-2">It's proof that you conquered the grid.</p>
+                </div>
+                <span className="ff-quote-mark right">”</span>
+              </div>
+              <div className="ff-quote-author">— Hack the Grid 2026</div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
   );
 }

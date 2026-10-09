@@ -407,25 +407,33 @@
 ---
 
 ## Phase 2 / Phase 5 Integration — Final Flag / Victory UI (`/final-flag`) Complete (Completed)
-- [x] Integrated reference `FinalFlagPage.jsx` at `client/src/pages/participant/FinalFlagPage.jsx`:
-  - [x] Hero section with Endgame Protocol badge, clamped "SYSTEM BREACHED." typography, progress bar (10/10), and master flag radar target graphic.
-  - [x] Form submission panel with `HTG` input prefix, validation status indicators, and collapsible pre-submission checklist.
-  - [x] Victory Protocol sidebar card with step breakdown and endgame objective.
-  - [x] Verified victory state: Displays "MISSION ACCOMPLISHED." only when server validates flag (`res.data.isCorrect === true`), or if squad already solved Level 10.
-  - [x] Connected directly to authenticated backend endpoint `challengeService.submitFlag(10, flag)` (`POST /api/v1/submissions/submit`).
-  - [x] Progression guard: Checks `teamService.getMyTeam()`; warns if squad has not yet cleared Levels 1–9.
-  - [x] Replaced all anchor tags with React Router `<Link>` components using `ROUTES` constants.
-- [x] Integrated reference `FinalFlagPage.css` at `client/src/styles/FinalFlagPage.css`:
-  - [x] Set `.final-flag-page` root to `overflow-x: hidden` preventing mobile overflow while guaranteeing smooth vertical scrolling.
-  - [x] Fully responsive across breakpoints (900px, 640px) with reduced-motion support.
-- [x] Connected navigation & routing:
-  - [x] Registered `FINAL_FLAG: '/final-flag'` and mapped `MASTER_FLAG: '/final-flag'` in `client/src/constants/routes.js`.
-  - [x] Mounted `ROUTES.FINAL_FLAG` as Standalone Full-Bleed route in `AppRoutes.jsx`, with portal redirects for `/portal/master-flag` and `/portal/final-flag`.
-  - [x] Added "Final Flag" link in `ParticipantDashboard.jsx` sidebar, wired Level 10 card in the dashboard level grid, and added CTA button on Level 10 in `ChallengeLevelsPage.jsx`.
-- [x] Verification:
-  - [x] Production build clean (`npm run build --workspace=client` completed in 8.78s with 0 errors).
-  - [x] Headless Chrome visual screenshot verified at 1440x900.
-  - [x] Runtime HTTP 200 OK verified across `/final-flag`.
+## Phase 2 / Phase 5 Integration — Final Flag UI Visual Alignment with Reference Design (Completed)
+- [x] **Visual Redesign & Component Architecture (`FinalFlagPage.jsx`)**:
+  - [x] Replaced previous generic HUD header with full-width top navigation bar (`HACK THE GRID`, `CODESPHERE × UTKRISHT 2026`, nav links: `MISSION`, `HOW IT WORKS`, `CHALLENGES`, `QR CHECKPOINT`, `LEADERBOARD`, active `FINAL FLAG` underlined in electric lime, `DASHBOARD` bordered button, and electric lime `REGISTER` button).
+  - [x] **Hero Section**:
+    - [x] Left column: Small lime flag icon + `FINAL CHALLENGE`, large bold heading `THE LAST FLAG` (white) / `AWAITS` (lime `#b8ff3d`), uppercase tracked tagline `YOU'VE SCANNED. YOU'VE SOLVED. NOW CLAIM VICTORY.`, description paragraph, and 3 stat cards in a row (`Level 10 — Final Challenge`, `1 Flag — Ultimate Goal`, `Maximum Points — 500 pts`).
+    - [x] Right column: High-impact cinematic artwork with the dark tattered flag, glowing lime hood/skull emblem on rocks with green fissures, and Tula's University campus behind it (`/final-flag-hero-art.png`).
+  - [x] **Lower Section (Two Prominent Panels)**:
+    - [x] **Left Panel (57% width)**:
+      - [x] Heading: `Submit Final Flag` (with `Final Flag` in lime) + subtitle.
+      - [x] Key icon input field (`Enter your flag here (e.g. HTG{...})`).
+      - [x] Bright electric lime `Submit Flag` button with paper plane icon.
+      - [x] Centered `OR` divider.
+      - [x] `Scan Final Flag QR` action card with QR icon, camera prompt, and chevron leading to `/qr-checkpoint`.
+      - [x] Right sub-column: `Requirements` (4 checklist items with green circular checkmark badges) and `Important` (4 bullet warning points with alert icon).
+    - [x] **Right Panel (43% width)**:
+      - [x] Radial lime-glowing trophy icon, `VICTORY AWAITS` heading in lime, and subtitle.
+      - [x] 6-checkpoint horizontal progression timeline with checkmark nodes (`CP-01 Main Gate`, `CP-02 Central Lawn`, `CP-03 Library Block`, `CP-04 CSE Block`, `CP-09 Final Room`), green connecting line, and glowing target node (`CP-10 Final Flag`).
+      - [x] Centered quotation card with stylized lime quotes: *"It's not just a flag. It's proof that you conquered the grid." — Hack the Grid 2026*.
+  - [x] Functional backend connection preserved to authenticated `challengeService.submitFlag(10, flag)` (`POST /api/v1/submissions/submit`) with error handling and victory alert banner.
+- [x] **Stylesheet Updates (`FinalFlagPage.css`)**:
+  - [x] Rebuilt with exact electric lime (`#b8ff3d`), obsidian backgrounds (`#070908`), glowing accents, DM Mono typography for badges and codes, and Manrope grotesque fonts.
+  - [x] Responsive layout covering desktop (1536px/1440px), tablet (1024px/960px), and mobile (640px).
+- [x] **Empirical Verification**:
+  - [x] Clean client build: `npm run build --workspace=client` (1,744 modules transformed, 0 errors).
+  - [x] Headless Chrome visual verification: Captured 1536×1024 screenshot (`final-flag-screenshot.png`) and verified visual fidelity against the target reference image.
+  - [x] HTTP 200 OK verified on `/final-flag`.
+
 
 
 
