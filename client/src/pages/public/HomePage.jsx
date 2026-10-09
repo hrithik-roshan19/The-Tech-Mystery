@@ -30,6 +30,9 @@ const LEVELS = [
   ["09", "Master Puzzle", "Teamwork"], ["10", "Master Flag", "Final"],
 ];
 
+
+const FACULTY = [["Mr. Shivam Paney","CSE Department"],["Mr. Mohit Saini","CSE Department"],["Mr. Abhishek Rawat","CSE Department"]];
+const STUDENTS = [["Hrithik Roshan","Advisor, CodeSphere"],["Anshika Kumari","President, CodeSphere"],["Ayush Kumar","Vice-President, CodeSphere"]];
 const Arrow = () => <span className="htg-arrow" aria-hidden="true">↗</span>;
 
 export default function HomePage() {
@@ -108,9 +111,21 @@ export default function HomePage() {
         <div className="htg-level-grid">{LEVELS.map(([number, title, category]) => <article className="htg-level" key={number}><span className="htg-level__number">{number}</span><div><h3>{title}</h3><p>{category}</p></div><span className="htg-level__arrow" aria-hidden="true">↗</span></article>)}</div>
       </section>
 
+      <section className="htg-team-section" id="team">
+        <p className="htg-kicker">04 / THE PEOPLE BEHIND THE GRID</p>
+        <h2 className="htg-team-title">Meet the <span>team.</span></h2>
+        <p className="htg-team-intro">The faculty and student coordinators bringing Hack the Grid to life.</p>
+        <div className="htg-team-group"><div className="htg-team-group__title"><h3>Faculty Coordinators</h3><span>CSE DEPARTMENT</span></div>
+          <div className="htg-team-grid">{FACULTY.map(([name,role])=><article className="htg-person-card" key={name}><div className="htg-person-photo"><span>PHOTO</span></div><div className="htg-person-info"><h4>{name}</h4><p>{role}</p></div></article>)}</div>
+        </div>
+        <div className="htg-team-group"><div className="htg-team-group__title"><h3>Student Coordinators</h3><span>CODESPHERE CORE TEAM</span></div>
+          <div className="htg-team-grid">{STUDENTS.map(([name,role])=><article className="htg-person-card" key={name}><div className="htg-person-photo"><span>PHOTO</span></div><div className="htg-person-info"><h4>{name}</h4><p>{role}</p></div></article>)}</div>
+        </div>
+      </section>
+
       <section className="htg-final-cta" id="rules"><p className="htg-kicker">READY TO ENTER THE GRID?</p><h2>Your team.<br /><span>Your strategy. Your flag.</span></h2><div className="htg-final-cta__actions"><Link to="/register" className="htg-button htg-button--lime htg-button--large">Register your team <Arrow /></Link><Link to="/rules" className="htg-button htg-button--glass htg-button--large">Read the rules <Arrow /></Link></div></section>
 
-      <footer className="htg-footer"><Link className="htg-brand htg-brand--footer" to="/"><span className="htg-brand__name">HACK THE <b>GRID</b></span><span className="htg-brand__tag">CODESPHERE <i>×</i> UTKRISHT 2026</span></Link><p>Built for curious minds and bold teams.</p><span>© 2026 Hack the Grid · CodeSphere</span></footer>
+      <footer className="htg-footer"><Link className="htg-brand htg-brand--footer" to="/"><span className="htg-brand__name">HACK THE <b>GRID</b></span><span className="htg-brand__tag">CODESPHERE <i>×</i> UTKRISHT 2026</span></Link><p>Built for curious minds and bold teams.</p><span className="htg-footer-credit">Built with <b>♥</b> by Hrithik Roshan</span><span>© 2026 Hack the Grid · CodeSphere</span></footer>
     </main>
   );
 }
