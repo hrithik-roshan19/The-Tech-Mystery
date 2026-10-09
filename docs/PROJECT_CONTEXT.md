@@ -395,6 +395,7 @@ Documented in detail in `docs/DECISIONS.md`:
 - **ADR-0014**: Standalone Full-Bleed Mission & How It Works Page UI Integration (Mission Playbook, 6-stage interactive process, orbital animations, expandable challenge map).
 - **ADR-0015**: Cross-Page Mission and How It Works Navigation Routing Fix (React Router `<Link>` transitions to `/mission` and `/mission#how-it-works`, multi-tier hash scroll retries, legacy redirect fallbacks).
 - **ADR-0016**: Standalone Full-Bleed Challenge Levels & Mission Map UI Integration (10-level challenge matrix, accordion briefings, UI-only secrets preservation, /campus-hero.png asset reuse).
+- **ADR-0017**: Unified Cross-Page Challenge Levels Navigation & Dashboard Routing Integration (Navbar, ParticipantLayout HUD, TeamDashboardPage, and public page links to /challenges, plus /dashboard alias mapping).
 
 ---
 
@@ -424,7 +425,9 @@ CURRENT STATUS:
              reference Rules Page UI (6-category accordion + ack gate),
              reference Mission Page UI (6-stage playbook + interactive challenge map),
              reference Challenge Levels UI (10-level interactive Mission Map matrix),
-             cross-page navigation routing for /mission, /challenges, /rules,
+             unified cross-page navigation routing for /mission, /challenges, /rules, /leaderboard,
+             participant HUD and dashboard navigation to /challenges,
+             alias redirection (/dashboard -> /portal/dashboard, /mission-map -> /portal/missions),
              campus hero asset, standalone full-bleed routing for /, /login, /register, /rules, /mission, /challenges,
              multi-tier responsive design (tested on viewports: 320px to 1440px),
              build & dev server verification.

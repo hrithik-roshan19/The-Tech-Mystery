@@ -258,8 +258,31 @@
 - [x] Verification:
   - [x] Validated across all 12 target viewports (1440x900 down to 320x740) with zero horizontal overflow.
   - [x] Production build clean (`npm run build --workspace=client` completed in 7.42s with 0 errors).
-  - [x] Runtime HTTP 200 OK verified on `/challenges`.
   - [x] All existing pages (`HomePage`, `LoginPage`, `RegisterPage`, `RulesPage`, `MissionPage`) remain 100% intact.
+
+---
+
+## Phase 2 Navigation Fix — Challenge Levels Cross-Page Navigation & Dashboard Mapping Complete (Completed)
+- [x] Connected Challenge Levels link across all major page entry points:
+  - `client/src/components/navigation/Navbar.jsx`: Added `{ label: 'CHALLENGES', path: ROUTES.CHALLENGES }` to `navLinks`.
+  - `client/src/layouts/ParticipantLayout.jsx`: Added `{ label: 'CHALLENGES', path: ROUTES.CHALLENGES, icon: Target }` to secondary tactical HUD nav.
+  - `client/src/pages/participant/TeamDashboardPage.jsx`: Added `CHALLENGE LEVELS` CyberButton to header banner and direct link to `MISSION DIRECTIVE` card.
+  - `client/src/pages/public/HomePage.jsx`: Updated desktop `<nav>` and mobile drawer to `<Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>`.
+  - `client/src/pages/public/MissionPage.jsx`: Updated desktop `<nav>` and mobile drawer to `<Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>`.
+  - `client/src/pages/public/RulesPage.jsx`: Updated desktop `<nav>` and mobile drawer to `<Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>`.
+  - `client/src/pages/public/LoginPage.jsx`: Updated desktop `<nav>` and mobile drawer to `<Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>`.
+  - `client/src/pages/public/RegisterPage.jsx`: Updated desktop `<nav>` and mobile drawer to `<Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>`.
+- [x] Enhanced `ChallengeLevelsPage.jsx` CTA buttons:
+  - Integrated `useAuth` hook: dynamically renders `Dashboard` button when authenticated, or `Login` and `Register` when unauthenticated.
+  - Added primary hero call-to-action buttons row linking to `/dashboard` (or `/register`) and `/rules`.
+  - Mapped all navigation items to central `ROUTES` registry constants.
+- [x] Routing alias configuration in `AppRoutes.jsx`:
+  - Added `<Route path="/dashboard" element={<Navigate to={ROUTES.DASHBOARD} replace />} />` mapping direct `/dashboard` requests cleanly to `/portal/dashboard`.
+- [x] Verification:
+  - Tested clicking `CHALLENGES` from `/`, `/mission`, `/rules`, `/login`, `/register`, and `/portal/dashboard`.
+  - Production build clean (`npm run build --workspace=client` completed in 6.67s with 0 errors).
+  - Runtime HTTP 200 OK verified across `/challenges`, `/dashboard`, `/mission-map`, `/how-it-works`, `/rules`, `/login`, `/register`.
+
 
 
 

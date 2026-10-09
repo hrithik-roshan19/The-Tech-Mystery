@@ -60,6 +60,13 @@
   - [x] Scoped `--htg-lime` variables and `/campus-hero.png` reuse.
   - [x] Responsive `overflow-x: hidden` and stats wrapping.
 - [x] Register `ROUTES.CHALLENGES` (`/challenges`) and mount as standalone route in `AppRoutes.jsx`.
+- [x] Cross-page Challenge Levels navigation integration:
+  - [x] Add `CHALLENGES` to shared `Navbar.jsx` in desktop and mobile drawer.
+  - [x] Add `CHALLENGES` to `ParticipantLayout.jsx` tactical nav bar.
+  - [x] Add `CHALLENGE LEVELS` CTA buttons and links to `TeamDashboardPage.jsx`.
+  - [x] Update `CHALLENGES` links across `HomePage.jsx`, `MissionPage.jsx`, `RulesPage.jsx`, `LoginPage.jsx`, and `RegisterPage.jsx` to `ROUTES.CHALLENGES`.
+  - [x] Map `/dashboard` route alias to `/portal/dashboard` in `AppRoutes.jsx`.
+  - [x] Integrate `useAuth` dynamic CTA buttons (Login/Register vs Dashboard) on `ChallengeLevelsPage.jsx`.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

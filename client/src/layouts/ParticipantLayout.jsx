@@ -5,7 +5,7 @@ import { teamService } from '../services/team.service';
 import HUDHeader from '../components/hud/HUDHeader';
 import ScanlineOverlay from '../components/hud/ScanlineOverlay';
 import { ROUTES } from '../constants/routes';
-import { LayoutDashboard, Map, Terminal, QrCode, Trophy, Users, Award, LogOut } from 'lucide-react';
+import { LayoutDashboard, Map, Terminal, QrCode, Trophy, Users, Award, LogOut, Target } from 'lucide-react';
 
 export const ParticipantLayout = () => {
   const { user, logout } = useAuth();
@@ -33,6 +33,7 @@ export const ParticipantLayout = () => {
   const navItems = [
     { label: 'DASHBOARD', path: ROUTES.DASHBOARD, icon: LayoutDashboard },
     { label: 'MISSION MAP', path: ROUTES.MISSION_MAP, icon: Map },
+    { label: 'CHALLENGES', path: ROUTES.CHALLENGES, icon: Target },
     { label: 'ACTIVE CHALLENGE', path: ROUTES.CHALLENGE, icon: Terminal },
     { label: 'QR SCANNER', path: ROUTES.CHECKPOINT, icon: QrCode },
     { label: 'LEADERBOARD', path: ROUTES.LEADERBOARD, icon: Trophy },

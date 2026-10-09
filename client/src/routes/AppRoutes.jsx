@@ -56,6 +56,7 @@ export const AppRoutes = () => {
       {/* 2. Public Pages using Shared Layout */}
       <Route element={<PublicLayout />}>
         <Route path={ROUTES.ABOUT} element={<AboutPage />} />
+        <Route path="/dashboard" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
         <Route path={ROUTES.HOW_IT_WORKS} element={<Navigate to="/mission#how-it-works" replace />} />
         <Route path="/mission-map" element={<Navigate to={ROUTES.MISSION_MAP} replace />} />
         <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />

@@ -119,7 +119,7 @@ export default function RulesPage() {
         <nav>
           <Link to={ROUTES.MISSION}>MISSION</Link>
           <Link to="/mission#how-it-works">HOW IT WORKS</Link>
-          <a href="/#challenges">CHALLENGES</a>
+          <Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>
           <Link className="current" to={ROUTES.RULES}>RULES</Link>
           <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
         </nav>
@@ -143,7 +143,7 @@ export default function RulesPage() {
           <div className="rp-mobile-drawer">
             <Link to={ROUTES.MISSION} onClick={() => setMobileMenuOpen(false)}>MISSION</Link>
             <Link to="/mission#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</Link>
-            <a href="/#challenges" onClick={() => setMobileMenuOpen(false)}>CHALLENGES</a>
+            <Link to={ROUTES.CHALLENGES} onClick={() => setMobileMenuOpen(false)}>CHALLENGES</Link>
             <Link className="current" to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
             <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
             <div className="rp-mobile-drawer-actions">

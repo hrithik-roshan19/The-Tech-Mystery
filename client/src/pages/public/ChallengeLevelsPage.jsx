@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { ROUTES } from "../../constants/routes";
 import "../../styles/ChallengeLevelsPage.css";
 
 const levels = [
@@ -16,15 +18,16 @@ const levels = [
 ];
 
 const navItems = [
-  ["Mission", "/mission"],
+  ["Mission", ROUTES.MISSION],
   ["How It Works", "/mission#how-it-works"],
-  ["Challenges", "/challenges"],
-  ["Rules", "/rules"],
-  ["Leaderboard", "/leaderboard"],
+  ["Challenges", ROUTES.CHALLENGES],
+  ["Rules", ROUTES.RULES],
+  ["Leaderboard", ROUTES.LEADERBOARD],
 ];
 
 export default function ChallengeLevelsPage() {
   const [selectedLevel, setSelectedLevel] = useState(null);
+  const { isAuthenticated } = useAuth();
 
   return (
     <main className="htg-levels-page">
@@ -40,8 +43,14 @@ export default function ChallengeLevelsPage() {
           ))}
         </nav>
         <div className="htg-levels-nav-actions">
-          <Link className="htg-levels-login" to="/login">Login</Link>
-          <Link className="htg-levels-register" to="/register">Register</Link>
+          {isAuthenticated ? (
+            <Link className="htg-levels-register" to={ROUTES.DASHBOARD}>Dashboard</Link>
+          ) : (
+            <>
+              <Link className="htg-levels-login" to={ROUTES.LOGIN}>Login</Link>
+              <Link className="htg-levels-register" to={ROUTES.REGISTER}>Register</Link>
+            </>
+          )}
         </div>
       </header>
 
@@ -52,6 +61,14 @@ export default function ChallengeLevelsPage() {
           <h2>THE ULTIMATE CAMPUS<br />CAPTURE-THE-FLAG EXPERIENCE.</h2>
           <div className="htg-levels-rule" />
           <p className="htg-levels-description">10 unique challenges. A progressive journey across skills, logic, creativity and real-world problem solving.</p>
+          <div className="htg-levels-cta-row" style={{ marginTop: '22px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link className="htg-levels-register" to={isAuthenticated ? ROUTES.DASHBOARD : ROUTES.REGISTER}>
+              {isAuthenticated ? "OPEN DASHBOARD →" : "REGISTER YOUR TEAM →"}
+            </Link>
+            <Link className="htg-levels-login" to={ROUTES.RULES}>
+              RULES
+            </Link>
+          </div>
           <div className="htg-levels-stats">
             <div><span className="stat-icon">⬡</span><strong>10</strong><small>CHALLENGE<br />LEVELS</small></div>
             <div><span className="stat-icon">♧</span><strong>2–4</strong><small>TEAM<br />MEMBERS</small></div>

@@ -163,6 +163,21 @@ This document logs significant architectural and design choices, their context, 
   - Wire React Router `Link` navigation to `/mission`, `/mission#how-it-works`, `/challenges`, `/rules`, `/leaderboard`, `/login`, `/register`, and `/`.
 - **Consequences**: Delivers high-fidelity challenge discovery, interactive level briefings, visual consistency with dark + electric-lime aesthetics, and zero side effects on existing routes.
 
+---
+
+## ADR-0017: Unified Cross-Page Challenge Levels Navigation & Dashboard Routing Integration
+- **Status**: ACCEPTED
+- **Context**: The Challenge Levels / Mission Map page (`/challenges`) required full cross-page discoverability across all public pages (`HomePage`, `MissionPage`, `RulesPage`, `LoginPage`, `RegisterPage`), the shared public `Navbar`, the participant HUD (`ParticipantLayout`), and the active operative cockpit (`TeamDashboardPage`). Additionally, direct traffic navigating to `/dashboard` needed clean alias mapping to the internal participant route `/portal/dashboard`.
+- **Decision**:
+  - Update `Navbar.jsx`: Add `{ label: 'CHALLENGES', path: ROUTES.CHALLENGES }` to `navLinks`.
+  - Update `ParticipantLayout.jsx`: Add `{ label: 'CHALLENGES', path: ROUTES.CHALLENGES, icon: Target }` to the secondary tactical HUD navigation.
+  - Update `TeamDashboardPage.jsx`: Add visible `CHALLENGE LEVELS` CyberButton in the header banner and direct link in the `MISSION DIRECTIVE` card.
+  - Update public navigation bars across `HomePage.jsx`, `MissionPage.jsx`, `RulesPage.jsx`, `LoginPage.jsx`, and `RegisterPage.jsx` to route `CHALLENGES` directly to `ROUTES.CHALLENGES` via React Router `<Link>`.
+  - Update `ChallengeLevelsPage.jsx`: Integrate `useAuth` hook for context-aware CTA buttons (`Dashboard` when authenticated, `Login` / `Register` when unauthenticated), and add hero action row.
+  - In `AppRoutes.jsx`: Map `/dashboard` to `<Navigate to={ROUTES.DASHBOARD} replace />`.
+- **Consequences**: Eliminates dead ends, connects all pages to `/challenges` via SPA `<Link>` navigation with zero page reloads, and prevents 404s on `/dashboard`.
+
+
 
 
 

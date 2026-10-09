@@ -94,7 +94,7 @@ export default function MissionPage() {
           >
             HOW IT WORKS
           </a>
-          <a href="/#challenges">CHALLENGES</a>
+          <Link to={ROUTES.CHALLENGES}>CHALLENGES</Link>
           <Link to={ROUTES.RULES}>RULES</Link>
           <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
         </nav>
@@ -136,7 +136,7 @@ export default function MissionPage() {
             >
               HOW IT WORKS
             </a>
-            <a href="/#challenges" onClick={() => setMobileMenuOpen(false)}>CHALLENGES</a>
+            <Link to={ROUTES.CHALLENGES} onClick={() => setMobileMenuOpen(false)}>CHALLENGES</Link>
             <Link to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
             <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
             <div className="mp-mobile-drawer-actions">

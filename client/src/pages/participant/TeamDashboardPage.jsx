@@ -133,7 +133,7 @@ export const TeamDashboardPage = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Link to={ROUTES.CHECKPOINT}>
             <CyberButton variant="cyan" size="md" icon={QrCode}>
               SCAN QR CHECKPOINT
@@ -142,6 +142,11 @@ export const TeamDashboardPage = () => {
           <Link to={ROUTES.CHALLENGE}>
             <CyberButton variant="green" size="md" icon={Target}>
               GO TO ACTIVE CHALLENGE
+            </CyberButton>
+          </Link>
+          <Link to={ROUTES.CHALLENGES}>
+            <CyberButton variant="ghost" size="md" icon={Target}>
+              CHALLENGE LEVELS
             </CyberButton>
           </Link>
         </div>
@@ -175,9 +180,12 @@ export const TeamDashboardPage = () => {
             <p className="text-cyber-muted">
               Scan the physical checkpoint QR to authenticate your location and unlock your squad's assigned cipher node.
             </p>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap items-center gap-4">
               <Link to={ROUTES.MISSION_MAP} className="inline-flex items-center gap-1.5 text-cyber-cyan hover:underline text-xs">
                 Inspect campus mission map <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <Link to={ROUTES.CHALLENGES} className="inline-flex items-center gap-1.5 text-cyber-green hover:underline text-xs">
+                View Challenge Levels <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
