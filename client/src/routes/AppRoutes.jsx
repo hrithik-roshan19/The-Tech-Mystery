@@ -47,12 +47,12 @@ export const AppRoutes = () => {
       <Route path={ROUTES.HOME} element={<HomePage />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+      <Route path={ROUTES.RULES} element={<RulesPage />} />
 
       {/* 2. Public Pages using Shared Layout */}
       <Route element={<PublicLayout />}>
         <Route path={ROUTES.ABOUT} element={<AboutPage />} />
         <Route path={ROUTES.HOW_IT_WORKS} element={<HowItWorksPage />} />
-        <Route path={ROUTES.RULES} element={<RulesPage />} />
         <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />
         <Route path={ROUTES.FAQ} element={<FAQPage />} />
         <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />

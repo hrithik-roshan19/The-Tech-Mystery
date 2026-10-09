@@ -110,6 +110,39 @@
   - [x] Production build clean (`npm run build --workspace=client`).
   - [x] Both `HomePage` and `LoginPage` remain 100% untouched.
 
+---
+
+## Phase 2 UI Integration — Rules Page Complete (Completed)
+- [x] Integrated reference `RulesPage.jsx` at `client/src/pages/public/RulesPage.jsx`:
+  - [x] Self-contained top navbar (`.rp-nav`) with brand mark, anchor links, and action buttons.
+  - [x] Background visual layers (`.rp-bg` with `/campus-hero.png`, `.rp-overlay`, `.rp-grid`).
+  - [x] Tactical hero section with eyebrow badge, large clamped heading, subtitle, and fair play protocol seal.
+  - [x] Quick metrics bar (`.rp-stats`) displaying 2–4 members, 10 levels, 90–120 mins, and single policy rule.
+  - [x] 6-category interactive accordion (`.rp-accordion`):
+    - 01 Team Eligibility
+    - 02 Fair Play & Integrity
+    - 03 QR Checkpoints & Challenges
+    - 04 Safety & Cybersecurity
+    - 05 Scoring & Leaderboard
+    - 06 Conduct & Disqualification
+  - [x] Independent multi-accordion state toggling (defaulting to sections 01 and 02 open).
+  - [x] Sidebar cards with golden rule "Stay inside the sandbox" callout and organizer help link.
+  - [x] Acknowledgment gate (`.rp-ack`): checkbox required before unlocking navigation button to `/register`.
+  - [x] Responsive hamburger menu toggle (`.rp-mobile-menu`) and slide-down drawer (`.rp-mobile-drawer`) on viewports <= 900px.
+- [x] Integrated reference `RulesPage.css` at `client/src/styles/RulesPage.css`:
+  - [x] Scoped styles with `.htg-rules` root and `--lime: #b8ff3d`, `--white: #f5f5f0`, `--muted: #b4bbb6` variables.
+  - [x] Connected fixed campus hero background (`/campus-hero.png`).
+  - [x] Implemented responsive breakpoints (1200px, 900px, 600px, 360px, 330px) ensuring zero horizontal scroll down to 320px.
+- [x] Routing Integration:
+  - [x] Mounted `ROUTES.RULES` as a top-level standalone full-bleed route in `AppRoutes.jsx`, removing it from `PublicLayout` to prevent double navbars and footers.
+  - [x] Connected React Router `Link` components for SPA navigation to `/`, `/login`, `/register`, and `/leaderboard`.
+- [x] Verification:
+  - [x] Tested across all 8 target viewports (1440px, 1024px, 768px, 600px, 430px, 390px, 360px, 320px) with zero horizontal overflow.
+  - [x] Production build clean (`npm run build --workspace=client` built in 40s with 0 errors).
+  - [x] Dev server loads `/rules` with status 200 OK and mounts successfully.
+  - [x] `HomePage`, `LoginPage`, and `RegisterPage` remain 100% intact and untouched.
+
+
 
 
 

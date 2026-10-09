@@ -96,6 +96,21 @@ This document logs significant architectural and design choices, their context, 
   - Wire client-side SPA navigation to `/`, `/login`, `/register`, and `/leaderboard` with responsive hamburger menu support.
 - **Consequences**: Delivers seamless 4-step enrollment UX, responsive fidelity from 320px to 1440px+, and leaves `HomePage` and `LoginPage` completely untouched.
 
+---
+
+## ADR-0013: Standalone Full-Bleed Rules Page UI Integration
+- **Status**: ACCEPTED
+- **Context**: Hack the Grid requires a comprehensive Participant Handbook and Fair Play Protocol page (`/rules`). The reference design features its own full-bleed header (`.rp-nav`), fixed campus hero background (`campus-hero.png`), stats counter bar, 6 interactive rule accordion categories, a golden rule sandbox sidebar, and an acknowledgment checkbox gate before registering. Nesting it inside `PublicLayout` would duplicate headers and footers.
+- **Decision**:
+  - Integrate `RulesPage.jsx` directly under `client/src/pages/public/` and import `client/src/styles/RulesPage.css`.
+  - Mount `ROUTES.RULES` as a top-level standalone full-bleed route alongside `ROUTES.HOME`, `ROUTES.LOGIN`, and `ROUTES.REGISTER` in `AppRoutes.jsx`, removing it from `PublicLayout`.
+  - Implement independent multi-accordion toggle logic with `team` and `fair` open by default.
+  - Enforce acknowledgment gating: the confirmation link remains disabled and prevents navigation until the agreement checkbox is checked.
+  - Add responsive hamburger toggle button (`.rp-mobile-menu`) and navigation drawer (`.rp-mobile-drawer`) on viewports <= 900px.
+  - Include responsive media queries (1200px, 900px, 600px, 360px, 330px) ensuring flawless rendering across 1440px down to 320px with zero horizontal scroll.
+- **Consequences**: Delivers high-fidelity rule discovery, strict acknowledgment enforcement, full-bleed visual consistency with dark + electric-lime aesthetics, and guarantees zero side effects on `HomePage`, `LoginPage`, or `RegisterPage`.
+
+
 
 
 

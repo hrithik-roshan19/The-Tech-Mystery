@@ -4,7 +4,7 @@
 
 ---
 
-## Phase 2: Frontend UI & Design System (Homepage, Login & Register Integration) (COMPLETED)
+## Phase 2: Frontend UI & Design System (Homepage, Login, Register & Rules Integration) (COMPLETED)
 - [x] Run `npm install` across workspaces and verify Vite development server startup.
 - [x] Integrate reference `HomePage.jsx` with full typography, 10 levels, stats, mission, and how-it-works sections.
 - [x] Integrate reference `HomePage.css` preserving dark + electric-lime visual identity.
@@ -28,6 +28,14 @@
   - [x] Namespaced `--rg-*` styling and campus background integration.
   - [x] Responsive breakpoints (1250px, 900px, 560px, 380px) tested down to 320px width.
 - [x] Mount `ROUTES.REGISTER` as standalone full-bleed route in `AppRoutes.jsx`.
+- [x] Integrate reference `RulesPage.jsx` at `client/src/pages/public/RulesPage.jsx`:
+  - [x] 6-category interactive accordion (independent toggle state).
+  - [x] Acknowledgment checkbox gating before register button enables.
+  - [x] Mobile hamburger toggle and navigation drawer.
+- [x] Integrate reference `RulesPage.css` at `client/src/styles/RulesPage.css`:
+  - [x] Fixed campus hero background layer (`/campus-hero.png`) and glassmorphic stats.
+  - [x] Responsive breakpoints (1200px, 900px, 600px, 360px, 330px) verified down to 320px width.
+- [x] Mount `ROUTES.RULES` as standalone full-bleed route in `AppRoutes.jsx`.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

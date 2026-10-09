@@ -391,6 +391,7 @@ Documented in detail in `docs/DECISIONS.md`:
 - **ADR-0010**: Standalone Full-Bleed Login Page UI Integration (Hero glass card, Team/Admin tabs, responsive breakpoints).
 - **ADR-0011**: Multi-Tier Responsive Architecture for Login Experience (12 viewports tested, natural vertical scrolling, mobile menu drawer).
 - **ADR-0012**: Standalone Full-Bleed Multi-Step Register Page UI Integration (4-step team enrollment wizard, responsive drawer).
+- **ADR-0013**: Standalone Full-Bleed Rules Page UI Integration (Participant handbook, 6-category accordion, acknowledgment checkbox gate, zero horizontal overflow down to 320px).
 
 ---
 

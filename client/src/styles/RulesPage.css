@@ -1,0 +1,1039 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap");
+
+.htg-rules {
+  --lime: #b8ff3d;
+  --white: #f5f5f0;
+  --muted: #b4bbb6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  background: #080b09;
+  color: var(--white);
+  font-family: Inter, sans-serif;
+}
+
+.htg-rules * {
+  box-sizing: border-box;
+}
+
+.htg-rules a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Background Layers */
+.rp-bg,
+.rp-overlay,
+.rp-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.rp-bg {
+  background: url("/campus-hero.png") center/cover no-repeat;
+}
+
+.rp-overlay {
+  background: linear-gradient(90deg, rgba(3, 7, 5, 0.93), rgba(3, 7, 5, 0.78) 55%, rgba(3, 7, 5, 0.8)),
+    linear-gradient(0deg, rgba(3, 7, 5, 0.92), rgba(3, 7, 5, 0.48));
+}
+
+.rp-grid {
+  opacity: 0.11;
+  background-image: linear-gradient(rgba(184, 255, 61, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184, 255, 61, 0.2) 1px, transparent 1px);
+  background-size: 84px 84px;
+}
+
+/* Navigation */
+.rp-nav {
+  height: 84px;
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 0 5.2vw;
+  border-bottom: 1px solid #ffffff20;
+  background: #040706c9;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.rp-brand {
+  min-width: 260px;
+}
+
+.rp-brand strong {
+  display: block;
+  font: 800 28px/1 Manrope, sans-serif;
+  letter-spacing: -1.8px;
+}
+
+.rp-brand strong span {
+  color: var(--lime);
+}
+
+.rp-brand small {
+  display: block;
+  margin-top: 7px;
+  color: #ffffffaa;
+  font: 10px "Geist Mono", monospace;
+  letter-spacing: 2px;
+}
+
+.rp-nav nav {
+  display: flex;
+  gap: 29px;
+  margin: auto;
+}
+
+.rp-nav nav a,
+.rp-nav-actions a {
+  font: 500 11px "Geist Mono", monospace;
+  letter-spacing: 0.7px;
+}
+
+.rp-nav nav a:hover,
+.rp-nav nav .current {
+  color: var(--lime);
+}
+
+.rp-nav-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.rp-login,
+.rp-register {
+  height: 44px;
+  min-width: 95px;
+  padding: 0 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ffffff80;
+  transition: all 0.2s ease;
+}
+
+.rp-register {
+  background: var(--lime);
+  border-color: var(--lime);
+  color: #080b07 !important;
+  min-width: 115px;
+  font-weight: 700;
+}
+
+.rp-login:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.rp-register:hover {
+  background: #a3f721;
+}
+
+/* Mobile Hamburger Menu */
+.rp-mobile-menu {
+  display: none;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid #ffffff30;
+  border-radius: 6px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0;
+  margin-left: 12px;
+  z-index: 101;
+}
+
+.rp-mobile-menu span {
+  display: block;
+  width: 20px;
+  height: 1.5px;
+  background: var(--white);
+  transition: 0.2s ease;
+}
+
+/* Mobile Drawer Dropdown */
+.rp-mobile-drawer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(8, 11, 9, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid #ffffff25;
+  padding: 24px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 100;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+}
+
+.rp-mobile-drawer a {
+  font-family: "Geist Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  padding: 8px 0;
+  border-bottom: 1px solid #ffffff12;
+  transition: color 0.2s ease;
+}
+
+.rp-mobile-drawer a:hover,
+.rp-mobile-drawer a.current {
+  color: var(--lime);
+}
+
+.rp-mobile-drawer-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.rp-mobile-drawer-actions .rp-login,
+.rp-mobile-drawer-actions .rp-register {
+  flex: 1;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Main Container & Hero */
+.rp-main {
+  position: relative;
+  z-index: 1;
+  max-width: 1440px;
+  margin: auto;
+  padding: 0 48px;
+}
+
+.rp-hero {
+  min-height: 365px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 55px 0 42px;
+}
+
+.rp-eyebrow,
+.rp-kicker {
+  color: var(--lime);
+  font: 500 11px "Geist Mono", monospace;
+  letter-spacing: 1.7px;
+}
+
+.rp-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 21px;
+}
+
+.rp-eyebrow i {
+  width: 7px;
+  height: 7px;
+  background: var(--lime);
+  box-shadow: 0 0 12px #b8ff3d99;
+}
+
+.rp-hero h1 {
+  font: 800 clamp(65px, 7vw, 100px) / 0.86 Manrope, sans-serif;
+  letter-spacing: -4px;
+  margin: 0;
+}
+
+.rp-hero h1 span,
+.rp-content-heading h2 span,
+.rp-ack h2 span {
+  color: var(--lime);
+}
+
+.rp-hero h2 {
+  font: 700 21px Manrope, sans-serif;
+  letter-spacing: 1.1px;
+  margin: 20px 0 0;
+}
+
+.rp-line {
+  height: 2px;
+  width: 48px;
+  background: var(--lime);
+  margin: 21px 0 14px;
+}
+
+.rp-intro {
+  max-width: 600px;
+  margin: 0;
+  color: #c0c7c1;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.rp-seal {
+  width: 225px;
+  height: 225px;
+  flex: 0 0 225px;
+  border: 1px solid #b8ff3d55;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: radial-gradient(circle, #b8ff3d1c, #080d0a66 70%);
+  box-shadow: inset 0 0 40px #b8ff3d0a;
+}
+
+.rp-seal div {
+  width: 105px;
+  height: 105px;
+  border: 1px solid #b8ff3d88;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--lime);
+  font-size: 64px;
+}
+
+.rp-seal b {
+  font: 500 10px "Geist Mono", monospace;
+  letter-spacing: 1px;
+}
+
+.rp-seal small {
+  color: #9ba69e;
+  font: 9px "Geist Mono", monospace;
+  letter-spacing: 2px;
+}
+
+/* Stats Section */
+.rp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid #ffffff29;
+  border-bottom: 1px solid #ffffff29;
+  background: #050907a8;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.rp-stats > div {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 21px 23px;
+  border-right: 1px solid #ffffff25;
+}
+
+.rp-stats > div:last-child {
+  border: 0;
+}
+
+.rp-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--lime);
+  font: 28px "Geist Mono", monospace;
+}
+
+.rp-stats p {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+}
+
+.rp-stats strong {
+  font: 800 27px Manrope, sans-serif;
+  letter-spacing: -1px;
+}
+
+.rp-stats small {
+  font: 9px "Geist Mono", monospace;
+  letter-spacing: 0.7px;
+  color: #b8c0ba;
+}
+
+/* Content, Accordion & Sidebar */
+.rp-content {
+  padding: 100px 0 90px;
+}
+
+.rp-content-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 35px;
+  margin-bottom: 36px;
+}
+
+.rp-kicker {
+  margin: 0 0 15px;
+}
+
+.rp-content-heading h2,
+.rp-ack h2 {
+  font: 800 clamp(43px, 5vw, 68px) / 0.94 Manrope, sans-serif;
+  letter-spacing: -3px;
+  margin: 0;
+}
+
+.rp-content-heading > p {
+  max-width: 390px;
+  margin: 0 0 5px;
+  color: #b8c0ba;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.rp-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(250px, 0.8fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.rp-accordion {
+  border-top: 1px solid #ffffff29;
+}
+
+.rp-item {
+  border-bottom: 1px solid #ffffff29;
+  background: #090e0b80;
+  transition: background 0.2s ease;
+}
+
+.rp-item.opened {
+  background: #0c130edb;
+}
+
+.rp-trigger {
+  width: 100%;
+  min-height: 91px;
+  display: grid;
+  grid-template-columns: 35px 44px minmax(0, 1fr) 25px;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 18px;
+  border: 0;
+  background: transparent;
+  color: var(--white);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rp-number {
+  color: var(--lime);
+  font: 11px "Geist Mono", monospace;
+}
+
+.rp-trigger > .rp-icon {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #b8ff3d24;
+  border-radius: 9px;
+  background: #b8ff3d12;
+  font-size: 25px;
+}
+
+.rp-item-title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rp-item-title b {
+  font: 700 16px Manrope, sans-serif;
+}
+
+.rp-item-title small {
+  color: #aab3ac;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rp-plus {
+  justify-self: end;
+  color: var(--lime);
+  font: 24px "Geist Mono", monospace;
+  font-weight: 300;
+}
+
+.rp-panel {
+  padding: 0 26px 25px 111px;
+}
+
+.rp-panel > p {
+  color: var(--lime);
+  font: 500 10px "Geist Mono", monospace;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
+
+.rp-panel ul {
+  padding-left: 17px;
+  margin: 0;
+  display: grid;
+  gap: 11px;
+}
+
+.rp-panel li {
+  padding-left: 3px;
+  color: #c3c9c4;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.rp-panel li::marker {
+  color: var(--lime);
+}
+
+.rp-sidebar {
+  display: grid;
+  gap: 17px;
+}
+
+.rp-side-card {
+  padding: 26px;
+  border: 1px solid #b8ff3d33;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #0f1917ed, #060b08e8);
+}
+
+.rp-side-symbol {
+  width: 55px;
+  height: 55px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #b8ff3d16;
+  color: var(--lime);
+  font-size: 38px;
+  margin-bottom: 24px;
+}
+
+.rp-side-card h3 {
+  font: 800 29px / 0.99 Manrope, sans-serif;
+  letter-spacing: -1px;
+  margin: 0 0 15px;
+}
+
+.rp-side-card h3 span {
+  color: var(--lime);
+}
+
+.rp-side-card > p:not(.rp-kicker) {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #b9c1bb;
+  margin: 0;
+}
+
+.rp-help {
+  border-color: #ffffff25;
+  background: #080d0bc9;
+}
+
+.rp-help h3 {
+  font-size: 23px;
+}
+
+.rp-help a {
+  display: inline-block;
+  color: var(--lime);
+  font: 500 10px "Geist Mono", monospace;
+  letter-spacing: 0.8px;
+  margin-top: 20px;
+}
+
+/* Acknowledgment Gate */
+.rp-ack {
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 0.8fr);
+  gap: 35px;
+  align-items: center;
+  padding: 40px;
+  margin-bottom: 90px;
+  border: 1px solid #b8ff3d42;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #111c12ed, #060c08ed);
+}
+
+.rp-ack h2 {
+  font-size: 48px;
+}
+
+.rp-ack > div:first-child > p:last-child {
+  max-width: 430px;
+  margin: 16px 0 0;
+  color: #b8c0ba;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.rp-ack-action {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rp-ack-action label {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  color: #d0d6d1;
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.rp-ack-action input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rp-check {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border: 1px solid #7a897b;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  color: #080b07;
+  font-weight: 800;
+  user-select: none;
+}
+
+.rp-ack-action input:checked + .rp-check {
+  background: var(--lime);
+  border-color: var(--lime);
+}
+
+.rp-ack-action input:focus-visible + .rp-check {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+.rp-ack-action > a {
+  min-height: 51px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 15px;
+  border-radius: 6px;
+  background: var(--lime);
+  color: #080b07 !important;
+  font: 700 11px "Geist Mono", monospace;
+  letter-spacing: 0.6px;
+  transition: all 0.2s ease;
+}
+
+.rp-ack-action > a:hover:not(.disabled) {
+  background: #a3f721;
+}
+
+.rp-ack-action > a.disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.rp-ack-action > a b {
+  font-size: 17px;
+}
+
+.rp-ack-action > small {
+  font-size: 10px;
+  color: #8e9890;
+}
+
+/* Footer */
+.rp-footer {
+  position: relative;
+  z-index: 1;
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 25px 5.2vw;
+  border-top: 1px solid #ffffff25;
+  background: #040705e8;
+}
+
+.rp-footer .rp-brand {
+  min-width: 0;
+}
+
+.rp-footer .rp-brand strong {
+  font-size: 22px;
+}
+
+.rp-footer .rp-brand small {
+  font-size: 8px;
+}
+
+.rp-footer p {
+  font-size: 11px;
+  color: #9ea79f;
+}
+
+.rp-footer > div {
+  display: flex;
+  gap: 19px;
+}
+
+.rp-footer > div a {
+  font: 10px "Geist Mono", monospace;
+  color: #c3c9c4;
+  transition: color 0.2s ease;
+}
+
+.rp-footer > div a:hover {
+  color: var(--lime);
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+/* 1. Desktop Small / Laptop (<= 1200px) */
+@media (max-width: 1200px) {
+  .rp-nav nav {
+    gap: 17px;
+  }
+  .rp-brand {
+    min-width: 225px;
+  }
+  .rp-main {
+    padding: 0 32px;
+  }
+  .rp-seal {
+    width: 185px;
+    height: 185px;
+    flex-basis: 185px;
+  }
+  .rp-stats > div {
+    padding: 18px 14px;
+    gap: 10px;
+  }
+  .rp-layout {
+    grid-template-columns: minmax(0, 1.5fr) minmax(220px, 0.8fr);
+  }
+}
+
+/* 2. Tablet Landscape & Medium Navigation Collapse (<= 900px) */
+@media (max-width: 900px) {
+  .rp-nav {
+    padding: 0 22px;
+  }
+  .rp-nav nav {
+    display: none;
+  }
+  .rp-nav-actions {
+    display: none;
+  }
+  .rp-mobile-menu {
+    display: flex;
+  }
+  .rp-brand {
+    margin-right: auto;
+  }
+  .rp-main {
+    padding: 0 23px;
+  }
+  .rp-hero {
+    min-height: 310px;
+  }
+  .rp-seal {
+    width: 150px;
+    height: 150px;
+    flex-basis: 150px;
+  }
+  .rp-seal div {
+    width: 75px;
+    height: 75px;
+    font-size: 47px;
+  }
+  .rp-seal b {
+    font-size: 8px;
+  }
+  .rp-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rp-stats > div:nth-child(2) {
+    border-right: 0;
+  }
+  .rp-stats > div:nth-child(-n + 2) {
+    border-bottom: 1px solid #ffffff25;
+  }
+  .rp-layout {
+    grid-template-columns: 1fr;
+  }
+  .rp-sidebar {
+    grid-template-columns: 1fr 1fr;
+  }
+  .rp-ack {
+    grid-template-columns: 1fr 1fr;
+    padding: 30px;
+  }
+}
+
+/* 3. Mobile Large / Phablet (<= 600px) */
+@media (max-width: 600px) {
+  .rp-nav {
+    height: 72px;
+    padding: 0 14px;
+  }
+  .rp-brand strong {
+    font-size: 21px;
+  }
+  .rp-brand small {
+    font-size: 7px;
+    letter-spacing: 1.4px;
+  }
+  .rp-login {
+    display: none;
+  }
+  .rp-register {
+    height: 40px;
+    min-width: 87px;
+    padding: 0 10px;
+    font-size: 10px;
+  }
+  .rp-mobile-menu {
+    width: 40px;
+    height: 40px;
+  }
+  .rp-mobile-menu span {
+    width: 18px;
+  }
+  .rp-main {
+    padding: 0 14px;
+  }
+  .rp-hero {
+    min-height: auto;
+    padding: 50px 0 34px;
+  }
+  .rp-seal {
+    display: none;
+  }
+  .rp-hero h1 {
+    font-size: clamp(52px, 14vw, 79px);
+    letter-spacing: -3px;
+  }
+  .rp-hero h2 {
+    font-size: 16px;
+    letter-spacing: 0.6px;
+  }
+  .rp-intro {
+    font-size: 13px;
+  }
+  .rp-stats > div {
+    padding: 14px 10px;
+    gap: 8px;
+  }
+  .rp-stats .rp-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 22px;
+  }
+  .rp-stats strong {
+    font-size: 21px;
+  }
+  .rp-stats small {
+    font-size: 7px;
+    letter-spacing: 0.3px;
+  }
+  .rp-content {
+    padding: 68px 0;
+  }
+  .rp-content-heading {
+    display: block;
+    margin-bottom: 25px;
+  }
+  .rp-content-heading h2 {
+    font-size: clamp(34px, 9vw, 42px);
+    letter-spacing: -2px;
+  }
+  .rp-content-heading > p {
+    font-size: 13px;
+    margin-top: 16px;
+  }
+  .rp-trigger {
+    grid-template-columns: 23px 36px minmax(0, 1fr) 18px;
+    gap: 8px;
+    min-height: 79px;
+    padding: 12px 8px;
+  }
+  .rp-trigger > .rp-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 21px;
+  }
+  .rp-number {
+    font-size: 9px;
+  }
+  .rp-item-title b {
+    font-size: 12px;
+  }
+  .rp-item-title small {
+    font-size: 10px;
+  }
+  .rp-plus {
+    font-size: 20px;
+  }
+  .rp-panel {
+    padding: 0 13px 22px 76px;
+  }
+  .rp-panel li {
+    font-size: 12px;
+  }
+  .rp-sidebar {
+    grid-template-columns: 1fr;
+  }
+  .rp-side-card {
+    padding: 22px;
+  }
+  .rp-ack {
+    grid-template-columns: 1fr;
+    gap: 25px;
+    padding: 23px 18px;
+    margin-bottom: 60px;
+  }
+  .rp-ack h2 {
+    font-size: clamp(32px, 9vw, 42px);
+  }
+  .rp-footer {
+    padding: 26px 17px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .rp-footer p {
+    margin: 0;
+  }
+  .rp-footer > div {
+    gap: 16px;
+  }
+}
+
+/* 4. Compact Mobile (<= 360px) */
+@media (max-width: 360px) {
+  .rp-nav {
+    padding: 0 9px;
+  }
+  .rp-brand strong {
+    font-size: 19px;
+  }
+  .rp-brand small {
+    font-size: 6px;
+    letter-spacing: 1px;
+  }
+  .rp-register {
+    min-width: 77px;
+    padding: 0 7px;
+  }
+  .rp-mobile-menu {
+    width: 36px;
+    height: 36px;
+  }
+  .rp-mobile-menu span {
+    width: 16px;
+  }
+  .rp-main {
+    padding: 0 9px;
+  }
+  .rp-hero h1 {
+    font-size: clamp(42px, 13vw, 54px);
+    letter-spacing: -2px;
+  }
+  .rp-stats > div {
+    padding: 12px 6px;
+  }
+  .rp-stats strong {
+    font-size: 18px;
+  }
+  .rp-stats small {
+    font-size: 6px;
+  }
+  .rp-content-heading h2 {
+    font-size: clamp(30px, 9.5vw, 38px);
+  }
+  .rp-trigger {
+    grid-template-columns: 18px 30px minmax(0, 1fr) 16px;
+    gap: 6px;
+    padding: 11px 6px;
+  }
+  .rp-trigger > .rp-icon {
+    width: 29px;
+    height: 29px;
+    font-size: 18px;
+  }
+  .rp-item-title b {
+    font-size: 11px;
+  }
+  .rp-item-title small {
+    font-size: 9px;
+  }
+  .rp-panel {
+    padding-left: 56px;
+    padding-right: 8px;
+  }
+  .rp-ack h2 {
+    font-size: clamp(28px, 9vw, 37px);
+  }
+}
+
+/* 5. Ultra-Compact Mobile (<= 330px) */
+@media (max-width: 330px) {
+  .rp-nav {
+    padding: 0 6px;
+  }
+  .rp-brand strong {
+    font-size: 17px;
+  }
+  .rp-main {
+    padding: 0 6px;
+  }
+  .rp-hero h1 {
+    font-size: 38px;
+    letter-spacing: -1.5px;
+  }
+  .rp-hero h2 {
+    font-size: 14px;
+  }
+  .rp-panel {
+    padding-left: 36px;
+    padding-right: 4px;
+  }
+  .rp-ack {
+    padding: 18px 12px;
+  }
+  .rp-ack h2 {
+    font-size: 28px;
+    letter-spacing: -1px;
+  }
+  .rp-ack-action > a {
+    font-size: 10px;
+    padding: 0 10px;
+    gap: 8px;
+  }
+}
+
