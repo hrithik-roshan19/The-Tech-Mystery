@@ -31,6 +31,7 @@ import ChallengeViewPage from '../pages/participant/ChallengeViewPage';
 import CheckpointScannerPage from '../pages/participant/CheckpointScannerPage';
 import LeaderboardPage from '../pages/public/LeaderboardPage';
 import TeamProfilePage from '../pages/participant/TeamProfilePage';
+import FinalFlagPage from '../pages/participant/FinalFlagPage';
 import MasterFlagPage from '../pages/participant/MasterFlagPage';
 
 // Admin Pages
@@ -53,6 +54,7 @@ export const AppRoutes = () => {
       <Route path={ROUTES.CHALLENGES} element={<ChallengeLevelsPage />} />
       <Route path={ROUTES.QR_CHECKPOINT} element={<QRCheckpointPage />} />
       <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
+      <Route path={ROUTES.FINAL_FLAG} element={<FinalFlagPage />} />
       <Route path={ROUTES.DASHBOARD} element={<ParticipantDashboard />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
@@ -63,6 +65,7 @@ export const AppRoutes = () => {
         <Route path={ROUTES.ABOUT} element={<AboutPage />} />
         <Route path={ROUTES.HOW_IT_WORKS} element={<Navigate to="/mission#how-it-works" replace />} />
         <Route path="/mission-map" element={<Navigate to={ROUTES.MISSION_MAP} replace />} />
+        <Route path="/master-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
         <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />
         <Route path={ROUTES.FAQ} element={<FAQPage />} />
         <Route path="/team" element={<Navigate to={ROUTES.TEAM_PROFILE} replace />} />
@@ -86,7 +89,8 @@ export const AppRoutes = () => {
         <Route path="challenge" element={<ChallengeViewPage />} />
         <Route path="checkpoint" element={<CheckpointScannerPage />} />
         <Route path="team" element={<TeamProfilePage />} />
-        <Route path="master-flag" element={<MasterFlagPage />} />
+        <Route path="master-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
+        <Route path="final-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
       </Route>
 
       {/* 3. Admin Command SOC Protected Routes */}

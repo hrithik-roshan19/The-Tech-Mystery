@@ -95,7 +95,31 @@ export default function ChallengeLevelsPage() {
                 <span className="htg-level-copy">
                   <strong>{level.title}</strong>
                   <small>{level.description}</small>
-                  {selectedLevel === level.number && <span className="htg-level-detail">{level.detail}</span>}
+                  {selectedLevel === level.number && (
+                    <span className="htg-level-detail">
+                      {level.detail}
+                      {level.number === "10" && (
+                        <Link
+                          to={ROUTES.FINAL_FLAG}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            display: "inline-block",
+                            marginTop: "8px",
+                            padding: "6px 12px",
+                            background: "var(--htg-lime, #b8ff3d)",
+                            color: "#080a09",
+                            fontWeight: "800",
+                            fontSize: "10px",
+                            borderRadius: "4px",
+                            textDecoration: "none",
+                            letterSpacing: "0.5px"
+                          }}
+                        >
+                          FINAL FLAG GATE →
+                        </Link>
+                      )}
+                    </span>
+                  )}
                 </span>
                 <span className={`htg-difficulty ${level.difficulty.toLowerCase()}`}>{level.difficulty}</span>
                 <span className="htg-level-chevron" aria-hidden="true">›</span>

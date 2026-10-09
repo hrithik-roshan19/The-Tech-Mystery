@@ -76,6 +76,7 @@ export default function ParticipantDashboard() {
           <Link to={ROUTES.CHALLENGES} onClick={() => setSidebarOpen(false)}><span>⚑</span>Challenges</Link>
           <Link to={ROUTES.TEAM_PROFILE} onClick={() => setSidebarOpen(false)}><span>♧</span>Team</Link>
           <Link to={ROUTES.LEADERBOARD} onClick={() => setSidebarOpen(false)}><span>▥</span>Leaderboard</Link>
+          <Link to={ROUTES.FINAL_FLAG} onClick={() => setSidebarOpen(false)}><span>✦</span>Final Flag</Link>
           <Link to={ROUTES.RULES} onClick={() => setSidebarOpen(false)}><span>▤</span>Rules</Link>
           <Link to={ROUTES.FAQ} onClick={() => setSidebarOpen(false)}><span>♧</span>Resources</Link>
           <Link to={ROUTES.TEAM_PROFILE} onClick={() => setSidebarOpen(false)}><span>◉</span>Profile</Link>
@@ -138,7 +139,7 @@ export default function ParticipantDashboard() {
               <div className="pd-panel-heading"><h2>Challenge Levels</h2><Link to={ROUTES.CHALLENGES}>View All Challenges →</Link></div>
               <div className="pd-level-grid">
                 {levels.map(([number, title, difficulty, state, icon]) => (
-                  <Link to={ROUTES.CHALLENGES} key={number} className={`pd-level-card ${state}`}>
+                  <Link to={number === "10" ? ROUTES.FINAL_FLAG : ROUTES.CHALLENGES} key={number} className={`pd-level-card ${state}`}>
                     <div className="pd-level-top"><span>{number}</span><b>{icon}</b><i>{state === "done" ? "✓" : state === "active" ? "●" : "♙"}</i></div>
                     <strong>{title}</strong>
                     <small className={`pd-difficulty ${difficulty.toLowerCase()}`}>{difficulty}</small>

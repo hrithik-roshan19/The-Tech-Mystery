@@ -404,6 +404,30 @@
   - [x] Production build clean (`npm run build --workspace=client` built in 20.61s with 0 errors).
   - [x] Dev server runtime HTTP 200 OK verified.
 
+---
+
+## Phase 2 / Phase 5 Integration — Final Flag / Victory UI (`/final-flag`) Complete (Completed)
+- [x] Integrated reference `FinalFlagPage.jsx` at `client/src/pages/participant/FinalFlagPage.jsx`:
+  - [x] Hero section with Endgame Protocol badge, clamped "SYSTEM BREACHED." typography, progress bar (10/10), and master flag radar target graphic.
+  - [x] Form submission panel with `HTG` input prefix, validation status indicators, and collapsible pre-submission checklist.
+  - [x] Victory Protocol sidebar card with step breakdown and endgame objective.
+  - [x] Verified victory state: Displays "MISSION ACCOMPLISHED." only when server validates flag (`res.data.isCorrect === true`), or if squad already solved Level 10.
+  - [x] Connected directly to authenticated backend endpoint `challengeService.submitFlag(10, flag)` (`POST /api/v1/submissions/submit`).
+  - [x] Progression guard: Checks `teamService.getMyTeam()`; warns if squad has not yet cleared Levels 1–9.
+  - [x] Replaced all anchor tags with React Router `<Link>` components using `ROUTES` constants.
+- [x] Integrated reference `FinalFlagPage.css` at `client/src/styles/FinalFlagPage.css`:
+  - [x] Set `.final-flag-page` root to `overflow-x: hidden` preventing mobile overflow while guaranteeing smooth vertical scrolling.
+  - [x] Fully responsive across breakpoints (900px, 640px) with reduced-motion support.
+- [x] Connected navigation & routing:
+  - [x] Registered `FINAL_FLAG: '/final-flag'` and mapped `MASTER_FLAG: '/final-flag'` in `client/src/constants/routes.js`.
+  - [x] Mounted `ROUTES.FINAL_FLAG` as Standalone Full-Bleed route in `AppRoutes.jsx`, with portal redirects for `/portal/master-flag` and `/portal/final-flag`.
+  - [x] Added "Final Flag" link in `ParticipantDashboard.jsx` sidebar, wired Level 10 card in the dashboard level grid, and added CTA button on Level 10 in `ChallengeLevelsPage.jsx`.
+- [x] Verification:
+  - [x] Production build clean (`npm run build --workspace=client` completed in 8.78s with 0 errors).
+  - [x] Headless Chrome visual screenshot verified at 1440x900.
+  - [x] Runtime HTTP 200 OK verified across `/final-flag`.
+
+
 
 
 

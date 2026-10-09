@@ -254,6 +254,22 @@ This document logs significant architectural and design choices, their context, 
   - Connect all action and navigation links to canonical routes (`ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.QR_CHECKPOINT`, `ROUTES.RULES`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, `ROUTES.REGISTER`) with zero `href="#"` or broken hash references.
 - **Consequences**: Matches original reference layout and dashboard proportions, provides verified headless Chrome visual rendering, maintains clean build integrity (0 errors), and leaves live backend WebSocket/REST score streaming ready for future phase hookup.
 
+---
+
+## ADR-0023: Final Flag / Victory UI Integration (`/final-flag`)
+- **Status**: ACCEPTED
+- **Context**: The climax of the Hack the Grid competition requires an authenticated Final Flag / Victory UI for Level 10 (Master Flag). The reference design (`Hack-The-Grid-Final-Flag-Victory-UI.zip`) provides a cyber endgame aesthetic featuring "SYSTEM BREACHED." typography, master flag radar targeting art, secure flag submission form with HTG input prefix, pre-submission checklist drawer, Victory Protocol sidebar, and an animated "MISSION ACCOMPLISHED" victory state.
+- **Decision**:
+  - Integrate `FinalFlagPage.jsx` at `client/src/pages/participant/FinalFlagPage.jsx` and `FinalFlagPage.css` at `client/src/styles/FinalFlagPage.css`.
+  - Add `FINAL_FLAG: '/final-flag'` to `client/src/constants/routes.js` and mount it under Standalone Full-Bleed Pages in `AppRoutes.jsx`, with portal redirects for `/portal/master-flag` and `/portal/final-flag`.
+  - Connect flag verification directly to the existing authenticated backend API `challengeService.submitFlag(10, flag)` (`POST /api/v1/submissions/submit`).
+  - Gated victory state: Display "MISSION ACCOMPLISHED" strictly after server confirmation of flag validity (`res.data.isCorrect === true`), or if `team.currentLevel > 10` confirms prior solve.
+  - Progression protection: Query `teamService.getMyTeam()` to detect current progression level. If `team.currentLevel < 10`, informatively block submission and guide the squad to conquer preceding levels first.
+  - Set root `.final-flag-page` to `overflow-x: hidden` allowing smooth vertical scrolling through all viewports down to the footer.
+  - Link from participant surfaces: Add "Final Flag" item to `ParticipantDashboard.jsx` sidebar, wire Level 10 card in the dashboard level grid, add direct action button on Level 10 in `ChallengeLevelsPage.jsx`, and map `MASTER FLAG` in `ParticipantLayout.jsx`.
+- **Consequences**: Guarantees zero frontend flag leaks or simulated wins, prevents duplicate points through backend atomic solve transactions, enforces strict sequential level progression, and delivers a visually compelling victory experience with 0 compilation errors.
+
+
 
 
 

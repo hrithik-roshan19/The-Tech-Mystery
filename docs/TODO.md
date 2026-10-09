@@ -93,6 +93,14 @@
   - [x] Connect working search, filter tabs (All Teams, Top 5, My Team), and sort dropdown over demo data.
   - [x] Add clear `EVENT RANKINGS DEMO DATA` badge and telemetry notes.
   - [x] Connect internal links to `ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.QR_CHECKPOINT`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, and `ROUTES.REGISTER`.
+- [x] Final Flag / Victory UI Integration:
+  - [x] Integrate reference `FinalFlagPage.jsx` at `client/src/pages/participant/FinalFlagPage.jsx`.
+  - [x] Integrate reference `FinalFlagPage.css` at `client/src/styles/FinalFlagPage.css` with `overflow-x: hidden` and responsive design.
+  - [x] Register `FINAL_FLAG: '/final-flag'` and mount standalone route in `AppRoutes.jsx`.
+  - [x] Connect flag submission directly to authenticated backend endpoint `challengeService.submitFlag(10, flag)` (`POST /api/v1/submissions/submit`).
+  - [x] Display "MISSION ACCOMPLISHED" strictly after server confirms flag validity or confirms previous solve.
+  - [x] Enforce progression requirements and prevent client-side scoring simulation.
+  - [x] Add navigation links from `ParticipantDashboard.jsx`, `ChallengeLevelsPage.jsx`, and `ParticipantLayout.jsx`.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

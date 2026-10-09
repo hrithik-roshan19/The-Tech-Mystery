@@ -25,7 +25,8 @@ export const ROUTES = {
   CHECKPOINT: '/portal/checkpoint',
   LEADERBOARD: '/leaderboard',
   TEAM_PROFILE: '/portal/team',
-  MASTER_FLAG: '/portal/master-flag',
+  MASTER_FLAG: '/final-flag',
+  FINAL_FLAG: '/final-flag',
 
   // Admin
   ADMIN_DASHBOARD: '/admin',
