@@ -10,6 +10,7 @@ import AdminLayout from '../layouts/AdminLayout';
 
 // Public Pages
 import HomePage from '../pages/public/HomePage';
+import MissionPage from '../pages/public/MissionPage';
 import AboutPage from '../pages/public/AboutPage';
 import HowItWorksPage from '../pages/public/HowItWorksPage';
 import RulesPage from '../pages/public/RulesPage';
@@ -45,6 +46,7 @@ export const AppRoutes = () => {
     <Routes>
       {/* 1. Standalone Full-Bleed Pages (Preserves custom hero navigation, overlays & glass panels) */}
       <Route path={ROUTES.HOME} element={<HomePage />} />
+      <Route path={ROUTES.MISSION} element={<MissionPage />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />

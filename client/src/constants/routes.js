@@ -4,6 +4,7 @@
 export const ROUTES = {
   // Public
   HOME: '/',
+  MISSION: '/mission',
   ABOUT: '/about',
   HOW_IT_WORKS: '/how-it-works',
   RULES: '/rules',

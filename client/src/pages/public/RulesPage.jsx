@@ -117,8 +117,8 @@ export default function RulesPage() {
         </Link>
 
         <nav>
-          <a href="/#mission">MISSION</a>
-          <a href="/#how-it-works">HOW IT WORKS</a>
+          <Link to={ROUTES.MISSION}>MISSION</Link>
+          <a href="/mission#how-it-works">HOW IT WORKS</a>
           <a href="/#challenges">CHALLENGES</a>
           <Link className="current" to={ROUTES.RULES}>RULES</Link>
           <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
@@ -141,8 +141,8 @@ export default function RulesPage() {
 
         {mobileMenuOpen && (
           <div className="rp-mobile-drawer">
-            <a href="/#mission" onClick={() => setMobileMenuOpen(false)}>MISSION</a>
-            <a href="/#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</a>
+            <Link to={ROUTES.MISSION} onClick={() => setMobileMenuOpen(false)}>MISSION</Link>
+            <a href="/mission#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</a>
             <a href="/#challenges" onClick={() => setMobileMenuOpen(false)}>CHALLENGES</a>
             <Link className="current" to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
             <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>
@@ -249,7 +249,7 @@ export default function RulesPage() {
                 <p className="rp-kicker">NEED CLARIFICATION?</p>
                 <h3>Ask an organizer.</h3>
                 <p>If a rule or challenge is unclear, pause and ask an authorized event volunteer instead of guessing.</p>
-                <a href="/#mission">ABOUT THE EVENT ↗</a>
+                <Link to={ROUTES.MISSION}>ABOUT THE EVENT ↗</Link>
               </div>
             </aside>
           </div>

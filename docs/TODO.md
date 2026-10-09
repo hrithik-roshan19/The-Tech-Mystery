@@ -37,6 +37,16 @@
   - [x] Responsive breakpoints (1200px, 900px, 600px, 360px, 330px) verified down to 320px width.
 - [x] Mount `ROUTES.RULES` as standalone full-bleed route in `AppRoutes.jsx`.
 - [x] Fix cross-page Rules navigation: replace `#rules` / `/#rules` with dedicated `<Link to={ROUTES.RULES}>` across `HomePage`, `LoginPage`, and `RegisterPage`.
+- [x] Integrate reference `MissionPage.jsx` at `client/src/pages/public/MissionPage.jsx`:
+  - [x] Interactive 6-step mission playbook with cycling Next Step controls.
+  - [x] Expandable 10-level Challenge Map.
+  - [x] Smooth hash scrolling to `#how-it-works` and `#challenges`.
+  - [x] Responsive hamburger menu drawer.
+- [x] Integrate reference `MissionPage.css` at `client/src/styles/MissionPage.css`:
+  - [x] Scoped `--lime`, `--white`, `--muted` variables and campus background integration.
+  - [x] Responsive breakpoints (1200px, 900px, 600px, 360px, 330px) verified down to 320px width.
+- [x] Mount `ROUTES.MISSION` (`/mission`) as standalone full-bleed route in `AppRoutes.jsx`.
+- [x] Update cross-page nav links: Mission to `/mission` and How It Works to `/mission#how-it-works`.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

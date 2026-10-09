@@ -160,6 +160,43 @@
   - Direct refresh of `/rules` loads cleanly with HTTP 200 OK.
   - Zero build errors (`npm run build --workspace=client` completed in 7.00s) and zero console warnings.
 
+---
+
+## Phase 2 UI Integration — Mission Page Complete (Completed)
+- [x] Integrated reference `MissionPage.jsx` at `client/src/pages/public/MissionPage.jsx`:
+  - [x] Full-bleed header (`.mp-nav`) with brand mark, anchor navigation, and action buttons.
+  - [x] Visual background stack (`.mp-bg` with `/campus-hero.png`, `.mp-overlay`, `.mp-grid`).
+  - [x] Orbit visual animation with 3 rotating rings, central HTG 2026 core, and live status floating tags.
+  - [x] 4 metrics summary cards (`.mp-stats`): 10 levels, 2–4 members, 90–120 mins, 01 master flag.
+  - [x] Interactive 6-step mission playbook (`.mp-process`):
+    - 01 Register Your Team
+    - 02 Enter Mission Control
+    - 03 Find Your Checkpoint
+    - 04 Crack Each Level
+    - 05 Unlock the Next Stage
+    - 06 Capture the Master Flag
+  - [x] Looping Next Step button cycling through all 6 stages (`(active + 1) % steps.length`).
+  - [x] 4-pillar principles of play: Think Critically, Explore & Discover, Collaborate, Play Responsibly.
+  - [x] Interactive Challenge Map with expansion toggle (5 levels default, 10 levels expanded).
+  - [x] Hash-scroll support (`useEffect` listening to `location.hash`) for seamless deep linking to `#how-it-works` and `#challenges`.
+  - [x] Responsive hamburger menu button (`.mp-mobile-menu`) and backdrop drawer (`.mp-mobile-drawer`).
+- [x] Integrated reference `MissionPage.css` at `client/src/styles/MissionPage.css`:
+  - [x] Scoped styles with `.htg-mission` root and `--lime`, `--white`, `--muted` variables.
+  - [x] Connected campus hero background asset `/campus-hero.png`.
+  - [x] Responsive breakpoints (1200px, 900px, 600px, 360px, 330px) verified down to 320px with zero horizontal scroll.
+- [x] Routing Integration:
+  - [x] Registered `MISSION: '/mission'` in `client/src/constants/routes.js`.
+  - [x] Mounted `ROUTES.MISSION` as a standalone full-bleed route in `AppRoutes.jsx`.
+  - [x] Updated cross-page nav links in `LoginPage.jsx`, `RegisterPage.jsx`, and `RulesPage.jsx` to route Mission to `/mission` and How It Works to `/mission#how-it-works`.
+  - [x] Preserved existing in-page anchors on `HomePage.jsx` (`#mission`, `#how-it-works`).
+- [x] Verification:
+  - [x] Tested across all 7 target viewports (320px, 360px, 390px, 430px, 768px, 1024px, 1440px) with zero horizontal overflow.
+  - [x] Production build clean (`npm run build --workspace=client` completed in 13.35s with 0 errors).
+  - [x] Direct URL load of `/mission` returns HTTP 200 OK.
+  - [x] Mission step selector and Next Step looping verified.
+  - [x] Challenge map level expansion verified (5 to 10 levels toggle).
+
+
 
 
 

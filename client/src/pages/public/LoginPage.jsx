@@ -165,8 +165,8 @@ export default function LoginPage() {
         </Link>
 
         <nav>
-          <a href="/#mission">MISSION</a>
-          <a href="/#how-it-works">HOW IT WORKS</a>
+          <Link to={ROUTES.MISSION}>MISSION</Link>
+          <a href="/mission#how-it-works">HOW IT WORKS</a>
           <a href="/#challenges">CHALLENGES</a>
           <Link to={ROUTES.RULES}>RULES</Link>
           <Link to={ROUTES.LEADERBOARD}>LEADERBOARD</Link>
@@ -189,8 +189,8 @@ export default function LoginPage() {
 
         {mobileMenuOpen && (
           <div className="htg-login-drawer">
-            <a href="/#mission" onClick={() => setMobileMenuOpen(false)}>MISSION</a>
-            <a href="/#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</a>
+            <Link to={ROUTES.MISSION} onClick={() => setMobileMenuOpen(false)}>MISSION</Link>
+            <a href="/mission#how-it-works" onClick={() => setMobileMenuOpen(false)}>HOW IT WORKS</a>
             <a href="/#challenges" onClick={() => setMobileMenuOpen(false)}>CHALLENGES</a>
             <Link to={ROUTES.RULES} onClick={() => setMobileMenuOpen(false)}>RULES</Link>
             <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileMenuOpen(false)}>LEADERBOARD</Link>

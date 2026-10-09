@@ -392,6 +392,7 @@ Documented in detail in `docs/DECISIONS.md`:
 - **ADR-0011**: Multi-Tier Responsive Architecture for Login Experience (12 viewports tested, natural vertical scrolling, mobile menu drawer).
 - **ADR-0012**: Standalone Full-Bleed Multi-Step Register Page UI Integration (4-step team enrollment wizard, responsive drawer).
 - **ADR-0013**: Standalone Full-Bleed Rules Page UI Integration (Participant handbook, 6-category accordion, acknowledgment checkbox gate, zero horizontal overflow down to 320px).
+- **ADR-0014**: Standalone Full-Bleed Mission & How It Works Page UI Integration (Mission Playbook, 6-stage interactive process, orbital animations, expandable challenge map).
 
 ---
 
