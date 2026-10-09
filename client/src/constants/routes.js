@@ -8,6 +8,7 @@ export const ROUTES = {
   ABOUT: '/about',
   HOW_IT_WORKS: '/how-it-works',
   CHALLENGES: '/challenges',
+  QR_CHECKPOINT: '/qr-checkpoint',
   RULES: '/rules',
   SCHEDULE: '/schedule',
   FAQ: '/faq',

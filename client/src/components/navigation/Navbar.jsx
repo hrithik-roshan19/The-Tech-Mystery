@@ -15,6 +15,7 @@ export const Navbar = () => {
     { label: 'MISSION', path: ROUTES.MISSION },
     { label: 'HOW IT WORKS', path: '/mission#how-it-works' },
     { label: 'CHALLENGES', path: ROUTES.CHALLENGES },
+    { label: 'QR CHECKPOINT', path: ROUTES.QR_CHECKPOINT },
     { label: 'RULES', path: ROUTES.RULES },
     { label: 'SCHEDULE', path: ROUTES.SCHEDULE },
     { label: 'FAQ', path: ROUTES.FAQ },

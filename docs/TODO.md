@@ -74,7 +74,15 @@
   - [x] Mount `ROUTES.DASHBOARD` as standalone full-bleed route in `AppRoutes.jsx`.
   - [x] Add route aliases for `/team`, `/profile`, and `/resources` to prevent 404s.
   - [x] Integrate `useAuth` hook for operative identity, team initials, and explicit `[PREVIEW MODE // SAMPLE DATA]` badge.
-  - [x] Preserve existing protected `TeamDashboardPage.jsx` and `/portal/dashboard` workflow intact.
+- [x] Standalone QR Checkpoint UI Integration:
+  - [x] Integrate reference `QRCheckpointPage.jsx` at `client/src/pages/participant/QRCheckpointPage.jsx`.
+  - [x] Integrate reference `QRCheckpointPage.css` at `client/src/styles/QRCheckpointPage.css` with responsive breakpoints (1300px, 850px, 560px, 360px).
+  - [x] Register `QR_CHECKPOINT: '/qr-checkpoint'` in `client/src/constants/routes.js`.
+  - [x] Mount `ROUTES.QR_CHECKPOINT` as standalone full-bleed route in `AppRoutes.jsx`.
+  - [x] Connect `QR CHECKPOINT` in shared `Navbar.jsx` (`navLinks`).
+  - [x] Configure image preview with object URL and explicit user message ("Image selected. QR decoding is not connected yet.").
+  - [x] Flag recent checkpoint status cards as sample preview data.
+  - [x] Set `overflow-x: hidden` to allow vertical scrolling down to rules and recent panels while preventing mobile overflow.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

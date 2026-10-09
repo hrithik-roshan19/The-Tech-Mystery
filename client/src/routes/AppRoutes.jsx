@@ -24,6 +24,7 @@ import RegisterPage from '../pages/public/RegisterPage';
 
 // Participant Pages
 import ParticipantDashboard from '../pages/participant/ParticipantDashboard';
+import QRCheckpointPage from '../pages/participant/QRCheckpointPage';
 import TeamDashboardPage from '../pages/participant/TeamDashboardPage';
 import MissionMapPage from '../pages/participant/MissionMapPage';
 import ChallengeViewPage from '../pages/participant/ChallengeViewPage';
@@ -50,6 +51,7 @@ export const AppRoutes = () => {
       <Route path={ROUTES.HOME} element={<HomePage />} />
       <Route path={ROUTES.MISSION} element={<MissionPage />} />
       <Route path={ROUTES.CHALLENGES} element={<ChallengeLevelsPage />} />
+      <Route path={ROUTES.QR_CHECKPOINT} element={<QRCheckpointPage />} />
       <Route path={ROUTES.DASHBOARD} element={<ParticipantDashboard />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />

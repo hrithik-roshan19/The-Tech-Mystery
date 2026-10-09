@@ -312,6 +312,30 @@
   - [x] Production build clean (`npm run build --workspace=client` completed in 25.19s with 0 errors).
   - [x] Runtime HTTP 200 OK verified across `/dashboard`, `/challenges`, `/team`, `/profile`, `/resources`, `/rules`, `/portal/dashboard`.
 
+---
+
+## Phase 2 UI Integration — Standalone QR Checkpoint Page Complete (Completed)
+- [x] Integrated reference `QRCheckpointPage.jsx` at `client/src/pages/participant/QRCheckpointPage.jsx`:
+  - [x] Three-column layout: left-side event intro & stats, center QR viewfinder card & recent checkpoints, right-side 4-step "How It Works" guide, rules list, and challenge map CTA.
+  - [x] File upload image preview handler with dynamic object URL creation and safe revoke.
+  - [x] Honest status reporting: clearly displays "Image selected. QR decoding is not connected yet." without fake scan completion.
+  - [x] Recent checkpoint status cards with status indicators (`completed`, `pending`, `locked`) flagged as sample preview data.
+  - [x] Integrated React Router `Link` navigation using central `ROUTES` registry (`/`, `/mission`, `/mission#how-it-works`, `/challenges`, `/qr-checkpoint`, `/leaderboard`, `/dashboard`, `/register`).
+- [x] Integrated reference `QRCheckpointPage.css` at `client/src/styles/QRCheckpointPage.css`:
+  - [x] Scoped styles with `.htg-qr-page` root and `--qr-lime: #b8ff3d` / `--qr-bg: #070b0a` theme tokens.
+  - [x] Reused existing `/campus-hero.png` background image with double linear gradient masks and subtle grid lines.
+  - [x] Replaced `overflow: hidden` with `overflow-x: hidden` to enable full vertical scrolling on mobile and prevent horizontal overflow.
+  - [x] Responsive layout breakdown at 1300px, 850px, 560px, and 360px viewports.
+- [x] Routing Integration:
+  - [x] Registered `QR_CHECKPOINT: '/qr-checkpoint'` in `client/src/constants/routes.js`.
+  - [x] Mounted `ROUTES.QR_CHECKPOINT` as a top-level Standalone Full-Bleed route in `AppRoutes.jsx`.
+  - [x] Added `QR CHECKPOINT` to shared `Navbar.jsx` (`navLinks`).
+  - [x] Preserved existing authenticated `/portal/checkpoint` scanner untouched.
+- [x] Verification:
+  - [x] Production build clean (`npm run build --workspace=client` completed in 5.50s with 0 errors).
+  - [x] Runtime HTTP 200 OK verified across `/qr-checkpoint`, `/dashboard`, `/challenges`, `/mission`, `/rules`, `/register`, `/leaderboard`.
+
+
 
 
 

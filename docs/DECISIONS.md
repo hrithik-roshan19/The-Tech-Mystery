@@ -193,6 +193,23 @@ This document logs significant architectural and design choices, their context, 
   - Set root `.pd-page` `overflow-x: hidden` with responsive drawer toggles for mobile viewports.
 - **Consequences**: Provides participants with a high-fidelity overview dashboard, preserves live squad flows intact, avoids route conflicts, and ensures seamless responsive cross-page navigation.
 
+---
+
+## ADR-0019: Standalone QR Checkpoint Discovery UI Integration
+- **Status**: ACCEPTED
+- **Context**: The campus-wide physical scavenger component requires a dedicated public/participant checkpoint discovery page (`/qr-checkpoint`). The reference design (`Hack-The-Grid-QR-Checkpoint-UI-Full-Code.zip`) features a 3-column cyber layout: left campus intro & stats, center QR scanner viewfinder simulation with file upload and recent checkpoint status cards, and right "How It Works" 4-step walkthrough with event rules and Challenge Map CTA.
+- **Decision**:
+  - Integrate `QRCheckpointPage.jsx` at `client/src/pages/participant/QRCheckpointPage.jsx` and `QRCheckpointPage.css` at `client/src/styles/QRCheckpointPage.css`.
+  - Add `QR_CHECKPOINT: '/qr-checkpoint'` to `client/src/constants/routes.js`.
+  - Mount `ROUTES.QR_CHECKPOINT` as a top-level Standalone Full-Bleed Page in `AppRoutes.jsx`, allowing its custom navbar (`.htg-qr-navbar`) and layered background (`/campus-hero.png`) to render unconstrained.
+  - Connect `QR CHECKPOINT` in `Navbar.jsx` (`navLinks`) so the link is available across all pages utilizing the shared navigation bar.
+  - Set root `.htg-qr-page` to `overflow-x: hidden` instead of `overflow: hidden`, guaranteeing smooth vertical scrolling down to the rules and recent checkpoint panels while preventing mobile horizontal overflow.
+  - Keep the upload control scoped to image preview with explicit user messaging (`"Image selected. QR decoding is not connected yet."`), without installing unvetted scanner dependencies or falsely claiming camera scanning is operative.
+  - Explicitly label recent checkpoint cards as `(Sample Preview)` data, avoiding confusion with live server telemetry.
+  - Wire all links to project registry routes: `ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, and `ROUTES.REGISTER`.
+- **Consequences**: Delivers pixel-accurate checkpoint discovery and file preview UI, preserves existing authenticated portal scanner (`/portal/checkpoint`) intact, maintains monorepo build cleanliness (0 errors), and leaves clear architectural requirements for future QR decode integration.
+
+
 
 
 
