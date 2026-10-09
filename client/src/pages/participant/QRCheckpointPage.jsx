@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Html5Qrcode } from "html5-qrcode";
 import { useAuth } from "../../hooks/useAuth";
 import { checkpointService } from "../../services/checkpoint.service";
 import { ROUTES } from "../../constants/routes";
@@ -54,13 +55,13 @@ function parseCheckpointPayload(raw) {
 }
 
 export default function QRCheckpointPage() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const fileInputRef = useRef(null);
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const scanFrameRef = useRef(null);
-  const scanBusyRef = useRef(false);
+  const scannerRef = useRef(null);
+  const hasScannedRef = useRef(false);
 
+  const [cameras, setCameras] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [scanMessage, setScanMessage] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
@@ -72,108 +73,210 @@ export default function QRCheckpointPage() {
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState(null);
 
-  const stopLiveScan = useCallback(() => {
-    if (scanFrameRef.current) cancelAnimationFrame(scanFrameRef.current);
-    scanFrameRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    if (videoRef.current) videoRef.current.srcObject = null;
-    scanBusyRef.current = false;
+  // Stop live scanner and safely release camera resources
+  const stopLiveScan = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+      } catch (err) {
+        console.warn("Notice: Html5Qrcode stop:", err);
+      } finally {
+        try {
+          scannerRef.current.clear();
+        } catch {
+          // ignore cleanup errors
+        }
+        scannerRef.current = null;
+      }
+    }
     setCameraActive(false);
   }, []);
 
+  // Enumerate cameras on mount if supported
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCameras() {
+      if (navigator.mediaDevices?.enumerateDevices) {
+        try {
+          const devices = await Html5Qrcode.getCameras();
+          if (isMounted && devices && devices.length > 0) {
+            setCameras(devices);
+            // Auto-select rear camera if available
+            const rearCam = devices.find(
+              (c) =>
+                c.label.toLowerCase().includes("back") ||
+                c.label.toLowerCase().includes("rear") ||
+                c.label.toLowerCase().includes("environment")
+            );
+            if (rearCam) {
+              setSelectedCameraId(rearCam.id);
+            } else {
+              setSelectedCameraId(devices[0].id);
+            }
+          }
+        } catch {
+          // Camera enumeration might fail before permissions are granted;
+          // default behavior falls back to { facingMode: 'environment' }.
+        }
+      }
+    }
+    loadCameras();
+
+    return () => {
+      isMounted = false;
+      if (scannerRef.current) {
+        try {
+          if (scannerRef.current.isScanning) {
+            scannerRef.current.stop().catch(() => {}).finally(() => {
+              try { scannerRef.current?.clear(); } catch {}
+              scannerRef.current = null;
+            });
+          } else {
+            try { scannerRef.current.clear(); } catch {}
+            scannerRef.current = null;
+          }
+        } catch {}
+      }
+    };
+  }, []);
+
+  // Start live scanning using Html5Qrcode
   const startLiveScan = useCallback(async () => {
     setCameraError("");
     setDecodedValue("");
     setVerifyResult(null);
     setScanMessage("");
+    hasScannedRef.current = false;
 
-    if (!("BarcodeDetector" in window)) {
+    // Secure origin verification
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "::1";
+    if (window.location.protocol !== "https:" && !isLocalhost) {
       setCameraError(
-        "Live QR decoding via BarcodeDetector is not supported by this browser. Open this page in the latest Chrome or Edge, or use the upload option."
+        "Camera access requires a secure connection (HTTPS or localhost). It is blocked by your browser on insecure HTTP origins."
       );
       return;
     }
 
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Camera access requires a secure connection. Open the app on localhost or HTTPS.");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError(
+        "Camera mediaDevices API is not available on this device or browser. You can use the upload image option instead."
+      );
       return;
     }
 
+    // Stop any running scanner first
+    await stopLiveScan();
+
     try {
-      const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
-        audio: false,
-      });
-
-      streamRef.current = stream;
-      if (!videoRef.current) {
-        stream.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-        return;
-      }
-
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
       setCameraActive(true);
       setSelectedFile(null);
       setPreviewUrl("");
-      setScanMessage("Camera is live. Hold the QR code steady inside the frame.");
+      setScanMessage("Initializing camera. Align an official checkpoint QR code inside the frame...");
 
-      const scan = async () => {
-        if (!streamRef.current || !videoRef.current) return;
-        if (!scanBusyRef.current && videoRef.current.readyState >= 2) {
-          scanBusyRef.current = true;
-          try {
-            const codes = await detector.detect(videoRef.current);
-            if (codes.length && codes[0].rawValue) {
-              const value = codes[0].rawValue;
-              setDecodedValue(value);
-              setScanMessage("QR code detected. Verify this checkpoint with the event server before awarding points.");
-              stopLiveScan();
-              return;
-            }
-          } catch {
-            // Keep scanning; a single unreadable frame is normal while the camera moves.
-          } finally {
-            scanBusyRef.current = false;
-          }
-        }
-        if (streamRef.current) scanFrameRef.current = requestAnimationFrame(scan);
+      // Allow a brief tick for the container element #htg-qr-reader to be mounted
+      await new Promise((resolve) => setTimeout(resolve, 120));
+
+      const scanner = new Html5Qrcode("htg-qr-reader");
+      scannerRef.current = scanner;
+
+      const config = {
+        fps: 10,
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+          const size = Math.floor(minEdge * 0.75);
+          return { width: size, height: size };
+        },
+        aspectRatio: 1.0,
       };
-      scanFrameRef.current = requestAnimationFrame(scan);
+
+      // Camera selection strategy:
+      // If a specific camera ID is selected, use it. Otherwise, prefer environment (rear) camera.
+      const cameraConfig = selectedCameraId
+        ? selectedCameraId
+        : { facingMode: "environment" };
+
+      await scanner.start(
+        cameraConfig,
+        config,
+        (decodedText) => {
+          // Prevent multiple callbacks for the same scan
+          if (hasScannedRef.current) return;
+          hasScannedRef.current = true;
+
+          setDecodedValue(decodedText);
+          setScanMessage("QR code detected! Verify this checkpoint with the event server before awarding points.");
+          stopLiveScan();
+        },
+        () => {
+          // Frame parse error happens continuously while searching for QR codes; ignore silently.
+        }
+      );
+
+      setScanMessage("Camera is live. Hold the QR code steady inside the frame.");
     } catch (error) {
-      stopLiveScan();
-      if (error?.name === "NotAllowedError") {
-        setCameraError("Camera permission was denied. Allow camera access in your browser settings and try again.");
-      } else if (error?.name === "NotFoundError") {
-        setCameraError("No camera was found on this device.");
+      await stopLiveScan();
+      const errStr = String(error?.message || error || "");
+      if (
+        error?.name === "NotAllowedError" ||
+        errStr.toLowerCase().includes("permission denied") ||
+        errStr.toLowerCase().includes("notallowed")
+      ) {
+        setCameraError(
+          "Camera permission was denied. Please allow camera access in your browser settings and try again."
+        );
+      } else if (
+        error?.name === "NotFoundError" ||
+        errStr.toLowerCase().includes("not found") ||
+        errStr.toLowerCase().includes("devicesnotfound")
+      ) {
+        setCameraError("No camera was found on this device. You can use the image upload option instead.");
+      } else if (error?.name === "NotReadableError" || errStr.toLowerCase().includes("in use")) {
+        setCameraError("Camera is currently in use by another application or blocked by system permissions.");
       } else {
-        setCameraError("Could not start the camera. Check camera permissions and try again.");
+        setCameraError(`Could not start the camera: ${errStr || "Check camera permissions and try again."}`);
       }
     }
-  }, [stopLiveScan]);
+  }, [stopLiveScan, selectedCameraId]);
 
-  useEffect(() => () => {
-    if (scanFrameRef.current) cancelAnimationFrame(scanFrameRef.current);
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    if (videoRef.current) videoRef.current.srcObject = null;
-  }, []);
-
-  function handleFileChange(event) {
+  // Handle image upload with file preview + instant QR decode attempt
+  async function handleFileChange(event) {
     const file = event.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       setScanMessage("Please select an image file containing a QR code.");
       return;
     }
+
     setSelectedFile(file);
     setPreviewUrl((oldUrl) => {
       if (oldUrl) URL.revokeObjectURL(oldUrl);
       return URL.createObjectURL(file);
     });
-    setScanMessage("Image preview ready. Use Start Live Scan for camera-based QR detection.");
+    setScanMessage("Image preview ready. Scanning image for QR codes...");
+
+    // Stop live camera if active
+    if (cameraActive) {
+      await stopLiveScan();
+    }
+
+    // Attempt decoding the uploaded image via Html5Qrcode
+    try {
+      const fileScanner = new Html5Qrcode("htg-qr-file-decoder");
+      const decodedText = await fileScanner.scanFile(file, false);
+      try { fileScanner.clear(); } catch {}
+      if (decodedText) {
+        setDecodedValue(decodedText);
+        setScanMessage("QR code successfully detected in uploaded image! Verify with server below.");
+      }
+    } catch {
+      // If scanFile couldn't decode, maintain preview and notify user
+      setScanMessage("Image preview ready. No readable QR code detected in this file. Try another image or use Start Live Scan.");
+    }
   }
 
   // Handle server-side checkpoint verification
@@ -184,7 +287,7 @@ export default function QRCheckpointPage() {
     if (!code) {
       setVerifyResult({
         success: false,
-        message: "Unable to parse a valid checkpoint code from the scanned payload."
+        message: "Scanned QR code does not contain a recognizable checkpoint code format."
       });
       return;
     }
@@ -196,7 +299,7 @@ export default function QRCheckpointPage() {
       const res = await checkpointService.scanCheckpoint(code, token);
       setVerifyResult({
         success: true,
-        message: res.message || `Checkpoint verified! Level ${res.data?.checkpoint?.levelNumber || ""} unlocked.`,
+        message: res.message || `Checkpoint verified: ${res.data?.checkpoint?.name || code}. Level unlocked!`,
         data: res.data
       });
     } catch (err) {
@@ -272,14 +375,13 @@ export default function QRCheckpointPage() {
               <i className="corner top-right" />
               <i className="corner bottom-left" />
               <i className="corner bottom-right" />
-              <video
-                ref={videoRef}
-                className="htg-qr-live-video"
+
+              {/* Cross-browser Html5Qrcode live viewfinder container */}
+              <div
+                id="htg-qr-reader"
                 style={{ display: cameraActive ? "block" : "none" }}
-                muted
-                playsInline
-                aria-label="Live QR scanner camera preview"
               />
+
               {!cameraActive && (
                 previewUrl ? (
                   <img src={previewUrl} alt="Selected QR code image preview" />
@@ -287,6 +389,7 @@ export default function QRCheckpointPage() {
                   <span className="htg-qr-scan-symbol">▣</span>
                 )
               )}
+
               <strong>{cameraActive ? "Live camera scanning…" : selectedFile ? selectedFile.name : "Scan QR Code"}</strong>
               <small>
                 {cameraActive
@@ -296,6 +399,28 @@ export default function QRCheckpointPage() {
                   : "Start the camera and align an official checkpoint QR code inside the frame."}
               </small>
             </div>
+
+            {/* Hidden container for file-based decoding */}
+            <div id="htg-qr-file-decoder" style={{ display: "none" }} aria-hidden="true" />
+
+            {/* Camera selector if multiple cameras detected */}
+            {cameras.length > 1 && !cameraActive && (
+              <div className="htg-qr-camera-picker">
+                <label htmlFor="camera-select">Camera:</label>
+                <select
+                  id="camera-select"
+                  value={selectedCameraId}
+                  onChange={(e) => setSelectedCameraId(e.target.value)}
+                  className="htg-qr-select"
+                >
+                  {cameras.map((cam) => (
+                    <option key={cam.id} value={cam.id}>
+                      {cam.label || `Camera ${cam.id}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="htg-qr-camera-actions">
               {!cameraActive ? (

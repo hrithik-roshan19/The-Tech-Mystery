@@ -223,6 +223,22 @@ This document logs significant architectural and design choices, their context, 
   - Provide an inline "Verify with Server" trigger for authenticated users and a "Login to Verify" redirect for unauthenticated guests.
 - **Consequences**: Enables zero-dependency live camera QR decoding on Chromium browsers, eliminates client-side trust vectors, prevents camera resource leaks, and seamlessly bridges the physical checkpoint scanning flow with the backend scoring engine.
 
+---
+
+## ADR-0021: Universal Cross-Browser QR Scanner Integration via html5-qrcode
+- **Status**: ACCEPTED
+- **Context**: The initial live camera implementation relied on the browser-native `BarcodeDetector` API. While efficient on recent Chromium builds, `BarcodeDetector` is unsupported in Firefox, older Safari/iOS versions, and several mobile WebViews, resulting in a blocking error ("Live QR decoding via BarcodeDetector is not supported by this browser"). The hackathon requires cross-platform compatibility across all mobile and desktop browsers used by participants.
+- **Decision**:
+  - Install `html5-qrcode` in the `client` workspace.
+  - Refactor `QRCheckpointPage.jsx` to replace `BarcodeDetector` with `Html5Qrcode`.
+  - Maintain a single scanner instance reference (`scannerRef`) with unmount and React Strict Mode cleanup routines to prevent memory leaks and duplicate media streams.
+  - Auto-enumerate video input devices using `Html5Qrcode.getCameras()` and prioritize rear/environment cameras (`facingMode: "environment"`) while offering camera selection when multiple lenses are detected.
+  - Guard scan callbacks with `hasScannedRef` to guarantee idempotency and prevent multiple triggers per frame.
+  - Extend image file upload handling to attempt automated QR decoding via `Html5Qrcode.scanFile()` alongside image preview.
+  - Connect verified QR payloads to `checkpointService.scanCheckpoint(code, token)` while maintaining unverified client-side labeling.
+- **Consequences**: Resolves the "BarcodeDetector is not supported" blocker across all browsers (Chrome, Firefox, Safari, Edge, mobile browsers), preserves the electric-lime cyber UI, guarantees clean camera lifecycle teardown, and maintains build integrity (0 compilation errors).
+
+
 
 
 

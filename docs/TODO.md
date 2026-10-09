@@ -80,8 +80,8 @@
   - [x] Register `QR_CHECKPOINT: '/qr-checkpoint'` in `client/src/constants/routes.js`.
   - [x] Mount `ROUTES.QR_CHECKPOINT` as standalone full-bleed route in `AppRoutes.jsx`.
   - [x] Connect `QR CHECKPOINT` in shared `Navbar.jsx` (`navLinks`).
-  - [x] Configure image preview with object URL.
-  - [x] Integrate live camera scanning via native `BarcodeDetector` API with rear camera focus (`facingMode: "environment"`).
+  - [x] Configure image preview with object URL and integrated client-side file QR decoding (`Html5Qrcode.scanFile`).
+  - [x] Integrate universal cross-browser live camera scanning via `html5-qrcode` with rear camera priority and camera switcher.
   - [x] Add camera permission handling, error states, and unmount stream cleanup.
   - [x] Connect scanned QR payload to backend `checkpointService.scanCheckpoint(code, token)` verification workflow.
   - [x] Flag recent checkpoint status cards as sample preview data.

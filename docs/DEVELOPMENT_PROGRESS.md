@@ -353,6 +353,22 @@
   - [x] Production build clean (`npm run build --workspace=client` completed in 13.78s with 0 errors).
   - [x] Runtime HTTP 200 OK verified across all routes.
 
+---
+
+## Phase 2 / Phase 7 Engineering — Cross-Browser QR Scanning (`html5-qrcode`) Complete (Completed)
+- [x] Replaced `BarcodeDetector`-only scanner with `html5-qrcode` (^2.3.8):
+  - [x] Eliminated "Live QR decoding via BarcodeDetector is not supported by this browser" limitation.
+  - [x] Universal cross-browser support across Chrome, Firefox, Safari, Edge, and iOS/Android mobile WebViews.
+  - [x] Camera device enumeration via `Html5Qrcode.getCameras()` with automatic rear/environment camera preference.
+  - [x] Interactive camera switcher dropdown when multiple camera sensors are available.
+  - [x] Idempotent callback locking via `hasScannedRef` preventing duplicate detection triggers.
+  - [x] Safe lifecycle teardown handling unmounts and React Strict Mode rerenders without leaking media tracks.
+  - [x] Dual-mode scanner: continuous live camera scanning + client-side image file QR decoding via `Html5Qrcode.scanFile()`.
+- [x] Verification:
+  - [x] Production build clean (`npm run build --workspace=client` completed in 8.71s with 0 errors).
+  - [x] Runtime HTTP 200 OK verified across `/qr-checkpoint` and all 7 core routes.
+
+
 
 
 

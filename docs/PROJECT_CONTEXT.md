@@ -82,6 +82,7 @@ The primary objective of Hack the Grid is to provide a cheat-resilient, scalable
   - Styling: Tailwind CSS (Custom Cybersecurity SOC theme)
   - Routing: React Router v7
   - Animation: Framer Motion
+  - QR Scanner: html5-qrcode (cross-browser live camera detection & file decode)
   - API Client: Axios (with Bearer JWT interceptors and auto-error handling)
   - Icons: Lucide React
 - **Backend API**:
