@@ -371,27 +371,38 @@
 ---
 
 ## Phase 2 UI Integration — Standalone Leaderboard Page (`/leaderboard`) Complete (Completed)
-- [x] Integrated reference `LeaderboardPage.jsx` at `client/src/pages/public/LeaderboardPage.jsx`:
-  - [x] Full-bleed top navigation bar (`.htg-lb-navbar`) with brand mark, active nav links, and Dashboard/Register CTAs.
-  - [x] Visual background stack (`.htg-lb-background`) reusing `/campus-hero.png` with cyber matrix grid overlay.
-  - [x] Hero header with live indicator and explicit `EVENT RANKINGS DEMO DATA` badge.
-  - [x] Top-3 podium cards (`.htg-lb-podium`) with gold, silver, and bronze rank styling, medals, team names, solved counts, and point totals.
-  - [x] Live standings panel (`.htg-lb-main-panel`) with search input, filter pills (All Teams, Top 5, My Team), and sort dropdown (Rank, Points, Challenges Solved).
-  - [x] Full standings table with rank medals/numbers, team avatar badges, solve progress bars, point values, timestamps, and trend arrows (up, down, same).
-  - [x] Empty state messaging when searches yield no matches.
-  - [x] Bottom row featuring personal team rank card (`#04 ByteForce`) with link to Dashboard, and Hack the Grid event quotation.
-  - [x] Responsive footer with event copyright and motto.
-- [x] Integrated reference `LeaderboardPage.css` at `client/src/styles/LeaderboardPage.css`:
-  - [x] Electric-lime palette token `--lb-lime: #b8ff3d` on dark `#070b0a` backdrop.
-  - [x] Set `.htg-lb-page` root to `overflow-x: hidden` preventing mobile horizontal clipping while guaranteeing smooth vertical scrolling.
-  - [x] Responsive layout breakpoints (1200px, 800px, 520px) with mobile podium layout conversion (compact horizontal cards) and scrollable navigation links.
-- [x] Connected routing in `AppRoutes.jsx`:
-  - [x] Mounted `<Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />` under Standalone Full-Bleed Pages.
-  - [x] Removed old nested route placeholder inside `PublicLayout` to avoid duplicate header/footer nesting.
-  - [x] Connected all internal links to `ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.QR_CHECKPOINT`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, and `ROUTES.REGISTER`.
-- [x] Verification:
-  - [x] Production build clean (`npm run build --workspace=client` completed in 14.60s with 0 errors).
-  - [x] Runtime HTTP 200 OK verified across `/leaderboard` and all public/participant routes.
+- [x] Implemented reference 3-column desktop layout at `client/src/pages/public/LeaderboardPage.jsx` and `client/src/styles/LeaderboardPage.css`:
+  - [x] **Left Hero (~28%)**:
+    - [x] Eyebrow: `TOP TEAMS RISE TO THE GRID` in electric lime.
+    - [x] Heading: White `LIVE STANDINGS` with `THE GRID` in electric lime `#b8ff3d`.
+    - [x] Accent bar and supporting telemetry paragraph.
+    - [x] Key metrics: Participants (`120+`), Challenges (`10`), Champion points (`1,850`).
+    - [x] Motivational event quote on dark overlay card with lime border.
+  - [x] **Center Column (~47%)**:
+    - [x] Compact podium with 3 ranked teams:
+      - Silver runner-up on the left (`#02 CyberTitans`, 1,620 PTS, 8/10 solved).
+      - Taller gold champion in the center (`#01 NullPointers`, 1,850 PTS, 9/10 solved, lime glow).
+      - Bronze third place on the right (`#03 HackOverflow`, 1,480 PTS, 8/10 solved).
+      - Compact proportions preventing table push-down.
+    - [x] Full live standings panel:
+      - Search box with query matching.
+      - Filter pills: All Teams / Top 5 / My Team.
+      - Sort dropdown: Rank / Points / Solved.
+      - Table columns: `RANK`, `TEAM NAME`, `CHALLENGES SOLVED`, `POINTS`, `LAST ACTIVITY`, `TREND`.
+      - Highlighted current team row (`#04 ByteForce [YOU]`).
+      - Responsive horizontal scroll wrapper.
+  - [x] **Right Sidebar (~25%)**:
+    - [x] Your Team status card with `#04` rank badge, points, 6/10 progress bar, trend, and `View Team Dashboard →` link.
+    - [x] Leaderboard Stats panel with Total Teams (32), Challenges (10), Participants (128), and Highest Points (1,850 PTS).
+    - [x] Recent Activity feed with live marker, team events, timestamps, and View All toggle.
+- [x] Navbar and routing compliance:
+  - [x] Connected all nav items (`Mission`, `How It Works`, `Challenges`, `QR Checkpoint`, `Rules`, `Leaderboard`) to canonical routes.
+  - [x] Rules link points to `ROUTES.RULES` (`/rules`) with zero `href="#"` or broken hash links.
+  - [x] Mobile drawer for screens below 860px.
+- [x] Visual Verification & Build:
+  - [x] Headless Chrome screenshot verified at 1440x900 capturing the complete 3-column layout, podium, rankings, and sidebar cards.
+  - [x] Production build clean (`npm run build --workspace=client` built in 20.61s with 0 errors).
+  - [x] Dev server runtime HTTP 200 OK verified.
 
 
 

@@ -246,10 +246,13 @@ This document logs significant architectural and design choices, their context, 
 - **Decision**:
   - Integrate `LeaderboardPage.jsx` at `client/src/pages/public/LeaderboardPage.jsx` and `LeaderboardPage.css` at `client/src/styles/LeaderboardPage.css`.
   - Mount `ROUTES.LEADERBOARD` (`/leaderboard`) under Standalone Full-Bleed Pages in `AppRoutes.jsx`, removing the former nested placeholder inside `PublicLayout` to prevent duplicate navigation bars and footers.
-  - Keep the root `.htg-lb-page` set to `overflow-x: hidden` to ensure natural vertical scrolling down to the rankings table and footer across mobile and desktop viewports while eliminating horizontal overflow.
-  - Maintain working client-side search, filtering, and sorting over the demo `teams` dataset, coupled with transparent demo signaling (`"EVENT RANKINGS DEMO DATA"` badge and `"Rankings refresh when connected to live event data"` note).
-  - Connect all action and navigation links to canonical routes (`ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.QR_CHECKPOINT`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, `ROUTES.REGISTER`).
-- **Consequences**: Delivers pixel-perfect electric-lime leaderboard presentation matching the Hack the Grid design system, provides immediate interactive search/filtering, prevents container clipping or scroll locking, preserves build integrity (0 errors), and leaves backend WebSocket/REST score streaming ready for future phase hookup.
+  - Implement the desktop 3-column composition matching the original reference:
+    - **Left Hero (~28%)**: `TOP TEAMS RISE TO THE GRID`, white heading with `THE GRID` in electric lime, accent bar, supporting telemetry paragraph, participant / challenge / champion stats, and motivational quotation on dark overlay.
+    - **Center Column (~47%)**: Compact top podium with 3 ranked teams (silver runner-up left, taller gold champion center with subtle lime glow, bronze 3rd place right) with emblems, ranks, points, and solve progress; followed immediately by the full standings panel with live search, All Teams / Top 5 / My Team filters, sort dropdown, and highlighted current-team row (`#04 ByteForce`).
+    - **Right Sidebar (~25%)**: Your Squad status card with rank badge, solve progress, and dashboard link; Leaderboard Stats card (Total Teams, Challenges, Participants, Highest Points); and Recent Activity feed with live marker and View All toggle.
+  - Set root `.htg-lb-page` to `overflow-x: hidden` preventing mobile horizontal clipping while guaranteeing smooth vertical scrolling.
+  - Connect all action and navigation links to canonical routes (`ROUTES.HOME`, `ROUTES.MISSION`, `ROUTES.CHALLENGES`, `ROUTES.QR_CHECKPOINT`, `ROUTES.RULES`, `ROUTES.LEADERBOARD`, `ROUTES.DASHBOARD`, `ROUTES.REGISTER`) with zero `href="#"` or broken hash references.
+- **Consequences**: Matches original reference layout and dashboard proportions, provides verified headless Chrome visual rendering, maintains clean build integrity (0 errors), and leaves live backend WebSocket/REST score streaming ready for future phase hookup.
 
 
 
