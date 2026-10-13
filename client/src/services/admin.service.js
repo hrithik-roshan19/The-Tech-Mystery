@@ -1,0 +1,57 @@
+import api from './api';
+
+/**
+ * Admin API Service
+ * Communicates with protected /api/v1/admin/* endpoints (requires ADMIN JWT).
+ */
+export const adminService = {
+  getDashboardStats: async () => {
+    const res = await api.get('/admin/dashboard-stats');
+    return res.data;
+  },
+
+  getAllTeams: async () => {
+    const res = await api.get('/admin/teams');
+    return res.data;
+  },
+
+  updateTeamDisqualification: async (teamId, { isDisqualified = true, reason } = {}) => {
+    const res = await api.patch(`/admin/teams/${teamId}/disqualify`, {
+      isDisqualified,
+      reason,
+    });
+    return res.data;
+  },
+
+  getSubmissionLogs: async (params = {}) => {
+    const res = await api.get('/admin/submissions', { params });
+    return res.data;
+  },
+
+  getCheckpoints: async () => {
+    const res = await api.get('/admin/checkpoints');
+    return res.data;
+  },
+
+  createCheckpoint: async (payload) => {
+    const res = await api.post('/admin/checkpoints', payload);
+    return res.data;
+  },
+
+  createChallenge: async (payload) => {
+    const res = await api.post('/admin/challenges', payload);
+    return res.data;
+  },
+
+  createQuestion: async (payload) => {
+    const res = await api.post('/admin/questions', payload);
+    return res.data;
+  },
+
+  updateEventConfig: async (payload) => {
+    const res = await api.patch('/admin/event-config', payload);
+    return res.data;
+  },
+};
+
+export default adminService;

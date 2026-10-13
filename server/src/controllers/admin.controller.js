@@ -37,9 +37,9 @@ class AdminController {
   async getAllTeams(req, res, next) {
     try {
       const teams = await Team.find()
-        .populate('leaderId', 'username email fullName')
-        .populate('members', 'username email fullName')
-        .sort({ totalScore: -1 });
+        .populate('leaderId', 'username email fullName role collegeRollNo isActive')
+        .populate('members', 'username email fullName role collegeRollNo isActive')
+        .sort({ totalScore: -1, createdAt: -1 });
 
       return success(res, { teams });
     } catch (error) {
@@ -50,20 +50,35 @@ class AdminController {
   async disqualifyTeam(req, res, next) {
     try {
       const { teamId } = req.params;
-      const { reason } = req.body;
+      if (!teamId || !/^[0-9a-fA-F]{24}$/.test(teamId)) {
+        return badRequest(res, 'Invalid team ID format');
+      }
+
+      const { reason, isDisqualified } = req.body;
+      const shouldDisqualify = isDisqualified === undefined ? true : Boolean(isDisqualified);
+      const sanitizedReason =
+        typeof reason === 'string' && reason.trim().length > 0
+          ? reason.trim().slice(0, 300)
+          : 'Violation of event rules';
 
       const team = await Team.findByIdAndUpdate(
         teamId,
         {
-          isDisqualified: true,
-          disqualificationReason: reason || 'Violation of event rules'
+          isDisqualified: shouldDisqualify,
+          disqualificationReason: shouldDisqualify ? sanitizedReason : null
         },
         { new: true }
-      );
+      )
+        .populate('leaderId', 'username email fullName role collegeRollNo isActive')
+        .populate('members', 'username email fullName role collegeRollNo isActive');
 
       if (!team) return notFound(res, 'Team not found');
 
-      return success(res, { team }, `Team ${team.name} has been disqualified`);
+      const actionMsg = shouldDisqualify
+        ? `Team ${team.name} has been disqualified`
+        : `Team ${team.name} has been restored`;
+
+      return success(res, { team }, actionMsg);
     } catch (error) {
       return next(error);
     }

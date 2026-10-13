@@ -269,6 +269,18 @@ This document logs significant architectural and design choices, their context, 
   - Link from participant surfaces: Add "Final Flag" item to `ParticipantDashboard.jsx` sidebar, wire Level 10 card in the dashboard level grid, add direct action button on Level 10 in `ChallengeLevelsPage.jsx`, and map `MASTER FLAG` in `ParticipantLayout.jsx`.
 - **Consequences**: Guarantees zero frontend flag leaks or simulated wins, prevents duplicate points through backend atomic solve transactions, enforces strict sequential level progression, and delivers a visually compelling victory experience with 0 compilation errors.
 
+---
+
+## ADR-0024: Reference-Matched Admin Team Management UI & Shared Mission Control Sidebar (`/admin/teams`)
+- **Status**: ACCEPTED
+- **Context**: The Admin Command SOC required replacing the placeholder Tailwind `TeamManagementPage.jsx` with the reference-matched Hack the Grid Team Management UI (`Hack-The-Grid-Team-Management-UI-Reference-Match.zip`), featuring the Mission Control sidebar, 5 KPI summary cards, filter/search toolbar, Table/Grid view switcher, pagination, and a right-hand selected-team inspection panel with live backend synchronization where endpoints exist.
+- **Decision**:
+  - Extract the Mission Control sidebar into a reusable [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) component that uses `useLocation()` to automatically highlight the active admin route (`Overview`, `Teams`, `Challenges`, `Questions`, `QR Checkpoints`, `Submissions`, `Leaderboard`, `Event Control`, `Security Logs`), displays dynamic badge counts, and provides a mobile slide-over drawer.
+  - Mount `ROUTES.ADMIN_TEAMS` (`/admin/teams`) as a standalone full-bleed route in `AppRoutes.jsx` alongside `/admin/dashboard` so `TeamManagementPage` renders its own `.htg-team-page` shell without duplicate sidebars or headers from `AdminLayout.jsx`.
+  - Connect [`TeamManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/TeamManagementPage.jsx) to `GET /api/v1/admin/teams` and `PATCH /api/v1/admin/teams/:teamId/disqualify` via [`admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js), enhancing [`admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) to populate `leaderId` and `members` (`username email fullName role collegeRollNo isActive`) and to validate ObjectId parameters when disqualifying or restoring teams.
+  - Explicitly distinguish live database data (`● LIVE DATABASE`) from demo fallback data (`● DEMO PREVIEW DATA`) when unauthenticated or when the backend is offline, and surface clear informational notices for UI actions whose backend endpoints are not yet implemented (`Add Team`, `Edit Team`, `Add Member`).
+- **Consequences**: Delivers a pixel-accurate match to the Mission Control Team Management reference across desktop, tablet, and mobile viewports, enables real-time server-validated team disqualification/restoration for authenticated admins, and preserves strict separation between live production records and demo preview state.
+
 
 
 

@@ -138,6 +138,11 @@
   - [x] Verify all sections: overview statistics, challenge activity, level progress, event controls, team overview, recent submissions, recent activity, and quick actions.
   - [x] Point Questions (`/admin/questions`) and QR Checkpoints (`/admin/checkpoints`) to configured route constants and document unimplemented standalone admin subpages (`/admin/questions`, `/admin/security-logs`, `/admin/analytics`).
   - [x] Keep dashboard statistics, submissions, charts, and toggles clearly marked as demo-only preview data until connected to authenticated admin APIs.
+- [x] Integrate Reference-Matched Admin Team Management UI (`Hack-The-Grid-Team-Management-UI-Reference-Match.zip`):
+  - [x] Create shared Mission Control sidebar (`AdminSidebar.jsx`) with active route highlighting and all 9 admin navigation links.
+  - [x] Integrate `TeamManagementPage.jsx` and `TeamManagementPage.css` at `/admin/teams` without duplicate sidebars/headers.
+  - [x] Connect `GET /api/v1/admin/teams` and `PATCH /api/v1/admin/teams/:teamId/disqualify` via `admin.service.js` with populated member rosters and explicit `● LIVE DATABASE` vs `● DEMO PREVIEW DATA` badges.
+  - [x] Verify search (by team, member, email, college), status/level/college filters, reset, CSV export, Table/Grid toggle, pagination, and responsive desktop/tablet/mobile layouts.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 
@@ -196,9 +201,10 @@
 ---
 
 ## Phase 10: Admin Command SOC (Medium Priority)
-- [ ] Verify admin authentication guard (`requireAdmin`).
+- [x] Verify admin authentication guard (`requireAdmin`).
 - [ ] Implement live submission stream polling in Admin SOC.
-- [ ] Implement one-click squad disqualification action.
+- [x] Implement one-click squad disqualification and restoration action (`PATCH /api/v1/admin/teams/:teamId/disqualify`).
+- [ ] Implement admin team creation endpoint (`POST /api/v1/admin/teams`), admin team details edit endpoint (`PATCH /api/v1/admin/teams/:teamId`), admin member assignment endpoint (`POST /api/v1/admin/teams/:teamId/members`), and add `college` field to `Team` Mongoose schema (`server/src/models/Team.js`).
 
 ---
 

@@ -60,6 +60,7 @@ export const AppRoutes = () => {
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.ADMIN_LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
+      <Route path={ROUTES.ADMIN_TEAMS} element={<TeamManagementPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />
 
@@ -106,10 +107,11 @@ export const AppRoutes = () => {
         }
       >
         <Route index element={<AdminDashboardPage />} />
-        <Route path="teams" element={<TeamManagementPage />} />
         <Route path="challenges" element={<ChallengePoolPage />} />
+        <Route path="questions" element={<ChallengePoolPage />} />
         <Route path="checkpoints" element={<CheckpointManagerPage />} />
         <Route path="submissions" element={<SubmissionLogsPage />} />
+        <Route path="security-logs" element={<SubmissionLogsPage />} />
         <Route path="controls" element={<EventControlsPage />} />
         <Route path="event-control" element={<EventControlsPage />} />
         <Route path="leaderboard" element={<Navigate to={ROUTES.LEADERBOARD} replace />} />

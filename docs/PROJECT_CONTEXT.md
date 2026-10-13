@@ -71,11 +71,12 @@ The primary objective of Hack the Grid is to provide a cheat-resilient, scalable
   - Leaderboard freeze switch: cloaks live score movement in final 30 minutes to preserve suspense.
 - **Admin Command SOC**:
   - Standalone redesigned Admin Mission Control Dashboard (`/admin/dashboard`) with `/campus-hero.png` banner, overview metrics, challenge activity SVG chart, mission level progress ring/bars, demo event controls, searchable team overview table, recent submissions, activity feed, and quick actions (`DEMO MODE` preview layer).
+  - Shared Mission Control Sidebar (`AdminSidebar.jsx`) with rotated diamond emblem, `HACK THE GRID` / `MISSION CONTROL` lockup, `ADMIN CONSOLE` live indicator, 9 navigation items (`Overview`, `Teams` with badge, `Challenges`, `Questions`, `QR Checkpoints`, `Submissions` with badge, `Leaderboard`, `Event Control`, `Security Logs`), `All systems operational` card, and `Event Admin` footer card.
+  - Standalone reference-matched Team Management Console (`/admin/teams` -> `TeamManagementPage.jsx` + `TeamManagementPage.css`) with 5 summary cards (`Total Teams`, `Total Participants`, `Active Teams`, `Pending Verification`, `Disqualified`), member-aware search, status/level/college filters, reset, CSV export, Table/Grid view toggle, pagination, right-hand selected team detail panel (`Overview`, `Members`, `Progress`, `Submissions` tabs), and live backend integration (`GET /api/v1/admin/teams`, `PATCH /api/v1/admin/teams/:teamId/disqualify` via `admin.service.js`) with explicit `● LIVE DATABASE` vs `● DEMO PREVIEW DATA` labeling.
   - Real-time event statistics: team count, operative count, solve counts, accuracy rate.
-  - Team roster management with instant disqualification triggers (`/admin/teams`).
-  - Challenge level and question pool management (`/admin/challenges`).
+  - Challenge level and question pool management (`/admin/challenges` & `/admin/questions`).
   - QR beacon registry and token generator for physical placard printing (`/admin/checkpoints`).
-  - Submission forensic log streaming with IP address and user tracking (`/admin/submissions`).
+  - Submission forensic log streaming with IP address and user tracking (`/admin/submissions` & `/admin/security-logs`).
   - Master event controls: Start (LIVE), Pause, Conclude, Leaderboard Freeze (`/admin/controls` & `/admin/event-control`).
 
 ---

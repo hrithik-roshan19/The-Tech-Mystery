@@ -586,3 +586,21 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,747 modules transformed).
   - [x] Verified desktop (`admin-dashboard-desktop.png`), mobile (`admin-dashboard-mobile.png`), mobile drawer (`admin-dashboard-mobile-drawer.png`), and `/admin/login` tab selection via headless Chrome CDP.
 
+---
+
+## Phase 2 Milestone — Admin Team Management UI & Shared Mission Control Sidebar Integration (Completed)
+- [x] **Integration of `Hack-The-Grid-Team-Management-UI-Reference-Match.zip`**:
+  - [x] Inspected `README-INTEGRATION.md`, reference screenshot (`admin-team-management-reference.png`), and existing admin routes/controllers.
+  - [x] Created shared [`client/src/components/navigation/AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) implementing the exact Mission Control sidebar reference with automatic active-route detection (`useLocation()`), React Router `<Link>` navigation across all 9 admin sections, dynamic badge counts, and mobile slide-over drawer support.
+  - [x] Integrated [`client/src/pages/admin/TeamManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/TeamManagementPage.jsx) and [`client/src/styles/TeamManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/TeamManagementPage.css).
+  - [x] Registered `/admin/teams` (`ROUTES.ADMIN_TEAMS`) as a standalone full-bleed route in `AppRoutes.jsx` (and added `/admin/questions` and `/admin/security-logs` routes) so there are no duplicate sidebars or headers from `AdminLayout.jsx`.
+- [x] **Backend & Service Layer Integration**:
+  - [x] Created [`client/src/services/admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js) wrapping `/api/v1/admin/*` endpoints.
+  - [x] Enhanced [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js):
+    - `getAllTeams`: Populates `leaderId` and `members` with `'username email fullName role collegeRollNo isActive'` while keeping `passwordHash` hidden (`select: false`).
+    - `disqualifyTeam`: Validates 24-hex ObjectId format, sanitizes `reason`, supports both disqualifying (`isDisqualified: true`) and restoring (`isDisqualified: false`) a team, and returns the populated team document.
+  - [x] Explicitly separated live database records (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) with a clear warning banner when unauthenticated or when the backend is offline.
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,750 modules transformed in 6.25s).
+  - [x] Verified desktop (`team-management-desktop.png`), grid view (`team-management-grid.png`), tablet (`team-management-tablet.png`), mobile (`team-management-mobile.png`), and mobile drawer (`team-management-mobile-drawer.png`) via headless Chrome CDP.
+
