@@ -35,6 +35,7 @@ import FinalFlagPage from '../pages/participant/FinalFlagPage';
 import MasterFlagPage from '../pages/participant/MasterFlagPage';
 
 // Admin Pages
+import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import TeamManagementPage from '../pages/admin/TeamManagementPage';
 import ChallengePoolPage from '../pages/admin/ChallengePoolPage';
@@ -57,6 +58,8 @@ export const AppRoutes = () => {
       <Route path={ROUTES.FINAL_FLAG} element={<FinalFlagPage />} />
       <Route path={ROUTES.DASHBOARD} element={<ParticipantDashboard />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.ADMIN_LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />
 
@@ -93,7 +96,7 @@ export const AppRoutes = () => {
         <Route path="final-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
       </Route>
 
-      {/* 3. Admin Command SOC Protected Routes */}
+      {/* 4. Admin Command SOC Protected Routes */}
       <Route
         path="/admin"
         element={
@@ -108,9 +111,11 @@ export const AppRoutes = () => {
         <Route path="checkpoints" element={<CheckpointManagerPage />} />
         <Route path="submissions" element={<SubmissionLogsPage />} />
         <Route path="controls" element={<EventControlsPage />} />
+        <Route path="event-control" element={<EventControlsPage />} />
+        <Route path="leaderboard" element={<Navigate to={ROUTES.LEADERBOARD} replace />} />
       </Route>
 
-      {/* 4. 404 Catch-All */}
+      {/* 5. 404 Catch-All */}
       <Route path="*" element={<PublicLayout />}>
         <Route path="*" element={<NotFoundPage />} />
       </Route>

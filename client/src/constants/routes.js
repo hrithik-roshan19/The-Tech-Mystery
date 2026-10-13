@@ -29,11 +29,19 @@ export const ROUTES = {
   FINAL_FLAG: '/final-flag',
 
   // Admin
-  ADMIN_DASHBOARD: '/admin',
+  ADMIN_ROOT: '/admin',
+  ADMIN_LOGIN: '/admin/login',
+  ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_TEAMS: '/admin/teams',
   ADMIN_CHALLENGES: '/admin/challenges',
+  ADMIN_QUESTIONS: '/admin/questions',
   ADMIN_CHECKPOINTS: '/admin/checkpoints',
   ADMIN_SUBMISSIONS: '/admin/submissions',
-  ADMIN_CONTROLS: '/admin/controls'
+  ADMIN_LEADERBOARD: '/admin/leaderboard',
+  ADMIN_CONTROLS: '/admin/controls',
+  ADMIN_EVENT_CONTROL: '/admin/event-control',
+  ADMIN_SECURITY_LOGS: '/admin/security-logs',
+  ADMIN_ANALYTICS: '/admin/analytics'
 };
+
 

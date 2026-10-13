@@ -131,6 +131,13 @@
   - [x] Enlarge footer padding to `38px clamp(24px, 5.5vw, 94px)` (desktop) and `34px 22px` (mobile).
   - [x] Enlarge footer brand logo to `24px` and set exact credit: `Built with ♥ by Hrithik Roshan` with `#ff4d64` red heart.
   - [x] Verify across desktop, tablet, and mobile with automated CDP tests and clean production build.
+- [x] Integrate Redesigned Admin Mission Control Dashboard (`Hack-The-Grid-Admin-Dashboard-Redesigned.zip`):
+  - [x] Create `client/src/pages/admin/AdminDashboard.jsx` and `client/src/styles/AdminDashboard.css`.
+  - [x] Mount `/admin/dashboard` as standalone route without duplicate `AdminLayout` sidebars/headers, and preserve `/admin/login` (`Admin Login` tab).
+  - [x] Reuse `/campus-hero.png` in `.ad-hero-banner` with dark + electric-lime `#b8ff3d` theme.
+  - [x] Verify all sections: overview statistics, challenge activity, level progress, event controls, team overview, recent submissions, recent activity, and quick actions.
+  - [x] Point Questions (`/admin/questions`) and QR Checkpoints (`/admin/checkpoints`) to configured route constants and document unimplemented standalone admin subpages (`/admin/questions`, `/admin/security-logs`, `/admin/analytics`).
+  - [x] Keep dashboard statistics, submissions, charts, and toggles clearly marked as demo-only preview data until connected to authenticated admin APIs.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "../../styles/LoginPage.css";
 import { authService } from "../../services/auth.service";
 import { useAuth } from "../../hooks/useAuth";
@@ -107,7 +107,10 @@ const highlights = [
 ];
 
 export default function LoginPage() {
-  const [mode, setMode] = useState("team");
+  const location = useLocation();
+  const [mode, setMode] = useState(() =>
+    location.pathname.startsWith("/admin") ? "admin" : "team"
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [identifier, setIdentifier] = useState("");

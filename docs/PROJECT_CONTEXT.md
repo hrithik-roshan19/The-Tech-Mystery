@@ -70,12 +70,13 @@ The primary objective of Hack the Grid is to provide a cheat-resilient, scalable
   - Deterministic tie-breaking: higher score first; earlier timestamp wins on point ties.
   - Leaderboard freeze switch: cloaks live score movement in final 30 minutes to preserve suspense.
 - **Admin Command SOC**:
+  - Standalone redesigned Admin Mission Control Dashboard (`/admin/dashboard`) with `/campus-hero.png` banner, overview metrics, challenge activity SVG chart, mission level progress ring/bars, demo event controls, searchable team overview table, recent submissions, activity feed, and quick actions (`DEMO MODE` preview layer).
   - Real-time event statistics: team count, operative count, solve counts, accuracy rate.
-  - Team roster management with instant disqualification triggers.
-  - Challenge level and question pool management.
-  - QR beacon registry and token generator for physical placard printing.
-  - Submission forensic log streaming with IP address and user tracking.
-  - Master event controls: Start (LIVE), Pause, Conclude, Leaderboard Freeze.
+  - Team roster management with instant disqualification triggers (`/admin/teams`).
+  - Challenge level and question pool management (`/admin/challenges`).
+  - QR beacon registry and token generator for physical placard printing (`/admin/checkpoints`).
+  - Submission forensic log streaming with IP address and user tracking (`/admin/submissions`).
+  - Master event controls: Start (LIVE), Pause, Conclude, Leaderboard Freeze (`/admin/controls` & `/admin/event-control`).
 
 ---
 
