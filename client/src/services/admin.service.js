@@ -87,6 +87,11 @@ export const adminService = {
     const res = await api.get('/leaderboard');
     return res.data;
   },
+
+  broadcastAnnouncement: async (payload) => {
+    const res = await api.post('/admin/announcements', payload);
+    return res.data;
+  },
 };
 
 export default adminService;

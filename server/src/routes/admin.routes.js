@@ -34,6 +34,7 @@ router.patch('/submissions/:submissionId/review', adminController.reviewSubmissi
 
 // Event Control
 router.patch('/event-config', adminController.updateEventConfig);
+router.post('/announcements', adminController.createAnnouncement);
 
 module.exports = router;
 

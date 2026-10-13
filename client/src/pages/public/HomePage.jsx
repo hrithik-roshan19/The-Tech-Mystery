@@ -97,17 +97,17 @@ export default function HomePage() {
       </section>
 
       <section className="htg-section htg-section--mission" id="mission">
-        <div className="htg-section__heading"><p className="htg-kicker">01 / THE MISSION</p><h2>Think sharp.<br /><span>Move together.</span></h2></div>
+        <div className="htg-section__heading"><p className="htg-kicker"> THE MISSION</p><h2>Think sharp.<br /><span>Move together.</span></h2></div>
         <div className="htg-mission-copy"><p>Hack the Grid turns the campus into a live puzzle trail. Every checkpoint brings a new problem, every solved challenge moves your team closer to the Master Flag.</p><Link to="/mission" className="htg-text-link">Explore the mission <Arrow /></Link></div>
       </section>
 
       <section className="htg-section htg-section--process" id="how-it-works">
-        <div className="htg-section__topline"><p className="htg-kicker">02 / HOW IT WORKS</p><p className="htg-section__aside">One grid. Ten levels. One winning team.</p></div>
+        <div className="htg-section__topline"><p className="htg-kicker"> HOW IT WORKS</p><p className="htg-section__aside">One grid. Ten levels. One winning team.</p></div>
         <div className="htg-steps">{STEPS.map(([number, title, text]) => <article className="htg-step" key={number}><span className="htg-step__number">{number}</span><h3>{title}</h3><p>{text}</p></article>)}</div>
       </section>
 
       <section className="htg-section htg-section--levels" id="challenges">
-        <div className="htg-section__topline"><div><p className="htg-kicker">03 / THE GRID</p><h2>Ten levels.<br /><span>One Master Flag.</span></h2></div><Link to="/challenges" className="htg-text-link">Explore challenges <Arrow /></Link></div>
+        <div className="htg-section__topline"><div><p className="htg-kicker"> THE GRID</p><h2>Ten levels.<br /><span>One Master Flag.</span></h2></div><Link to="/challenges" className="htg-text-link">Explore challenges <Arrow /></Link></div>
         <div className="htg-level-grid">{LEVELS.map(([number, title, category]) => <article className="htg-level" key={number}><span className="htg-level__number">{number}</span><div><h3>{title}</h3><p>{category}</p></div><span className="htg-level__arrow" aria-hidden="true">↗</span></article>)}</div>
       </section>
 

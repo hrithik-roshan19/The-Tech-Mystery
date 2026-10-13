@@ -355,6 +355,29 @@ This document logs significant architectural and design choices, their context, 
   - Connect "View Team Profile ↗" in the detail panel to navigate directly to `/admin/teams?search=...`.
 - **Consequences**: Equips competition organizers with an audit-ready, real-time leaderboard control console, guarantees zero client-side score forgery or conflicting ranks with the participant-facing leaderboard, enforces deterministic tie-breaking, synchronizes freeze state across the entire event lifecycle, and delivers full responsive fidelity across desktop, tablet, and mobile devices.
 
+---
+
+## ADR-0030: Reference-Matched Admin Event Control Console, Operational Switches & Announcement Broadcasting (`/admin/event-control`)
+- **Status**: ACCEPTED
+- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Event Control UI (`EventControlPage.jsx` and `EventControlPage.css`) at `/admin/event-control` (and legacy alias `/admin/controls`), supporting event state oversight (radar HUD, live status badge, metrics), operational control switches (registration, QR checkpoint validation, public leaderboard freeze, hints system, maintenance mode), event configuration parameters (event name, subtitle, start/end dates, duration, maximum teams, team size constraints), system health checks, live activity feed, and participant announcement broadcasting with preview. Critical requirements were:
+  1. Reusing the shared `AdminSidebar` with `EventControl` (`◉`) highlighted as active without duplicate headers or sidebars.
+  2. Connecting all operational switches and configuration fields to authenticated backend endpoints (`PATCH /api/v1/admin/event-config`), validating inputs server-side, and logging sensitive transitions in audit logs.
+  3. Guaranteeing maintenance mode halts participant actions without restricting authorized administrators from accessing the admin panel.
+  4. Wiring announcement broadcasting to a secure endpoint (`POST /api/v1/admin/announcements`) with history auditing, without claiming unverified client-side delivery.
+  5. Sourcing overview KPI cards (`Registered teams`, `Active participants`, `Checkpoints cleared`, `Submissions today`) and activity items from live backend data (`adminService.getDashboardStats()`), falling back gracefully to reference preview values.
+- **Decision**:
+  - Implement [`EventControlPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/EventControlPage.jsx) and [`EventControlPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/EventControlPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Event Control` (`◉`) highlighted as active on both `/admin/event-control` and `/admin/controls`.
+  - Mount `ROUTES.ADMIN_EVENT_CONTROL` (`/admin/event-control`) as a standalone full-bleed route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) and redirect `ROUTES.ADMIN_CONTROLS` (`/admin/controls`) to `/admin/event-control`.
+  - Extend [`EventConfig.js`](file:///c:/projects/Hack-The-Grid/server/src/models/EventConfig.js) with `subtitle`, `duration`, `maxTeams`, `registrationOpen`, `qrCheckpoints`, `hintsEnabled`, `maintenanceMode`, `announcementsEnabled`, and `location`.
+  - Enhance `updateEventConfig` in [`admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) to validate parameters (`duration > 0`, `maxTeams > 0`, `minTeamSize 1..4`, `maxTeamSize 1..4`, `minTeamSize <= maxTeamSize`) and write audit log entries (`logger.warn`/`logger.info`) for state, freeze, and maintenance mode transitions.
+  - Implement `createAnnouncement` at `POST /api/v1/admin/announcements`, validating content, appending to `EventConfig.announcements` history (capped at 50), and writing structured audit logs.
+  - Enhance `getDashboardStats` to compute `totalScans` across checkpoints and retrieve the latest live submission records for the activity feed.
+  - Ensure administrative access to `/api/v1/admin/*` is governed strictly by `authenticate` and `requireAdmin`, guaranteeing maintenance mode never locks out organizers.
+  - Implement dynamic status badges: switching `maintenanceMode` instantly reflects a glowing amber `PAUSED` radar status and header pill.
+  - Add announcement preview container with explicit "PREVIEW ONLY" badge so operators review broadcasts before publishing.
+- **Consequences**: Delivers a resilient Mission Control console for live competition orchestration, provides end-to-end audit logging for critical administrative actions, guarantees uninterrupted admin access during maintenance windows, and upholds strict responsive visual standards across all devices.
+
+
 
 
 

@@ -693,5 +693,27 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,810 modules transformed in 7.63s).
   - [x] Verified desktop (`leaderboard-management-desktop.png`), search filtering (`leaderboard-management-filtered.png`), visibility switch toggle (`leaderboard-management-visibility.png`), grid view (`leaderboard-management-grid.png`), tablet (`leaderboard-management-tablet.png`), mobile (`leaderboard-management-mobile.png`), and mobile drawer (`leaderboard-management-mobile-drawer.png`) via headless Chrome CDP.
 
+---
+
+## Phase 2 Milestone — Admin Event Control Console & Operational Switch Integration (Completed)
+- [x] **Integration of `EventControlPage.jsx` & `EventControlPage.css`**:
+  - [x] Integrated [`client/src/pages/admin/EventControlPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/EventControlPage.jsx) and [`client/src/styles/EventControlPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/EventControlPage.css) reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Event Control` (`◉ Event Control`) highlighted on `/admin/event-control` and `/admin/controls`.
+  - [x] Registered `/admin/event-control` (`ROUTES.ADMIN_EVENT_CONTROL`) as a standalone full-bleed route in [`client/src/routes/AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) and redirected `/admin/controls` to `/admin/event-control`.
+- [x] **Backend & Service Layer Integration**:
+  - [x] Extended [`server/src/models/EventConfig.js`](file:///c:/projects/Hack-The-Grid/server/src/models/EventConfig.js) schema with `subtitle`, `duration`, `maxTeams`, `registrationOpen`, `qrCheckpoints`, `hintsEnabled`, `maintenanceMode`, `announcementsEnabled`, and `location`.
+  - [x] Enhanced `updateEventConfig` in [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) with validation checks and audit logging for critical state transitions (`maintenanceMode`, `state`, `isLeaderboardFrozen`).
+  - [x] Implemented `createAnnouncement` endpoint (`POST /api/v1/admin/announcements`), validating inputs, updating the announcement history array, and logging broadcasts.
+  - [x] Enhanced `getDashboardStats` in [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) to aggregate `totalScans` across checkpoints and retrieve latest submission records.
+  - [x] Added `broadcastAnnouncement` to [`client/src/services/admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - [x] Guaranteed administrative access remains unimpeded during maintenance windows through role-based middleware (`requireAdmin`).
+- [x] **Frontend Features & State Synchronization**:
+  - [x] Synchronized 4 overview KPI cards (`Registered teams`, `Active participants`, `Checkpoints cleared`, `Submissions today`) with live data or fallback demo values.
+  - [x] Connected all 4 tab panels: `Overview` (radar HUD, metrics, quick switches, system health, live activity feed), `Event Settings` (name, dates, duration, team limits), `Access & Safety` (maintenance mode, safety controls, production warning), and `Announcements` (broadcast composer, char counter, preview mode, broadcast action).
+  - [x] Dynamic radar HUD status and header pill reflecting maintenance state (`RUNNING` vs `PAUSED`).
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,811 modules transformed in 18.20s).
+  - [x] Verified desktop (`event-control-desktop.png`), settings tab (`event-control-settings.png`), safety controls & maintenance mode (`event-control-safety.png`), announcement preview & composer (`event-control-announcements.png`), tablet (`event-control-tablet.png`), mobile (`event-control-mobile.png`), and mobile drawer (`event-control-mobile-drawer.png`) via headless Chrome CDP.
+
+
 
 

@@ -18,7 +18,32 @@ class AdminController {
       const totalQuestions = await Question.countDocuments();
       const totalSubmissions = await Submission.countDocuments();
       const correctSubmissions = await Submission.countDocuments({ isCorrect: true });
-      const config = await EventConfig.findOne();
+      const checkpoints = await Checkpoint.find().select('scansCount');
+      const totalScans = checkpoints.reduce((acc, cp) => acc + (cp.scansCount || 0), 0);
+
+      // Recent activity for live feeds
+      const recentSubs = await Submission.find()
+        .populate('teamId', 'name joinCode')
+        .populate('challengeId', 'title levelNumber')
+        .sort({ createdAt: -1 })
+        .limit(8);
+
+      const recentActivity = recentSubs.map((s) => {
+        const timeStr = s.createdAt
+          ? new Date(s.createdAt).toLocaleTimeString('en-GB')
+          : 'Just now';
+        return {
+          time: timeStr,
+          title: s.isCorrect ? 'Flag accepted' : 'Answer submitted',
+          detail: `${s.teamId?.name || 'A team'} on Level ${s.levelNumber}`,
+          type: s.isCorrect ? 'success' : 'info'
+        };
+      });
+
+      let config = await EventConfig.findOne();
+      if (!config) {
+        config = await EventConfig.create({});
+      }
 
       return success(res, {
         stats: {
@@ -28,6 +53,8 @@ class AdminController {
           totalQuestions,
           totalSubmissions,
           correctSubmissions,
+          totalScans,
+          recentActivity,
           accuracyRate: totalSubmissions > 0 ? ((correctSubmissions / totalSubmissions) * 100).toFixed(1) + '%' : '0%'
         },
         eventConfig: config
@@ -1171,10 +1198,48 @@ class AdminController {
 
   async updateEventConfig(req, res, next) {
     try {
+      const {
+        duration,
+        maxTeams,
+        minTeamSize,
+        maxTeamSize,
+        state,
+        maintenanceMode,
+        isLeaderboardFrozen,
+        ...otherFields
+      } = req.body;
+
+      if (duration !== undefined && (Number(duration) <= 0 || Number.isNaN(Number(duration)))) {
+        return badRequest(res, 'Duration must be a positive number of minutes');
+      }
+
+      if (maxTeams !== undefined && (Number(maxTeams) <= 0 || Number.isNaN(Number(maxTeams)))) {
+        return badRequest(res, 'Maximum teams must be a positive number');
+      }
+
+      if (minTeamSize !== undefined && (Number(minTeamSize) < 1 || Number(minTeamSize) > 4)) {
+        return badRequest(res, 'Minimum team size must be between 1 and 4');
+      }
+
+      if (maxTeamSize !== undefined && (Number(maxTeamSize) < 1 || Number(maxTeamSize) > 4)) {
+        return badRequest(res, 'Maximum team size must be between 1 and 4');
+      }
+
       let config = await EventConfig.findOne();
       if (!config) {
         config = await EventConfig.create(req.body);
       } else {
+        // Audit logging for sensitive operations
+        if (maintenanceMode !== undefined && config.maintenanceMode !== Boolean(maintenanceMode)) {
+          logger.warn(`AUDIT: Maintenance mode set to ${maintenanceMode} by admin ${req.user?.username || 'Admin'}`);
+        }
+        if (state !== undefined && config.state !== state) {
+          logger.info(`AUDIT: Event state transitioned to ${state} by admin ${req.user?.username || 'Admin'}`);
+        }
+        if (isLeaderboardFrozen !== undefined && config.isLeaderboardFrozen !== Boolean(isLeaderboardFrozen)) {
+          logger.info(`AUDIT: Leaderboard freeze toggled to ${isLeaderboardFrozen} by admin ${req.user?.username || 'Admin'}`);
+        }
+
         Object.assign(config, req.body);
         await config.save();
       }
@@ -1182,6 +1247,43 @@ class AdminController {
       return success(res, { config }, 'Event configuration updated');
     } catch (error) {
       return badRequest(res, error.message);
+    }
+  }
+
+  async createAnnouncement(req, res, next) {
+    try {
+      const { title, content, priority = 'MEDIUM' } = req.body;
+      if (!content || typeof content !== 'string' || !content.trim()) {
+        return badRequest(res, 'Announcement message content is required');
+      }
+
+      let config = await EventConfig.findOne();
+      if (!config) {
+        config = await EventConfig.create({});
+      }
+
+      const newAnnouncement = {
+        title: title && typeof title === 'string' && title.trim() ? title.trim() : 'System Announcement',
+        content: content.trim(),
+        priority: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(priority) ? priority : 'MEDIUM',
+        createdAt: new Date()
+      };
+
+      config.announcements.unshift(newAnnouncement);
+      if (config.announcements.length > 50) {
+        config.announcements = config.announcements.slice(0, 50);
+      }
+      await config.save();
+
+      logger.info(`AUDIT: Announcement broadcasted by admin ${req.user?.username || 'Admin'}: ${newAnnouncement.title}`);
+
+      return success(
+        res,
+        { announcement: newAnnouncement, announcements: config.announcements },
+        'Announcement broadcasted successfully to all participants'
+      );
+    } catch (error) {
+      return next(error);
     }
   }
 }

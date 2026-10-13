@@ -53,6 +53,42 @@ const eventConfigSchema = new mongoose.Schema(
       type: Number,
       default: 2
     },
+    subtitle: {
+      type: String,
+      default: 'CodeSphere × UTKRISHT 2026'
+    },
+    duration: {
+      type: Number,
+      default: 120
+    },
+    maxTeams: {
+      type: Number,
+      default: 50
+    },
+    registrationOpen: {
+      type: Boolean,
+      default: true
+    },
+    qrCheckpoints: {
+      type: Boolean,
+      default: true
+    },
+    hintsEnabled: {
+      type: Boolean,
+      default: true
+    },
+    maintenanceMode: {
+      type: Boolean,
+      default: false
+    },
+    announcementsEnabled: {
+      type: Boolean,
+      default: true
+    },
+    location: {
+      type: String,
+      default: "Tula's University, Dehradun"
+    },
     announcements: [
       {
         title: { type: String, required: true },

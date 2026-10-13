@@ -32,3 +32,4 @@
 @media(max-width:1450px){.ad-dashboard-panels,.ad-lower{grid-template-columns:minmax(0,1.3fr) minmax(250px,.9fr)}.ad-dashboard-panels>.ad-chart-panel{grid-column:span 1}.ad-dashboard-panels>.ad-level-panel{grid-column:span 1}.ad-dashboard-panels>.ad-control-panel{grid-column:span 1}.ad-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){.ad-dashboard-panels,.ad-lower{grid-template-columns:minmax(0,1fr)}.ad-hero-banner{min-height:150px}.ad-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.ad-hero-banner{align-items:flex-start;flex-direction:column;padding:18px 14px;min-height:175px}.ad-hero-banner h1{font-size:30px}.ad-hero-copy{max-width:280px;line-height:1.5}.ad-level-overview{gap:12px}.ad-ring{width:72px;height:72px}.ad-quick-actions{grid-template-columns:1fr}.ad-quick-actions>a{padding:12px}}
+
