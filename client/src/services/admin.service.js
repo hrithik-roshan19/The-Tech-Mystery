@@ -28,6 +28,11 @@ export const adminService = {
     return res.data;
   },
 
+  reviewSubmission: async (submissionId, payload) => {
+    const res = await api.patch(`/admin/submissions/${submissionId}/review`, payload);
+    return res.data;
+  },
+
   getCheckpoints: async () => {
     const res = await api.get('/admin/checkpoints');
     return res.data;

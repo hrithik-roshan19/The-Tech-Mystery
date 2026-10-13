@@ -322,6 +322,21 @@ This document logs significant architectural and design choices, their context, 
   - Distinguish live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) with clear UI badges and dismissible banners when unauthenticated or offline.
 - **Consequences**: Provides full checkpoint lifecycle management, authentic physical QR code generation for competition deployment, printable placards for campus stations, zero-trust server validation flow, and complete responsive fidelity across desktop, tablet, and mobile devices.
 
+---
+
+## ADR-0028: Reference-Matched Admin Submission Management UI & Secure Review Actions (`/admin/submissions`)
+- **Status**: ACCEPTED
+- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Submission Management UI (`SubmissionManagementPage.jsx` and `SubmissionManagementPage.css`) at `/admin/submissions`, supporting submission statistics (total submissions, correct, incorrect, pending review, points awarded), multi-criteria filtering (result, level, team), text search, Table/Grid view toggling, CSV export, a pending review queue shortcut, and a detailed inspector panel with answer mask/reveal and manual review controls (awarded points and review note). A critical requirement was implementing secure review actions on the server (`PATCH /api/v1/admin/submissions/:submissionId/review`) that enforce administrator authorization, prevent duplicate scoring, validate points against the question's maximum allowed points, atomically update team scores and score snapshot history, and maintain complete audit traceability.
+- **Decision**:
+  - Implement [`SubmissionManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/SubmissionManagementPage.jsx) and [`SubmissionManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/SubmissionManagementPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Submissions` (`⇧`) highlighted as active on `/admin/submissions` and showing the real-time pending submissions badge count.
+  - Mount `ROUTES.ADMIN_SUBMISSIONS` (`/admin/submissions`) as a standalone full-bleed route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx), avoiding duplicate sidebars or headers from `AdminLayout.jsx`.
+  - Extend [`Submission.js`](file:///c:/projects/Hack-The-Grid/server/src/models/Submission.js) schema with review tracking fields (`reviewed`, `reviewedBy`, `reviewedAt`, `reviewNote`, and `updatedAt: true`) and add `PENDING_REVIEW` to [`submissionStatus.js`](file:///c:/projects/Hack-The-Grid/server/src/constants/submissionStatus.js).
+  - Enhance `GET /api/v1/admin/submissions` in [`admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) to populate team, challenge, question, user, and reviewer data, support query filters (result, level, team, search), and return global summary statistics for dashboard KPI cards.
+  - Implement `PATCH /api/v1/admin/submissions/:submissionId/review` in [`admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js), enforcing server-side admin validation, points bounding against `question.points`, duplicate award prevention, atomic `TeamChallenge`, `Team.totalScore`, and `Score.currentScore` updates, and structured logging.
+  - Add `reviewSubmission` to [`admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - Clearly distinguish live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) with badges and banners when unauthenticated or offline.
+- **Consequences**: Equips competition organizers with an audit-ready submission review console, guarantees zero client-side score manipulation or duplicate point awards, enforces strict server validation, and delivers full responsive fidelity across desktop, tablet, and mobile devices.
+
 
 
 

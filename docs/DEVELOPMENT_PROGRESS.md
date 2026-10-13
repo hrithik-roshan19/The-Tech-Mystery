@@ -659,4 +659,21 @@
   - [x] Verified desktop (`checkpoint-management-desktop.png`), Create Checkpoint modal (`checkpoint-management-modal.png`), grid view (`checkpoint-management-grid.png`), tablet (`checkpoint-management-tablet.png`), mobile (`checkpoint-management-mobile.png`), and mobile drawer (`checkpoint-management-mobile-drawer.png`) via headless Chrome CDP.
   - [x] Validated roundtrip scannability and URL query parameter parsing (`code` and `token`) against participant scanner logic.
 
+---
+
+## Phase 2 Milestone — Admin Submission Management UI & Secure Review Actions (Completed)
+- [x] **Integration of `SubmissionManagementPage.jsx` & `SubmissionManagementPage.css`**:
+  - [x] Integrated [`client/src/pages/admin/SubmissionManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/SubmissionManagementPage.jsx) and [`client/src/styles/SubmissionManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/SubmissionManagementPage.css) reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Submissions` (`⇧ Submissions`) highlighted on `/admin/submissions` and showing the real-time pending submissions badge count.
+  - [x] Registered `/admin/submissions` (`ROUTES.ADMIN_SUBMISSIONS`) as a standalone full-bleed route in [`client/src/routes/AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) without duplicate `AdminLayout` sidebars or headers.
+- [x] **Backend & Secure Review Endpoint Integration**:
+  - [x] Extended [`server/src/models/Submission.js`](file:///c:/projects/Hack-The-Grid/server/src/models/Submission.js) schema with `reviewed`, `reviewedBy`, `reviewedAt`, `reviewNote`, and `updatedAt: true`, and added `PENDING_REVIEW` to [`server/src/constants/submissionStatus.js`](file:///c:/projects/Hack-The-Grid/server/src/constants/submissionStatus.js).
+  - [x] Enhanced `GET /api/v1/admin/submissions` in [`server/src/routes/admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) with multi-criteria filtering (`result`, `level`, `team`, `search`) and global KPI aggregation (`total`, `correct`, `incorrect`, `pending`, `totalPoints`).
+  - [x] Implemented `PATCH /api/v1/admin/submissions/:submissionId/review` in [`server/src/routes/admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) enforcing admin authorization, points bounding against `question.points`, duplicate award prevention, and atomic score updates across `TeamChallenge`, `Team.totalScore`, and `Score.currentScore`.
+  - [x] Added `reviewSubmission` to [`client/src/services/admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - [x] Clearly distinguished live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`).
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,807 modules transformed in 6.45s).
+  - [x] Verified desktop (`submission-management-desktop.png`), answer reveal (`submission-management-reveal.png`), pending queue filter & approve review action (`submission-management-reviewed.png`), grid view (`submission-management-grid.png`), tablet (`submission-management-tablet.png`), mobile (`submission-management-mobile.png`), and mobile drawer (`submission-management-mobile-drawer.png`) via headless Chrome CDP.
+
+
 

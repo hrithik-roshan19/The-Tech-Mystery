@@ -41,6 +41,7 @@ import TeamManagementPage from '../pages/admin/TeamManagementPage';
 import ChallengeManagementPage from '../pages/admin/ChallengeManagementPage';
 import QuestionManagementPage from '../pages/admin/QuestionManagementPage';
 import QRCheckpointManagementPage from '../pages/admin/QRCheckpointManagementPage';
+import SubmissionManagementPage from '../pages/admin/SubmissionManagementPage';
 import ChallengePoolPage from '../pages/admin/ChallengePoolPage';
 import CheckpointManagerPage from '../pages/admin/CheckpointManagerPage';
 import SubmissionLogsPage from '../pages/admin/SubmissionLogsPage';
@@ -67,6 +68,7 @@ export const AppRoutes = () => {
       <Route path={ROUTES.ADMIN_CHALLENGES} element={<ChallengeManagementPage />} />
       <Route path={ROUTES.ADMIN_QUESTIONS} element={<QuestionManagementPage />} />
       <Route path={ROUTES.ADMIN_CHECKPOINTS} element={<QRCheckpointManagementPage />} />
+      <Route path={ROUTES.ADMIN_SUBMISSIONS} element={<SubmissionManagementPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />
 

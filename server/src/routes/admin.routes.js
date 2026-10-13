@@ -28,8 +28,9 @@ router.get('/checkpoints', adminController.getCheckpoints);
 router.post('/checkpoints', adminController.createCheckpoint);
 router.patch('/checkpoints/:checkpointId', adminController.updateCheckpoint);
 
-// Audit logs
+// Audit logs & Submissions Review
 router.get('/submissions', adminController.getSubmissionLogs);
+router.patch('/submissions/:submissionId/review', adminController.reviewSubmission);
 
 // Event Control
 router.patch('/event-config', adminController.updateEventConfig);

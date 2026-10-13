@@ -62,6 +62,25 @@ const submissionSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    reviewed: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    reviewedAt: {
+      type: Date,
+      default: null
+    },
+    reviewNote: {
+      type: String,
+      default: null,
+      trim: true
+    },
     ipAddress: {
       type: String,
       default: null
@@ -72,7 +91,7 @@ const submissionSchema = new mongoose.Schema(
     }
   },
   {
-    timestamps: { createdAt: 'submittedAt', updatedAt: false }
+    timestamps: { createdAt: 'submittedAt', updatedAt: true }
   }
 );
 
