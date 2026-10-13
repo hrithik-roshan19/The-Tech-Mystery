@@ -785,6 +785,37 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,818 modules transformed in 18.16s).
   - [x] Verified desktop overview (`admin-profile-desktop.png`), settings tab with edit mode (`admin-profile-settings.png`), security tab with switches (`admin-profile-security.png`), password change modal (`admin-profile-password-modal.png`), tablet (`admin-profile-tablet.png`), mobile (`admin-profile-mobile.png`), and mobile drawer (`admin-profile-mobile-drawer.png`) via headless Chrome CDP.
 
+---
+
+## Phase 2 / Phase 5 Milestone — Homepage Navbar Layout Fix & Standardization (Completed)
+- [x] **Root Cause Resolution**:
+  - [x] Identified that `TeamManagementPage.css` contained unscoped global `.htg-nav` rules (`display: grid; gap: 5px; padding-top: 20px` and `padding-top: 0; gap: 4px`), which leaked into the app bundle and forced the homepage navigation into a single-column CSS grid, stacking links vertically and causing them to overflow into the hero image.
+  - [x] Scoped all sidebar navigation rules in [`TeamManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/TeamManagementPage.css) under `.htg-sidebar` (e.g. `.htg-sidebar .htg-nav`, `.htg-sidebar .htg-brand`), completely eliminating global CSS pollution.
+  - [x] Eliminated duplicate inlined navbar markup (`<header className="htg-header">`) from [`HomePage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/public/HomePage.jsx), unifying it with the shared [`Navbar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/Navbar.jsx) component.
+  - [x] Removed deprecated `.htg-header` and `.htg-nav` rules from [`HomePage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/HomePage.css) and adjusted hero fixed background offset to 72px (`inset: 72px 0 0`).
+- [x] **Standardized Shared Navbar (`Navbar.jsx` & `Navbar.css`)**:
+  - [x] Container with 3 horizontally aligned sections:
+    - **Left — Branding (`.nav-brand`)**: `HACK THE GRID` with “GRID” in electric lime (`#B8FF3D`) and `CODESPHERE × UTKRISHT 2026` monospace subtitle.
+    - **Center — Navigation Links (`.nav-links`)**: All seven links displayed in a single horizontal row in the required sequence:
+      1. `HOME` (`/`)
+      2. `LEADERBOARD` (`/leaderboard`)
+      3. `MISSION` (`/mission`)
+      4. `CHALLENGES` (`/challenges`)
+      5. `QR CHECKPOINT` (`/qr-checkpoint`)
+      6. `FINAL FLAG` (`/final-flag`)
+      7. `RULES` (`/rules`)
+    - **Right — Authentication Actions (`.nav-actions`)**: `LOGIN` (dark transparent outline) and `REGISTER ↗` (electric lime with dark text and arrow) for guests, or `DASHBOARD` / `DISCONNECT` for authenticated users.
+  - [x] Active route indicator bar (`.site-navbar__active-bar`) in electric lime without shifting element dimensions.
+  - [x] Solid opaque near-black background (`#050706`) with backdrop blur and border.
+  - [x] Responsive drawer for mobile and narrow tablet views with keyboard accessibility (Escape key handler, route transition closing, `aria-expanded`, and `aria-label`).
+- [x] **Empirical Verification**:
+  - [x] Client build clean: `npm run build --workspace=client` (1,818 modules transformed in 6.59s, 0 errors).
+  - [x] Verified desktop 1440x900 (`homepage-navbar-desktop.png`): All 7 links horizontally aligned (`top: 18px`), zero overlap with hero content (`heroTop: 140px` vs `headerHeight: 73px`).
+  - [x] Verified tablet 1024x768 (`homepage-navbar-tablet.png`): Single row preserved with scaled gaps (`allSameRow: true`).
+  - [x] Verified mobile 390x844 (`homepage-navbar-mobile.png`, `homepage-navbar-mobile-drawer.png`): Hamburger toggle, 7 drawer links, Login and Register buttons, and Escape key dismissal verified.
+  - [x] Verified all 7 links click through to canonical routes (`/`, `/leaderboard`, `/mission`, `/challenges`, `/rules`), and other public pages using `<Navbar />` render without regressions.
+
+
 
 
 

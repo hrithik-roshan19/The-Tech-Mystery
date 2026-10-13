@@ -1,10 +1,12 @@
 /* ==========================================================================
    Hack the Grid — Global Standardized Site Navbar Stylesheet
-   Consistent typography, font size (13px), spacing, colors, and responsive behavior
+   Three horizontally aligned sections: .nav-brand, .nav-links, .nav-actions
+   Solid opaque near-black background (#050706), electric-lime accents (#b8ff3d)
    ========================================================================== */
 
-.htg-site-navbar {
-  --nav-bg: rgba(6, 9, 7, 0.95);
+.htg-site-navbar,
+.site-navbar {
+  --nav-bg: #050706;
   --nav-lime: #b8ff3d;
   --nav-lime-bright: #caff54;
   --nav-text: #cbd5e1;
@@ -27,28 +29,36 @@
 
 .htg-site-navbar *,
 .htg-site-navbar *::before,
-.htg-site-navbar *::after {
+.htg-site-navbar *::after,
+.site-navbar *,
+.site-navbar *::before,
+.site-navbar *::after {
   box-sizing: border-box;
 }
 
-.htg-nav-container {
+/* --- Navbar Container (3 horizontally aligned sections) --- */
+.htg-nav-container,
+.nav-container {
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
-  height: 70px;
+  height: 72px;
   padding: 0 clamp(16px, 3.5vw, 48px);
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  box-sizing: border-box;
 }
 
-/* --- Brand Logo --- */
-.htg-nav-brand {
+/* --- Section 1: Left — Branding --- */
+.htg-nav-brand,
+.nav-brand {
   display: flex;
   flex-direction: column;
   text-decoration: none;
-  gap: 2px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
@@ -60,6 +70,7 @@
   color: #ffffff;
   line-height: 1.1;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .htg-nav-brand-title .htg-brand-lime {
@@ -70,33 +81,40 @@
   font-family: 'DM Mono', monospace;
   font-size: 9px;
   color: #788579;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   font-weight: 500;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
-/* --- Navigation Links (Desktop) --- */
-.htg-nav-links {
+/* --- Section 2: Center — Navigation Links (All 7 in single row) --- */
+.htg-nav-links,
+.nav-links {
   display: none;
+  flex-direction: row;
   align-items: center;
-  gap: clamp(12px, 1.6vw, 24px);
+  justify-content: center;
+  gap: clamp(10px, 1.4vw, 22px);
   margin: 0;
   padding: 0;
+  list-style: none;
 }
 
-@media (min-width: 1024px) {
-  .htg-nav-links {
+@media (min-width: 980px) {
+  .htg-nav-links,
+  .nav-links {
     display: flex;
   }
 }
 
-.site-navbar__link {
+.site-navbar__link,
+.nav-link {
   position: relative;
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--nav-text);
@@ -107,11 +125,15 @@
   align-items: center;
 }
 
-.site-navbar__link:hover {
+.site-navbar__link:hover,
+.nav-link:hover {
   color: var(--nav-text-hover);
 }
 
-.site-navbar__link.active {
+.site-navbar__link.active,
+.site-navbar__link.is-active,
+.nav-link.active,
+.nav-link.is-active {
   color: var(--nav-lime);
 }
 
@@ -124,18 +146,22 @@
   background: var(--nav-lime);
   border-radius: 2px;
   box-shadow: 0 0 10px rgba(184, 255, 61, 0.7);
+  pointer-events: none;
 }
 
-/* --- Action Controls (Dashboard / Register) --- */
-.htg-nav-actions {
+/* --- Section 3: Right — Authentication Actions --- */
+.htg-nav-actions,
+.nav-actions {
   display: none;
+  flex-direction: row;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
 }
 
-@media (min-width: 768px) {
-  .htg-nav-actions {
+@media (min-width: 980px) {
+  .htg-nav-actions,
+  .nav-actions {
     display: flex;
   }
 }
@@ -144,7 +170,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 5px;
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 11.5px;
   letter-spacing: 0.08em;
@@ -153,35 +179,55 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  height: 38px;
+  min-height: 38px;
+  box-sizing: border-box;
 }
 
-.htg-nav-btn-dash {
-  padding: 8px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.03);
-  color: #ffffff;
+/* Login button: dark/transparent button with subtle border */
+.htg-nav-btn-login,
+.nav-btn-login,
+.htg-nav-btn-dash,
+.nav-btn-dash {
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1f5f9;
   font-weight: 700;
 }
 
-.htg-nav-btn-dash:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+.htg-nav-btn-login:hover,
+.nav-btn-login:hover,
+.htg-nav-btn-dash:hover,
+.nav-btn-dash:hover {
+  border-color: var(--nav-lime);
+  background: rgba(184, 255, 61, 0.06);
+  color: var(--nav-lime);
 }
 
-.htg-nav-btn-reg {
-  padding: 8px 20px;
-  border: none;
+/* Register button: lime background with dark text */
+.htg-nav-btn-reg,
+.nav-btn-register {
+  padding: 0 20px;
+  border: 1px solid var(--nav-lime);
   background: var(--nav-lime);
-  color: #070908;
+  color: #050706 !important;
   font-weight: 800;
-  box-shadow: 0 0 16px rgba(184, 255, 61, 0.3);
+  box-shadow: 0 0 16px rgba(184, 255, 61, 0.32);
 }
 
-.htg-nav-btn-reg:hover {
+.htg-nav-btn-reg:hover,
+.nav-btn-register:hover {
   background: var(--nav-lime-bright);
-  box-shadow: 0 0 22px rgba(184, 255, 61, 0.5);
+  border-color: var(--nav-lime-bright);
+  box-shadow: 0 0 24px rgba(184, 255, 61, 0.55);
   transform: translateY(-1px);
+}
+
+.htg-btn-arrow {
+  margin-left: 6px;
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* --- Mobile Menu Trigger --- */
@@ -202,7 +248,7 @@
   flex-shrink: 0;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 980px) {
   .htg-nav-mobile-toggle {
     display: none;
   }
@@ -230,14 +276,16 @@
 }
 
 /* --- Mobile Drawer --- */
-.htg-nav-mobile-drawer {
+.htg-nav-mobile-drawer,
+.nav-mobile-drawer {
   display: flex;
   flex-direction: column;
   padding: 16px 24px 28px;
-  background: #090c0a;
+  background: #050706;
   border-bottom: 1px solid rgba(184, 255, 61, 0.2);
-  gap: 10px;
+  gap: 8px;
   animation: htg-nav-slide-down 0.2s ease-out;
+  overflow-x: hidden;
 }
 
 @keyframes htg-nav-slide-down {
@@ -259,7 +307,7 @@
   text-transform: uppercase;
   color: #cbd5e1;
   text-decoration: none;
-  padding: 10px 0;
+  padding: 11px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
@@ -268,11 +316,13 @@
 }
 
 .htg-mobile-link:hover,
-.htg-mobile-link.active {
+.htg-mobile-link.active,
+.htg-mobile-link.is-active {
   color: var(--nav-lime);
 }
 
-.htg-mobile-link.active::after {
+.htg-mobile-link.active::after,
+.htg-mobile-link.is-active::after {
   content: '›';
   font-size: 18px;
   line-height: 1;
@@ -286,5 +336,33 @@
 
 .htg-mobile-drawer-actions .htg-nav-btn {
   flex: 1;
-  height: 40px;
+  height: 42px;
+}
+
+/* --- Tablet Responsive Scaling (980px - 1180px) --- */
+@media (min-width: 980px) and (max-width: 1180px) {
+  .htg-nav-container,
+  .nav-container {
+    padding: 0 16px;
+    gap: 10px;
+  }
+  .htg-nav-links,
+  .nav-links {
+    gap: clamp(8px, 1.1vw, 13px);
+  }
+  .site-navbar__link,
+  .nav-link {
+    font-size: 11px;
+    padding: 8px 1px;
+  }
+  .htg-nav-brand-title {
+    font-size: 15px;
+  }
+  .htg-nav-brand-sub {
+    font-size: 8px;
+  }
+  .htg-nav-btn {
+    font-size: 10.5px;
+    padding: 0 12px;
+  }
 }

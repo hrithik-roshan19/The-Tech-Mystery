@@ -1,12 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
+import Navbar from "../../components/navigation/Navbar";
 import "../../styles/HomePage.css";
-
-const NAV_ITEMS = [
-  ["Home", "/"], ["Leaderboard", "/leaderboard"], ["Mission", "/mission"],
-  ["Challenges", "/challenges"], ["QR Checkpoint", "/qr-checkpoint"],
-  ["Final Flag", "/final-flag"], ["Rules", "/rules"],
-];
 
 const STATS = [
   ["⬡", "10", "Challenge levels", "Progressive difficulty"],
@@ -36,36 +31,9 @@ const STUDENTS = [["Hrithik Roshan","Advisor, CodeSphere"],["Anshika Kumari","Pr
 const Arrow = () => <span className="htg-arrow" aria-hidden="true">↗</span>;
 
 export default function HomePage() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const closeMenu = () => setMenuOpen(false);
-
   return (
     <main className="htg-home">
-      <header className="htg-header">
-        <Link className="htg-brand" to="/" aria-label="Hack the Grid home" onClick={closeMenu}>
-          <span className="htg-brand__name">HACK THE <b>GRID</b></span>
-          <span className="htg-brand__tag">CODESPHERE <i>×</i> UTKRISHT 2026</span>
-        </Link>
-        <button className={`htg-menu-toggle ${menuOpen ? "is-open" : ""}`} type="button"
-          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}>
-          <span /><span />
-        </button>
-        <nav className={`htg-nav ${menuOpen ? "is-open" : ""}`} aria-label="Main navigation">
-          {NAV_ITEMS.map(([label, to]) => (
-            <Link key={label} to={to} className={`htg-nav__link ${to === "/" ? "is-active" : ""}`}
-              onClick={closeMenu}>{label}</Link>
-          ))}
-          <div className="htg-nav__mobile-actions">
-            <Link to="/login" className="htg-button htg-button--outline" onClick={closeMenu}>Login</Link>
-            <Link to="/register" className="htg-button htg-button--lime" onClick={closeMenu}>Register <Arrow /></Link>
-          </div>
-        </nav>
-        <div className="htg-header__actions">
-          <Link to="/login" className="htg-button htg-button--outline">Login</Link>
-          <Link to="/register" className="htg-button htg-button--lime">Register <Arrow /></Link>
-        </div>
-      </header>
+      <Navbar />
 
       <section className="htg-hero" aria-labelledby="htg-hero-title">
         <div className="htg-hero__background" aria-hidden="true" />

@@ -434,6 +434,25 @@ This document logs significant architectural and design choices, their context, 
   - Clearly distinguish live database state (`● LIVE DATABASE`) from demo preview (`● DEMO PREVIEW`) with responsive pill badges and fallback handling.
 - **Consequences**: Equips event organizers and SOC administrators with a dedicated administrative command identity console, guarantees zero privilege escalation, enforces security audit trails across profile and credential updates, and provides responsive mobile drawer navigation.
 
+---
+
+## ADR-0034: Unified Site Navbar Component & Global CSS Scoping Resolution
+- **Status**: ACCEPTED
+- **Context**: The homepage navbar exhibited a layout breakdown where navigation links stacked vertically in the center and overlapped the hero content. Investigation revealed two root causes:
+  1. `HomePage.jsx` contained duplicate, inlined navbar markup (`<header className="htg-header">` and `<nav className="htg-nav">`) rather than reusing the shared [`Navbar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/Navbar.jsx) component used across the rest of the public pages (`/mission`, `/challenges`, `/leaderboard`, `/rules`, etc.).
+  2. Unscoped CSS in `TeamManagementPage.css` defined global rules (`.htg-nav { display: grid; gap: 5px; padding-top: 20px; }` and `.htg-nav { padding-top: 0; gap: 4px; }`), which leaked into the global stylesheet bundle and overrode `.htg-nav` with a single-column CSS Grid layout, causing links to stack vertically and overflow down into the hero image.
+- **Decision**:
+  - Refactor [`Navbar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/Navbar.jsx) and [`Navbar.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/Navbar.css) into a robust, standardized site header with three horizontally aligned sections:
+    - **Left — Branding (`.nav-brand`)**: `HACK THE GRID` with “GRID” in electric lime (`#B8FF3D`) and `CODESPHERE × UTKRISHT 2026` monospace subtitle.
+    - **Center — Navigation Links (`.nav-links`)**: Exactly seven links in a single horizontal row (`HOME`, `LEADERBOARD`, `MISSION`, `CHALLENGES`, `QR CHECKPOINT`, `FINAL FLAG`, `RULES`) using React Router `Link`, active indicator bar (`.site-navbar__active-bar`), and responsive gap scaling.
+    - **Right — Authentication Actions (`.nav-actions`)**: `LOGIN` (dark transparent with subtle border) and `REGISTER ↗` (electric lime `#B8FF3D` background with dark text) for guests, or `DASHBOARD` / `DISCONNECT` for authenticated users.
+  - Mount `<Navbar />` directly into [`HomePage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/public/HomePage.jsx), eliminating duplicated navbar markup.
+  - Remove obsolete `.htg-header` and `.htg-nav` rules from [`HomePage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/HomePage.css) and align the fixed hero background offset to 72px (`inset: 72px 0 0`).
+  - Scope all sidebar navigation styles in [`TeamManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/TeamManagementPage.css) under `.htg-sidebar` (e.g. `.htg-sidebar .htg-nav`, `.htg-sidebar .htg-brand`), completely preventing global selector collisions.
+  - Provide full responsive support: horizontal row for desktop and tablet landscape (`>= 980px`), and a keyboard-accessible drawer with Escape key handling, route transition closing, and hamburger toggle for mobile devices.
+- **Consequences**: Resolves the vertical stacking bug at the root cause, guarantees cross-page navigation consistency across all public routes, prevents future CSS cascade pollution, and aligns with the near-black and electric-lime design system without layout shifts.
+
+
 
 
 

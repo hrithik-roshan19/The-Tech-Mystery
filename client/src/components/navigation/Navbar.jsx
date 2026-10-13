@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../constants/routes';
@@ -7,13 +7,13 @@ import '../../styles/Navbar.css';
 /**
  * Standardized Hack the Grid Navigation Links
  * Exactly 7 links in the required sequence:
- * 1. HOME
- * 2. LEADERBOARD
- * 3. MISSION
- * 4. CHALLENGES
- * 5. QR CHECKPOINT
- * 6. FINAL FLAG
- * 7. RULES
+ * 1. HOME → /
+ * 2. LEADERBOARD → /leaderboard
+ * 3. MISSION → /mission
+ * 4. CHALLENGES → /challenges
+ * 5. QR CHECKPOINT → /qr-checkpoint
+ * 6. FINAL FLAG → /final-flag
+ * 7. RULES → /rules
  */
 const NAVBAR_LINKS = [
   { label: 'HOME', path: ROUTES.HOME },
@@ -29,6 +29,22 @@ export const Navbar = ({ activeOverride }) => {
   const { isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Close mobile drawer on route transition
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Keyboard accessibility: Escape closes drawer
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
 
   /**
    * Determine if a given link is active based on location path and optional override.
@@ -50,25 +66,25 @@ export const Navbar = ({ activeOverride }) => {
   };
 
   return (
-    <header className="htg-site-navbar">
-      <div className="htg-nav-container">
-        {/* Brand Logo */}
-        <Link to={ROUTES.HOME} className="htg-nav-brand" aria-label="Hack the Grid home">
+    <header className="htg-site-navbar site-navbar">
+      <div className="htg-nav-container nav-container">
+        {/* Left — Branding */}
+        <Link to={ROUTES.HOME} className="htg-nav-brand nav-brand" aria-label="Hack the Grid home">
           <span className="htg-nav-brand-title">
             HACK THE <span className="htg-brand-lime">GRID</span>
           </span>
           <span className="htg-nav-brand-sub">CODESPHERE × UTKRISHT 2026</span>
         </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="htg-nav-links" aria-label="Main navigation">
+        {/* Center — Navigation Links (All 7 horizontal on desktop) */}
+        <nav className="htg-nav-links nav-links" aria-label="Main navigation">
           {NAVBAR_LINKS.map((item) => {
             const isActive = checkIsActive(item.path, item.label);
             return (
               <Link
                 key={item.label}
                 to={item.path}
-                className={`site-navbar__link ${isActive ? 'active' : ''}`}
+                className={`site-navbar__link nav-link ${isActive ? 'active is-active' : ''}`}
               >
                 {item.label}
                 {isActive && <span className="site-navbar__active-bar" />}
@@ -77,31 +93,38 @@ export const Navbar = ({ activeOverride }) => {
           })}
         </nav>
 
-        {/* Action Controls */}
-        <div className="htg-nav-actions">
-          <Link to={ROUTES.DASHBOARD} className="htg-nav-btn htg-nav-btn-dash">
-            DASHBOARD
-          </Link>
+        {/* Right — Authentication Actions */}
+        <div className="htg-nav-actions nav-actions">
           {isAuthenticated ? (
-            <button
-              type="button"
-              className="htg-nav-btn htg-nav-btn-reg"
-              onClick={() => logout && logout()}
-            >
-              DISCONNECT
-            </button>
+            <>
+              <Link to={ROUTES.DASHBOARD} className="htg-nav-btn htg-nav-btn-dash nav-btn-dash">
+                DASHBOARD
+              </Link>
+              <button
+                type="button"
+                className="htg-nav-btn htg-nav-btn-reg nav-btn-register"
+                onClick={() => logout && logout()}
+              >
+                DISCONNECT
+              </button>
+            </>
           ) : (
-            <Link to={ROUTES.REGISTER} className="htg-nav-btn htg-nav-btn-reg">
-              REGISTER
-            </Link>
+            <>
+              <Link to={ROUTES.LOGIN} className="htg-nav-btn htg-nav-btn-login nav-btn-login">
+                LOGIN
+              </Link>
+              <Link to={ROUTES.REGISTER} className="htg-nav-btn htg-nav-btn-reg nav-btn-register">
+                REGISTER <span className="htg-btn-arrow" aria-hidden="true">↗</span>
+              </Link>
+            </>
           )}
         </div>
 
-        {/* Mobile Menu Trigger */}
+        {/* Mobile Hamburger Button */}
         <button
           type="button"
           className={`htg-nav-mobile-toggle ${mobileMenuOpen ? 'is-open' : ''}`}
-          aria-label="Toggle navigation menu"
+          aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={mobileMenuOpen}
           onClick={() => setMobileMenuOpen((prev) => !prev)}
         >
@@ -111,16 +134,16 @@ export const Navbar = ({ activeOverride }) => {
         </button>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="htg-nav-mobile-drawer">
+        <div className="htg-nav-mobile-drawer nav-mobile-drawer">
           {NAVBAR_LINKS.map((item) => {
             const isActive = checkIsActive(item.path, item.label);
             return (
               <Link
                 key={item.label}
                 to={item.path}
-                className={`htg-mobile-link ${isActive ? 'active' : ''}`}
+                className={`htg-mobile-link ${isActive ? 'active is-active' : ''}`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.label}
@@ -128,32 +151,43 @@ export const Navbar = ({ activeOverride }) => {
             );
           })}
           <div className="htg-mobile-drawer-actions">
-            <Link
-              to={ROUTES.DASHBOARD}
-              className="htg-nav-btn htg-nav-btn-dash"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              DASHBOARD
-            </Link>
             {isAuthenticated ? (
-              <button
-                type="button"
-                className="htg-nav-btn htg-nav-btn-reg"
-                onClick={() => {
-                  if (logout) logout();
-                  setMobileMenuOpen(false);
-                }}
-              >
-                DISCONNECT
-              </button>
+              <>
+                <Link
+                  to={ROUTES.DASHBOARD}
+                  className="htg-nav-btn htg-nav-btn-dash nav-btn-dash"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  DASHBOARD
+                </Link>
+                <button
+                  type="button"
+                  className="htg-nav-btn htg-nav-btn-reg nav-btn-register"
+                  onClick={() => {
+                    if (logout) logout();
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  DISCONNECT
+                </button>
+              </>
             ) : (
-              <Link
-                to={ROUTES.REGISTER}
-                className="htg-nav-btn htg-nav-btn-reg"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                REGISTER
-              </Link>
+              <>
+                <Link
+                  to={ROUTES.LOGIN}
+                  className="htg-nav-btn htg-nav-btn-login nav-btn-login"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  LOGIN
+                </Link>
+                <Link
+                  to={ROUTES.REGISTER}
+                  className="htg-nav-btn htg-nav-btn-reg nav-btn-register"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  REGISTER <span className="htg-btn-arrow" aria-hidden="true">↗</span>
+                </Link>
+              </>
             )}
           </div>
         </div>
