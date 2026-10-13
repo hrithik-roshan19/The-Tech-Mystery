@@ -604,3 +604,19 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,750 modules transformed in 6.25s).
   - [x] Verified desktop (`team-management-desktop.png`), grid view (`team-management-grid.png`), tablet (`team-management-tablet.png`), mobile (`team-management-mobile.png`), and mobile drawer (`team-management-mobile-drawer.png`) via headless Chrome CDP.
 
+---
+
+## Phase 2 Milestone — Admin Challenge Management UI & Backend Integration (Completed)
+- [x] **Integration of `Hack-The-Grid-Challenge-Management-UI.zip`**:
+  - [x] Inspected `README-INTEGRATION.md`, existing `Challenge`, `Question`, and `Checkpoint` models, and admin routes/controllers.
+  - [x] Integrated [`client/src/pages/admin/ChallengeManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/ChallengeManagementPage.jsx) and [`client/src/styles/ChallengeManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/ChallengeManagementPage.css) using the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Challenges` (`⌘ Challenges`) highlighted on `/admin/challenges`.
+  - [x] Registered `/admin/challenges` (`ROUTES.ADMIN_CHALLENGES`) as a standalone full-bleed route in [`client/src/routes/AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) without duplicate `AdminLayout` sidebars/headers.
+- [x] **Backend & Service Layer Integration**:
+  - [x] Extended [`server/src/constants/challengeTypes.js`](file:///c:/projects/Hack-The-Grid/server/src/constants/challengeTypes.js) and [`server/src/models/Challenge.js`](file:///c:/projects/Hack-The-Grid/server/src/models/Challenge.js) to support `subtitle`, `status` (`Published`, `Draft`, `Paused` synced with `isActive`), `objectives`, `image`, and UI category tags (`Recon`, `OSINT`, `Crypto`, `Web`, `Forensics`, `Pwn`, `Stego`, `Network`, `Mixed`).
+  - [x] Added `GET /api/v1/admin/challenges`, `PATCH /api/v1/admin/challenges/:challengeId`, and `GET /api/v1/admin/questions` in [`server/src/routes/admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) with server-side validation, linked question counts, linked QR checkpoints, and strict flag exclusion (`select('-flag')`).
+  - [x] Added `getChallenges`, `updateChallenge`, and `getQuestions` to [`client/src/services/admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - [x] Explicitly separated live database records (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`).
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,752 modules transformed in 6.33s).
+  - [x] Verified desktop (`challenge-management-desktop.png`), Add Challenge modal (`challenge-management-modal.png`), grid view (`challenge-management-grid.png`), tablet (`challenge-management-tablet.png`), mobile (`challenge-management-mobile.png`), and mobile drawer (`challenge-management-mobile-drawer.png`) via headless Chrome CDP.
+

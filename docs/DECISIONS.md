@@ -281,6 +281,19 @@ This document logs significant architectural and design choices, their context, 
   - Explicitly distinguish live database data (`● LIVE DATABASE`) from demo fallback data (`● DEMO PREVIEW DATA`) when unauthenticated or when the backend is offline, and surface clear informational notices for UI actions whose backend endpoints are not yet implemented (`Add Team`, `Edit Team`, `Add Member`).
 - **Consequences**: Delivers a pixel-accurate match to the Mission Control Team Management reference across desktop, tablet, and mobile viewports, enables real-time server-validated team disqualification/restoration for authenticated admins, and preserves strict separation between live production records and demo preview state.
 
+---
+
+## ADR-0025: Reference-Matched Admin Challenge Management UI & Backend Integration (`/admin/challenges`)
+- **Status**: ACCEPTED
+- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Challenge Management UI (`Hack-The-Grid-Challenge-Management-UI.zip`) at `/admin/challenges`, supporting challenge statistics, search/status/difficulty/category filtering, List/Grid view switching, Add/Edit Challenge modal configuration, publish/pause toggling, and inspection of linked questions and QR checkpoints without exposing flags or unpublished challenges to participants.
+- **Decision**:
+  - Create [`ChallengeManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/ChallengeManagementPage.jsx) and [`ChallengeManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/ChallengeManagementPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) so `Challenges` is highlighted automatically on `/admin/challenges`.
+  - Mount `ROUTES.ADMIN_CHALLENGES` (`/admin/challenges`) as a standalone full-bleed route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) (avoiding duplicate sidebars/headers from `AdminLayout.jsx`), while keeping `/admin/questions` routed to `ChallengePoolPage.jsx` for question pool authoring.
+  - Extend [`Challenge.js`](file:///c:/projects/Hack-The-Grid/server/src/models/Challenge.js) and [`challengeTypes.js`](file:///c:/projects/Hack-The-Grid/server/src/constants/challengeTypes.js) with backward-compatible fields (`subtitle`, `status`, `objectives`, `image`, and UI category tags) synchronized with `isActive: status === 'Published'` so participant endpoints (`Challenge.find({ isActive: true })`) never expose `Draft` or `Paused` challenges.
+  - Add `GET /api/v1/admin/challenges`, `PATCH /api/v1/admin/challenges/:challengeId`, and `GET /api/v1/admin/questions` (with `.select('-flag')`) in [`admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js), enriching each challenge with `questionCount`, `linkedQuestions` (without secret flags), and `linkedCheckpoints`.
+  - Clearly distinguish live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) when unauthenticated or when the backend is offline, and label the `challenge-materials.zip` attachment card as a non-uploaded demo placeholder until binary storage is configured.
+- **Consequences**: Provides full end-to-end admin challenge lifecycle management (`Create`, `Edit`, `Publish`, `Pause`, `Filter`, `Export CSV`, and `Questions`/`QR Checkpoints` inspection) while preserving sequential level progression and zero-trust server-side flag storage.
+
 
 
 

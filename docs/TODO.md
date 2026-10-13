@@ -143,6 +143,11 @@
   - [x] Integrate `TeamManagementPage.jsx` and `TeamManagementPage.css` at `/admin/teams` without duplicate sidebars/headers.
   - [x] Connect `GET /api/v1/admin/teams` and `PATCH /api/v1/admin/teams/:teamId/disqualify` via `admin.service.js` with populated member rosters and explicit `● LIVE DATABASE` vs `● DEMO PREVIEW DATA` badges.
   - [x] Verify search (by team, member, email, college), status/level/college filters, reset, CSV export, Table/Grid toggle, pagination, and responsive desktop/tablet/mobile layouts.
+- [x] Integrate Reference-Matched Admin Challenge Management UI (`Hack-The-Grid-Challenge-Management-UI.zip`):
+  - [x] Integrate `ChallengeManagementPage.jsx` and `ChallengeManagementPage.css` at `/admin/challenges` using shared `AdminSidebar.jsx`.
+  - [x] Implement `GET /api/v1/admin/challenges`, `PATCH /api/v1/admin/challenges/:challengeId`, and `GET /api/v1/admin/questions` (with `.select('-flag')`) in `admin.controller.js`.
+  - [x] Connect challenge listing, creation, editing, publish/pause toggle, linked question counts, and linked QR checkpoints in `ChallengeManagementPage.jsx`.
+  - [x] Verify search, status/difficulty/category filters, reset, CSV export, List/Grid toggle, Add/Edit modal, and responsive desktop/tablet/mobile layouts.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
 
@@ -169,7 +174,7 @@
 ## Phase 5: Challenge Engine & Asset Pipeline (High Priority)
 - [ ] Create seed script with sample challenges for Levels 1 through 10.
 - [ ] Support rich Markdown rendering for challenge prompts (syntax highlighting for code snippets).
-- [ ] Support downloadable challenge asset artifacts (binary dumps, stego images).
+- [ ] Support downloadable challenge asset artifacts (binary dumps, stego images) and backend file attachment upload endpoint (`POST /api/v1/admin/challenges/:challengeId/attachments`).
 
 ---
 
@@ -204,6 +209,8 @@
 - [x] Verify admin authentication guard (`requireAdmin`).
 - [ ] Implement live submission stream polling in Admin SOC.
 - [x] Implement one-click squad disqualification and restoration action (`PATCH /api/v1/admin/teams/:teamId/disqualify`).
+- [x] Implement admin challenge listing, creation, editing, and publish/pause status management (`GET / POST / PATCH /api/v1/admin/challenges`).
+- [ ] Implement admin challenge deletion (`DELETE /api/v1/admin/challenges/:challengeId`) and question edit/delete (`PATCH / DELETE /api/v1/admin/questions/:questionId`).
 - [ ] Implement admin team creation endpoint (`POST /api/v1/admin/teams`), admin team details edit endpoint (`PATCH /api/v1/admin/teams/:teamId`), admin member assignment endpoint (`POST /api/v1/admin/teams/:teamId/members`), and add `college` field to `Team` Mongoose schema (`server/src/models/Team.js`).
 
 ---

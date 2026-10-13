@@ -20,6 +20,11 @@ const challengeSchema = new mongoose.Schema(
       required: [true, 'Challenge title is required'],
       trim: true
     },
+    subtitle: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     category: {
       type: String,
       enum: Object.values(CHALLENGE_TYPES),
@@ -28,6 +33,14 @@ const challengeSchema = new mongoose.Schema(
     description: {
       type: String,
       required: [true, 'Challenge overview description is required']
+    },
+    objectives: {
+      type: [String],
+      default: []
+    },
+    image: {
+      type: String,
+      default: '🧩'
     },
     points: {
       type: Number,
@@ -50,6 +63,12 @@ const challengeSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(CHALLENGE_DIFFICULTY),
       default: CHALLENGE_DIFFICULTY.MEDIUM
+    },
+    status: {
+      type: String,
+      enum: ['Published', 'Draft', 'Paused'],
+      default: 'Published',
+      index: true
     },
     isActive: {
       type: Boolean,

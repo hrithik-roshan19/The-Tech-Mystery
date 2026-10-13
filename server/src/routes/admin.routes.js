@@ -16,7 +16,10 @@ router.get('/teams', adminController.getAllTeams);
 router.patch('/teams/:teamId/disqualify', adminController.disqualifyTeam);
 
 // Challenges & Pool
+router.get('/challenges', adminController.getChallenges);
 router.post('/challenges', adminController.createChallenge);
+router.patch('/challenges/:challengeId', adminController.updateChallenge);
+router.get('/questions', adminController.getQuestions);
 router.post('/questions', adminController.createQuestion);
 
 // Checkpoints

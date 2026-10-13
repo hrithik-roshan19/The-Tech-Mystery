@@ -38,6 +38,7 @@ import MasterFlagPage from '../pages/participant/MasterFlagPage';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import TeamManagementPage from '../pages/admin/TeamManagementPage';
+import ChallengeManagementPage from '../pages/admin/ChallengeManagementPage';
 import ChallengePoolPage from '../pages/admin/ChallengePoolPage';
 import CheckpointManagerPage from '../pages/admin/CheckpointManagerPage';
 import SubmissionLogsPage from '../pages/admin/SubmissionLogsPage';
@@ -61,6 +62,7 @@ export const AppRoutes = () => {
       <Route path={ROUTES.ADMIN_LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
       <Route path={ROUTES.ADMIN_TEAMS} element={<TeamManagementPage />} />
+      <Route path={ROUTES.ADMIN_CHALLENGES} element={<ChallengeManagementPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />
 
@@ -107,7 +109,6 @@ export const AppRoutes = () => {
         }
       >
         <Route index element={<AdminDashboardPage />} />
-        <Route path="challenges" element={<ChallengePoolPage />} />
         <Route path="questions" element={<ChallengePoolPage />} />
         <Route path="checkpoints" element={<CheckpointManagerPage />} />
         <Route path="submissions" element={<SubmissionLogsPage />} />

@@ -38,8 +38,23 @@ export const adminService = {
     return res.data;
   },
 
+  getChallenges: async () => {
+    const res = await api.get('/admin/challenges');
+    return res.data;
+  },
+
   createChallenge: async (payload) => {
     const res = await api.post('/admin/challenges', payload);
+    return res.data;
+  },
+
+  updateChallenge: async (challengeId, payload) => {
+    const res = await api.patch(`/admin/challenges/${challengeId}`, payload);
+    return res.data;
+  },
+
+  getQuestions: async (params = {}) => {
+    const res = await api.get('/admin/questions', { params });
     return res.data;
   },
 
@@ -55,3 +70,4 @@ export const adminService = {
 };
 
 export default adminService;
+
