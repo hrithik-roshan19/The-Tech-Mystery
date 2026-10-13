@@ -186,9 +186,9 @@
 ---
 
 ## Phase 7: QR Checkpoint Cryptographic System (High Priority)
-- [ ] Connect smartphone HTML5 camera QR scanner library in `CheckpointScannerPage.jsx`.
-- [ ] Test HMAC token verification on `/api/v1/checkpoints/scan`.
-- [ ] Generate printable PDF/SVG placards for campus checkpoints.
+- [x] Connect smartphone HTML5 camera QR scanner library in `CheckpointScannerPage.jsx` and `QRCheckpointPage.jsx`.
+- [x] Test HMAC token verification on `/api/v1/checkpoint/scan`.
+- [x] Generate printable placards with real scannable QR codes for campus checkpoints (`/admin/checkpoints`).
 
 ---
 
@@ -212,6 +212,8 @@
 - [x] Implement admin challenge listing, creation, editing, and publish/pause status management (`GET / POST / PATCH /api/v1/admin/challenges`).
 - [x] Implement admin question listing, creation, editing, and publish/pause status management (`GET / POST / PATCH /api/v1/admin/questions`).
 - [x] Integrate reference Question Management page (`/admin/questions`) with search, status/type/level filtering, table/grid views, answer reveal toggle, CSV export, and live/demo state sync.
+- [x] Integrate reference QR Checkpoint Management page (`/admin/checkpoints`) with real scannable QR code generation (`qrcode`), high-resolution printable placard generator (`downloadPlacard`), status/mode filtering, table/grid views, and live/demo state sync.
+- [x] Implement admin checkpoint listing, creation, and updating (`GET / POST / PATCH /api/v1/admin/checkpoints`).
 - [ ] Implement admin challenge deletion (`DELETE /api/v1/admin/challenges/:challengeId`) and question deletion (`DELETE /api/v1/admin/questions/:questionId`).
 - [ ] Implement admin team creation endpoint (`POST /api/v1/admin/teams`), admin team details edit endpoint (`PATCH /api/v1/admin/teams/:teamId`), admin member assignment endpoint (`POST /api/v1/admin/teams/:teamId/members`), and add `college` field to `Team` Mongoose schema (`server/src/models/Team.js`).
 

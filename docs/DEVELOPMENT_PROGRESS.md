@@ -637,4 +637,26 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,754 modules transformed in 12.67s).
   - [x] Verified desktop (`question-management-desktop.png`), secret answer reveal (`demo-answer-not-for-production`), Add Question modal (`question-management-modal.png`), grid view (`question-management-grid.png`), tablet (`question-management-tablet.png`), mobile (`question-management-mobile.png`), and mobile drawer (`question-management-mobile-drawer.png`) via headless Chrome CDP.
 
+---
+
+## Phase 2 Milestone — Admin QR Checkpoint Management UI & Real Scannable QR Generation (Completed)
+- [x] **Integration of `Hack-The-Grid-QR-Checkpoint-Management-UI.zip`**:
+  - [x] Inspected `README-INTEGRATION.md`, existing `Checkpoint` and `Challenge` models, and participant scan flows.
+  - [x] Integrated [`client/src/pages/admin/QRCheckpointManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/QRCheckpointManagementPage.jsx) and [`client/src/styles/QRCheckpointManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/QRCheckpointManagementPage.css) reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `QR Checkpoints` (`▦ QR Checkpoints`) highlighted on `/admin/checkpoints`.
+  - [x] Registered `/admin/checkpoints` (`ROUTES.ADMIN_CHECKPOINTS`) as a standalone full-bleed route in [`client/src/routes/AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) without duplicate `AdminLayout` sidebars or headers.
+- [x] **Real Scannable QR Code Generation & Printable Placards**:
+  - [x] Installed `qrcode` in the `client` workspace (`npm install qrcode --workspace=client`).
+  - [x] Replaced decorative 21×21 SVGs with `ScannableQrImage` component that renders genuine scannable QR data URLs encoding canonical verification URLs (`/checkpoint/scan?code=...&token=...`).
+  - [x] Built high-resolution printable placard generator (`downloadPlacard`) exporting branded `HTG-Placard-${code}.png` placards ready for physical competition deployment.
+  - [x] Added "Copy URL" button and station configuration inspector.
+- [x] **Backend & Service Layer Integration**:
+  - [x] Extended [`server/src/models/Checkpoint.js`](file:///c:/projects/Hack-The-Grid/server/src/models/Checkpoint.js) with `status` (`'Active' | 'Paused' | 'Draft'`), `mode` (`'Public QR' | 'Team-bound QR'`), and `lastScanAt` (`Date`), keeping `status === 'Active'` synced with `isActive`.
+  - [x] Added `PATCH /api/v1/admin/checkpoints/:checkpointId` and enhanced `GET /api/v1/admin/checkpoints` and `POST /api/v1/admin/checkpoints` in [`server/src/routes/admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js).
+  - [x] Added `updateCheckpoint` to [`client/src/services/admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - [x] Clearly distinguished live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`).
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,805 modules transformed in 6.36s).
+  - [x] Verified desktop (`checkpoint-management-desktop.png`), Create Checkpoint modal (`checkpoint-management-modal.png`), grid view (`checkpoint-management-grid.png`), tablet (`checkpoint-management-tablet.png`), mobile (`checkpoint-management-mobile.png`), and mobile drawer (`checkpoint-management-mobile-drawer.png`) via headless Chrome CDP.
+  - [x] Validated roundtrip scannability and URL query parameter parsing (`code` and `token`) against participant scanner logic.
+
 

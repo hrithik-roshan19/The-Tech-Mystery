@@ -40,6 +40,17 @@ const checkpointSchema = new mongoose.Schema(
       default: null,
       index: true
     },
+    status: {
+      type: String,
+      enum: ['Active', 'Paused', 'Draft'],
+      default: 'Active',
+      index: true
+    },
+    mode: {
+      type: String,
+      enum: ['Public QR', 'Team-bound QR'],
+      default: 'Team-bound QR'
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -48,6 +59,10 @@ const checkpointSchema = new mongoose.Schema(
     scanCount: {
       type: Number,
       default: 0
+    },
+    lastScanAt: {
+      type: Date,
+      default: null
     },
     notes: {
       type: String,

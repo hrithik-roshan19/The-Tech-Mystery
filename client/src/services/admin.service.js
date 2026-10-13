@@ -38,6 +38,11 @@ export const adminService = {
     return res.data;
   },
 
+  updateCheckpoint: async (checkpointId, payload) => {
+    const res = await api.patch(`/admin/checkpoints/${checkpointId}`, payload);
+    return res.data;
+  },
+
   getChallenges: async () => {
     const res = await api.get('/admin/challenges');
     return res.data;

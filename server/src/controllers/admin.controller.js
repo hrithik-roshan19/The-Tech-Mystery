@@ -1,4 +1,4 @@
-const { Team, User, Challenge, Question, Submission, Checkpoint, EventConfig } = require('../models');
+const { Team, User, Challenge, Question, TeamChallenge, Submission, Checkpoint, EventConfig } = require('../models');
 const { generateCheckpointToken } = require('../utils/crypto');
 const { success, badRequest, notFound } = require('../utils/apiResponse');
 
@@ -566,15 +566,36 @@ class AdminController {
 
   async getCheckpoints(req, res, next) {
     try {
-      const checkpoints = await Checkpoint.find().sort({ levelNumber: 1 });
-      const enriched = checkpoints.map((cp) => {
-        const token = generateCheckpointToken(cp.checkpointCode, cp.levelNumber);
-        return {
-          ...cp.toObject(),
-          hmacToken: token,
-          sampleQrUrl: `/checkpoint/scan?code=${cp.checkpointCode}&token=${token}`
-        };
-      });
+      const checkpoints = await Checkpoint.find()
+        .populate('associatedChallengeId', 'levelNumber title category difficulty points status isActive')
+        .sort({ levelNumber: 1, createdAt: 1 });
+
+      const enriched = await Promise.all(
+        checkpoints.map(async (cp) => {
+          const token = generateCheckpointToken(cp.checkpointCode, cp.levelNumber);
+          const teamsCount = await TeamChallenge.countDocuments({
+            levelNumber: cp.levelNumber,
+            checkpointScanned: true
+          });
+
+          return {
+            ...cp.toObject(),
+            token,
+            hmacToken: token,
+            teamsCount,
+            teams: teamsCount,
+            scans: cp.scanCount || 0,
+            challenge: cp.associatedChallengeId?.title || `Level ${cp.levelNumber}`,
+            location: cp.locationDescription,
+            code: cp.checkpointCode,
+            level: cp.levelNumber,
+            status: cp.status || (cp.isActive ? 'Active' : 'Paused'),
+            mode: cp.mode || 'Team-bound QR',
+            lastScan: cp.lastScanAt ? new Date(cp.lastScanAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—',
+            sampleQrUrl: `/checkpoint/scan?code=${cp.checkpointCode}&token=${token}`
+          };
+        })
+      );
 
       return success(res, { checkpoints: enriched });
     } catch (error) {
@@ -584,17 +605,223 @@ class AdminController {
 
   async createCheckpoint(req, res, next) {
     try {
-      const checkpoint = await Checkpoint.create(req.body);
+      const {
+        name,
+        code,
+        checkpointCode,
+        level,
+        levelNumber,
+        challenge,
+        challengeId,
+        associatedChallengeId,
+        location,
+        locationDescription,
+        status,
+        mode,
+        notes
+      } = req.body;
+
+      const codeVal = String(code || checkpointCode || '').trim().toUpperCase();
+      const nameVal = String(name || '').trim();
+      const locVal = String(location || locationDescription || '').trim();
+      const lvlVal = Number(level !== undefined ? level : (levelNumber !== undefined ? levelNumber : 1));
+
+      if (!nameVal || !codeVal || !locVal) {
+        return badRequest(res, 'Checkpoint name, code, and location description are required');
+      }
+
+      const existing = await Checkpoint.findOne({ checkpointCode: codeVal });
+      if (existing) {
+        return badRequest(res, `Checkpoint with code "${codeVal}" already exists`);
+      }
+
+      let targetChallenge = null;
+      if (associatedChallengeId && /^[0-9a-fA-F]{24}$/.test(associatedChallengeId)) {
+        targetChallenge = await Challenge.findById(associatedChallengeId);
+      } else if (challengeId && /^[0-9a-fA-F]{24}$/.test(challengeId)) {
+        targetChallenge = await Challenge.findById(challengeId);
+      } else if (challenge && typeof challenge === 'string') {
+        targetChallenge = await Challenge.findOne({ title: challenge.trim() });
+      }
+      if (!targetChallenge && lvlVal) {
+        targetChallenge = await Challenge.findOne({ levelNumber: lvlVal });
+      }
+
+      const finalStatus = ['Active', 'Paused', 'Draft'].includes(status) ? status : 'Draft';
+      const finalMode = ['Public QR', 'Team-bound QR'].includes(mode) ? mode : 'Team-bound QR';
+
+      const checkpoint = await Checkpoint.create({
+        name: nameVal,
+        checkpointCode: codeVal,
+        locationDescription: locVal,
+        levelNumber: targetChallenge ? targetChallenge.levelNumber : lvlVal,
+        associatedChallengeId: targetChallenge ? targetChallenge._id : null,
+        status: finalStatus,
+        isActive: finalStatus === 'Active',
+        mode: finalMode,
+        notes: notes ? String(notes).trim() : null
+      });
+
       const token = generateCheckpointToken(checkpoint.checkpointCode, checkpoint.levelNumber);
+      const populated = await Checkpoint.findById(checkpoint._id)
+        .populate('associatedChallengeId', 'levelNumber title category difficulty points status isActive');
+
       return success(
         res,
         {
-          checkpoint,
+          checkpoint: {
+            ...populated.toObject(),
+            token,
+            hmacToken: token,
+            challenge: populated.associatedChallengeId?.title || `Level ${populated.levelNumber}`,
+            location: populated.locationDescription,
+            code: populated.checkpointCode,
+            level: populated.levelNumber,
+            scans: 0,
+            teams: 0,
+            lastScan: '—',
+            sampleQrUrl: `/checkpoint/scan?code=${checkpoint.checkpointCode}&token=${token}`
+          },
           token,
           sampleQrUrl: `/checkpoint/scan?code=${checkpoint.checkpointCode}&token=${token}`
         },
         'Checkpoint created',
         201
+      );
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async updateCheckpoint(req, res, next) {
+    try {
+      const { checkpointId } = req.params;
+      if (!checkpointId || !/^[0-9a-fA-F]{24}$/.test(checkpointId)) {
+        return badRequest(res, 'Valid checkpoint ID is required');
+      }
+
+      const existing = await Checkpoint.findById(checkpointId);
+      if (!existing) {
+        return notFound(res, 'Checkpoint not found');
+      }
+
+      const {
+        name,
+        code,
+        checkpointCode,
+        level,
+        levelNumber,
+        challenge,
+        challengeId,
+        associatedChallengeId,
+        location,
+        locationDescription,
+        status,
+        isActive,
+        mode,
+        notes
+      } = req.body;
+
+      if (name !== undefined) {
+        if (typeof name !== 'string' || !name.trim()) {
+          return badRequest(res, 'Checkpoint name cannot be empty');
+        }
+        existing.name = name.trim();
+      }
+
+      const codeVal = code !== undefined ? code : checkpointCode;
+      if (codeVal !== undefined) {
+        const trimmedCode = String(codeVal).trim().toUpperCase();
+        if (!trimmedCode) {
+          return badRequest(res, 'Checkpoint code cannot be empty');
+        }
+        const conflict = await Checkpoint.findOne({
+          checkpointCode: trimmedCode,
+          _id: { $ne: existing._id }
+        });
+        if (conflict) {
+          return badRequest(res, `Another checkpoint already uses code "${trimmedCode}"`);
+        }
+        existing.checkpointCode = trimmedCode;
+      }
+
+      const locVal = location !== undefined ? location : locationDescription;
+      if (locVal !== undefined) {
+        if (typeof locVal !== 'string' || !locVal.trim()) {
+          return badRequest(res, 'Location description cannot be empty');
+        }
+        existing.locationDescription = locVal.trim();
+      }
+
+      const lvlVal = level !== undefined ? level : levelNumber;
+      if (lvlVal !== undefined) {
+        const lvlNum = Number(lvlVal);
+        if (!Number.isInteger(lvlNum) || lvlNum < 1) {
+          return badRequest(res, 'Level must be a positive integer');
+        }
+        existing.levelNumber = lvlNum;
+      }
+
+      if (mode !== undefined && ['Public QR', 'Team-bound QR'].includes(mode)) {
+        existing.mode = mode;
+      }
+
+      const validStatuses = ['Active', 'Paused', 'Draft'];
+      if (status !== undefined && validStatuses.includes(status)) {
+        existing.status = status;
+        existing.isActive = status === 'Active';
+      } else if (isActive !== undefined) {
+        existing.isActive = Boolean(isActive);
+        existing.status = existing.isActive ? 'Active' : 'Paused';
+      }
+
+      if (notes !== undefined) {
+        existing.notes = typeof notes === 'string' ? notes.trim() : null;
+      }
+
+      let targetChallenge = null;
+      if (associatedChallengeId && /^[0-9a-fA-F]{24}$/.test(associatedChallengeId)) {
+        targetChallenge = await Challenge.findById(associatedChallengeId);
+      } else if (challengeId && /^[0-9a-fA-F]{24}$/.test(challengeId)) {
+        targetChallenge = await Challenge.findById(challengeId);
+      } else if (challenge && typeof challenge === 'string') {
+        targetChallenge = await Challenge.findOne({ title: challenge.trim() });
+      }
+
+      if (targetChallenge) {
+        existing.associatedChallengeId = targetChallenge._id;
+        existing.levelNumber = targetChallenge.levelNumber;
+      }
+
+      await existing.save();
+
+      const populated = await Checkpoint.findById(existing._id)
+        .populate('associatedChallengeId', 'levelNumber title category difficulty points status isActive');
+
+      const token = generateCheckpointToken(populated.checkpointCode, populated.levelNumber);
+      const teamsCount = await TeamChallenge.countDocuments({
+        levelNumber: populated.levelNumber,
+        checkpointScanned: true
+      });
+
+      return success(
+        res,
+        {
+          checkpoint: {
+            ...populated.toObject(),
+            token,
+            hmacToken: token,
+            teamsCount,
+            teams: teamsCount,
+            scans: populated.scanCount || 0,
+            challenge: populated.associatedChallengeId?.title || `Level ${populated.levelNumber}`,
+            location: populated.locationDescription,
+            code: populated.checkpointCode,
+            level: populated.levelNumber,
+            sampleQrUrl: `/checkpoint/scan?code=${populated.checkpointCode}&token=${token}`
+          }
+        },
+        `Checkpoint "${existing.name}" updated`
       );
     } catch (error) {
       return badRequest(res, error.message);

@@ -26,6 +26,7 @@ router.patch('/questions/:questionId', adminController.updateQuestion);
 // Checkpoints
 router.get('/checkpoints', adminController.getCheckpoints);
 router.post('/checkpoints', adminController.createCheckpoint);
+router.patch('/checkpoints/:checkpointId', adminController.updateCheckpoint);
 
 // Audit logs
 router.get('/submissions', adminController.getSubmissionLogs);

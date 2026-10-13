@@ -307,6 +307,21 @@ This document logs significant architectural and design choices, their context, 
   - Distinguish live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) with clear UI badges and dismissible banners when unauthenticated or when the backend is offline.
 - **Consequences**: Enables full admin question authoring and pool configuration with zero chance of flag leakage to participants, complete visual fidelity with the Mission Control design system, and full responsiveness across desktop, tablet, and mobile devices.
 
+---
+
+## ADR-0027: Reference-Matched Admin QR Checkpoint Management UI & Real QR Placard Generation (`/admin/checkpoints`)
+- **Status**: ACCEPTED
+- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid QR Checkpoint Management UI (`Hack-The-Grid-QR-Checkpoint-Management-UI.zip`) at `/admin/checkpoints`, supporting checkpoint statistics (total checkpoints, active, drafts, paused, total scans), search across checkpoints/codes/challenges/locations, status/mode filtering, Table/Grid view toggling, Add/Edit Checkpoint modal, physical location and volunteer notes configuration, pause/activate toggles, CSV export, and an inspection panel. A critical requirement was replacing decorative SVG placeholders with genuine scannable QR code generation using `qrcode`, encoding server-validated checkpoint URLs (`/checkpoint/scan?code=...&token=...`), supporting high-resolution printable placard downloads, and enforcing strict server-side authorization so physical QR scans only initiate eligibility checks rather than client-side awards.
+- **Decision**:
+  - Implement [`QRCheckpointManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/QRCheckpointManagementPage.jsx) and [`QRCheckpointManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/QRCheckpointManagementPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `QR Checkpoints` (`▦`) highlighted as active on `/admin/checkpoints`.
+  - Install `qrcode` in the `client` workspace to generate authentic, scannable PNG data URLs rendered in both thumbnail and full inspector views via `ScannableQrImage`.
+  - Implement a high-resolution printable placard generator (`downloadPlacard`) producing a canvas with official HTG branding, checkpoint code, station name, instructions, and scannable QR code.
+  - Mount `ROUTES.ADMIN_CHECKPOINTS` (`/admin/checkpoints`) as a standalone full-bleed route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx), preventing duplicate sidebars/headers from `AdminLayout.jsx`.
+  - Extend [`Checkpoint.js`](file:///c:/projects/Hack-The-Grid/server/src/models/Checkpoint.js) with `status` (`Active`, `Paused`, `Draft`), `mode` (`Public QR`, `Team-bound QR`), and `lastScanAt` (`Date`), maintaining synchronization with `isActive`.
+  - Add `PATCH /api/v1/admin/checkpoints/:checkpointId` and enhance `GET /api/v1/admin/checkpoints` and `POST /api/v1/admin/checkpoints` in [`admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js). Checkpoints are enriched with `teamsCount`, server-generated HMAC token, and canonical `sampleQrUrl`.
+  - Distinguish live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) with clear UI badges and dismissible banners when unauthenticated or offline.
+- **Consequences**: Provides full checkpoint lifecycle management, authentic physical QR code generation for competition deployment, printable placards for campus stations, zero-trust server validation flow, and complete responsive fidelity across desktop, tablet, and mobile devices.
+
 
 
 
