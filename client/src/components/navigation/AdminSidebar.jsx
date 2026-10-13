@@ -99,12 +99,19 @@ export default function AdminSidebar({
               <small>API · DATABASE · SCORING</small>
             </div>
           </div>
-          <div className="htg-sidebar-user">
-            <span className="htg-admin-avatar">{avatarInitial}</span>
-            <span>
-              <strong>{adminName}</strong>
-              <small>{adminRole}</small>
-            </span>
+          <div className={`htg-sidebar-user ${pathname.startsWith('/admin/profile') ? 'active' : ''}`}>
+            <Link
+              to={ROUTES.ADMIN_PROFILE}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
+              title="Admin Profile"
+              onClick={() => onCloseMobile && onCloseMobile()}
+            >
+              <span className="htg-admin-avatar">{avatarInitial}</span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <strong>{adminName}</strong>
+                <small>{adminRole}</small>
+              </span>
+            </Link>
             <button
               type="button"
               aria-label="Account options"

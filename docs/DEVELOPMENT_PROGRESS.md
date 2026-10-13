@@ -761,6 +761,31 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,816 modules transformed in 30.94s).
   - [x] Verified desktop overview (`user-profile-desktop.png`), achievements tab (`user-profile-achievements.png`), settings tab with edit mode (`user-profile-settings.png`), account security password modal (`user-profile-security-modal.png`), tablet (`user-profile-tablet.png`), mobile (`user-profile-mobile.png`), and mobile drawer (`user-profile-mobile-drawer.png`) via headless Chrome CDP.
 
+---
+
+## Phase 10 Milestone — Admin Profile Console & Security Operations Identity Management (Completed)
+- [x] **Integration of `AdminProfilePage.jsx` & `AdminProfilePage.css`**:
+  - [x] Integrated [`client/src/pages/admin/AdminProfilePage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/AdminProfilePage.jsx) and [`client/src/styles/AdminProfilePage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/AdminProfilePage.css) reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with responsive overlay scrim.
+  - [x] Updated [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) to link the administrator user card directly to `ROUTES.ADMIN_PROFILE` with active route highlight.
+  - [x] Registered `ROUTES.ADMIN_PROFILE` (`/admin/profile`) as a standalone full-bleed route and mounted `/admin/profile` in [`client/src/routes/AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx).
+- [x] **Backend & Service Layer Integration**:
+  - [x] Extended [`server/src/models/User.js`](file:///c:/projects/Hack-The-Grid/server/src/models/User.js) schema with `department`, `twoFactor`, `securityAlerts`, `emailAlerts`, and `sessionAlerts`.
+  - [x] Implemented `getAdminProfile`, `updateAdminProfile`, and `revokeSession` in [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) and [`server/src/routes/admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) guarded by `authenticate` and `requireAdmin`.
+  - [x] Enforced strict role immutability: attempts to elevate roles or permissions are rejected server-side and trigger security warnings.
+  - [x] Added `getAdminProfile`, `updateAdminProfile`, and `revokeSessions` to [`client/src/services/admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - [x] Added append-only audit logging to `SecurityLog` on profile and preference updates.
+- [x] **Frontend Features & Security Operations (SOC) Workflow**:
+  - [x] Hero card with `ACCESS LEVEL 04`, privileged account status bar, and avatar upload trigger.
+  - [x] Telemetry cards: `Admin actions`, `Security reviews`, `Managed teams`, `Session status`.
+  - [x] 3-tab layout: `Overview` (administrator details, bio, recent admin activity), `Settings` (editable contact and professional links), `Security` (2FA, security alerts, email alerts, session alerts, password change, session revocation).
+  - [x] Side column: `Access & permissions` inspector, `Current session` telemetry, and official support contact.
+  - [x] Password modal with client validation, progress state, and backdrop dismissal.
+  - [x] Live database vs demo preview transparency badges.
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,818 modules transformed in 18.16s).
+  - [x] Verified desktop overview (`admin-profile-desktop.png`), settings tab with edit mode (`admin-profile-settings.png`), security tab with switches (`admin-profile-security.png`), password change modal (`admin-profile-password-modal.png`), tablet (`admin-profile-tablet.png`), mobile (`admin-profile-mobile.png`), and mobile drawer (`admin-profile-mobile-drawer.png`) via headless Chrome CDP.
+
+
 
 
 

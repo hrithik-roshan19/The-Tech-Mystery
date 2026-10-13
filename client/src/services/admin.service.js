@@ -102,6 +102,21 @@ export const adminService = {
     const res = await api.patch(`/admin/security-logs/${logId}/review`);
     return res.data;
   },
+
+  getAdminProfile: async () => {
+    const res = await api.get('/admin/profile');
+    return res.data;
+  },
+
+  updateAdminProfile: async (payload) => {
+    const res = await api.patch('/admin/profile', payload);
+    return res.data;
+  },
+
+  revokeSessions: async () => {
+    const res = await api.post('/admin/sessions/revoke');
+    return res.data;
+  },
 };
 
 export default adminService;

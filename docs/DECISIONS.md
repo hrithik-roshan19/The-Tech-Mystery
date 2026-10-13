@@ -415,6 +415,25 @@ This document logs significant architectural and design choices, their context, 
   - Distinguish live database state (`● LIVE DATABASE`) from offline demo preview (`● DEMO PREVIEW`) with responsive pill badges and fallback handling.
 - **Consequences**: Delivers a complete, secure participant identity hub that respects event score integrity, provides seamless mobile navigation, and enables participants to manage preferences and credentials without exposing sensitive security data.
 
+---
+
+## ADR-0033: Reference-Matched Admin Profile Console & Security Operations Identity Management (`/admin/profile`)
+- **Status**: ACCEPTED
+- **Context**: The Admin Command SOC required integrating the reference Hack the Grid Admin Profile page (`AdminProfilePage.jsx` and `AdminProfilePage.css`) at `/admin/profile`, providing administrator identity overview, privileged account status inspection (`ACCESS LEVEL 04`), telemetry cards (`Admin actions`, `Security reviews`, `Managed teams`, `Session status`), tabbed workspace (`Overview`, `Settings`, `Security`), side inspector panels (`Access & permissions`, `Current session`, `Need access help?`), and account security controls. Critical constraints were:
+  1. Reusing the shared `AdminSidebar` without duplicate sidebars or headers, ensuring seamless navigation across all 9 mission control items (`Overview`, `Teams`, `Challenges`, `Questions`, `QR Checkpoints`, `Submissions`, `Leaderboard`, `Event Control`, `Security Logs`) and linking the user footer card directly to `/admin/profile`.
+  2. Extending the backend `User` schema (`server/src/models/User.js`) with admin identity and security fields (`department`, `twoFactor`, `securityAlerts`, `emailAlerts`, `sessionAlerts`).
+  3. Implementing authenticated admin endpoints (`GET /api/v1/admin/profile`, `PATCH /api/v1/admin/profile`, `POST /api/v1/admin/sessions/revoke`) guarded by `authenticate` and `requireAdmin`.
+  4. Strictly enforcing role and permission immutability: an administrator is never permitted to grant themselves additional roles or elevate their privileges through profile updates; any attempts to submit `role`, `permissions`, or `accessLevel` in the payload are rejected server-side and trigger security audit warnings.
+  5. Connecting password management via `authService.changePassword` requiring current password verification with bcrypt, session revocation via `adminService.revokeSessions` with audit logging (`logger.security`), and avatar photo uploads with a 500KB client limit.
+- **Decision**:
+  - Implement [`AdminProfilePage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/AdminProfilePage.jsx) and [`AdminProfilePage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/AdminProfilePage.css), matching the dark charcoal and electric-lime aesthetic with responsive layout (desktop, tablet, and mobile).
+  - Register `ROUTES.ADMIN_PROFILE` (`/admin/profile`) as a standalone full-bleed page and under `/admin/profile` in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx).
+  - Update [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) so clicking the administrator card navigates directly to `/admin/profile` and displays an active highlight when on the profile page.
+  - Implement `getAdminProfile`, `updateAdminProfile`, and `revokeSession` in [`admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) and mount them in [`admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js).
+  - Add API client bindings in [`admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - Clearly distinguish live database state (`● LIVE DATABASE`) from demo preview (`● DEMO PREVIEW`) with responsive pill badges and fallback handling.
+- **Consequences**: Equips event organizers and SOC administrators with a dedicated administrative command identity console, guarantees zero privilege escalation, enforces security audit trails across profile and credential updates, and provides responsive mobile drawer navigation.
+
 
 
 

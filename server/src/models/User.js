@@ -100,6 +100,27 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: ""
     },
+    department: {
+      type: String,
+      default: "CodeSphere · Event Operations",
+      trim: true
+    },
+    twoFactor: {
+      type: Boolean,
+      default: true
+    },
+    securityAlerts: {
+      type: Boolean,
+      default: true
+    },
+    emailAlerts: {
+      type: Boolean,
+      default: true
+    },
+    sessionAlerts: {
+      type: Boolean,
+      default: false
+    },
     isActive: {
       type: Boolean,
       default: true

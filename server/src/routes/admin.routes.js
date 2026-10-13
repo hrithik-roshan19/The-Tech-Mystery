@@ -40,5 +40,10 @@ router.post('/announcements', adminController.createAnnouncement);
 router.get('/security-logs', adminController.getSecurityLogs);
 router.patch('/security-logs/:logId/review', adminController.reviewSecurityLog);
 
+// Admin Profile & Account Preferences
+router.get('/profile', adminController.getAdminProfile);
+router.patch('/profile', adminController.updateAdminProfile);
+router.post('/sessions/revoke', adminController.revokeSession);
+
 module.exports = router;
 

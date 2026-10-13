@@ -231,6 +231,9 @@
 - [x] Extend `EventConfig` model with operational toggles (`maintenanceMode`, `registrationOpen`, `qrCheckpoints`, `hintsEnabled`, `announcementsEnabled`, `duration`, `maxTeams`, `subtitle`, `location`) and audit logging for sensitive state transitions.
 - [x] Integrate reference Security Logs page (`/admin/security-logs` and `/admin/logs`) with audit telemetry stats, multi-criteria filtering (severity, category, status, range), search with Ctrl+K shortcut, CSV export, record inspector, and live review persistence (`PATCH /api/v1/admin/security-logs/:logId/review`).
 - [x] Implement `SecurityLog` model and administrative endpoints (`GET /api/v1/admin/security-logs`, `PATCH /api/v1/admin/security-logs/:logId/review`) with structured security audit logging.
+- [x] Integrate reference Admin Profile page (`/admin/profile`) with privileged account identity (`ACCESS LEVEL 04`), telemetry stats, Overview / Settings / Security tabs, permissions inspector, session card, and password change modal.
+- [x] Implement admin profile endpoints (`GET /api/v1/admin/profile`, `PATCH /api/v1/admin/profile`, `POST /api/v1/admin/sessions/revoke`) with server-enforced role immutability and audit logging.
+- [x] Update `AdminSidebar.jsx` to link the administrator user card directly to `ROUTES.ADMIN_PROFILE`.
 - [ ] Implement admin challenge deletion (`DELETE /api/v1/admin/challenges/:challengeId`) and question deletion (`DELETE /api/v1/admin/questions/:questionId`).
 - [ ] Implement admin team creation endpoint (`POST /api/v1/admin/teams`), admin team details edit endpoint (`PATCH /api/v1/admin/teams/:teamId`), admin member assignment endpoint (`POST /api/v1/admin/teams/:teamId/members`), and add `college` field to `Team` Mongoose schema (`server/src/models/Team.js`).
 

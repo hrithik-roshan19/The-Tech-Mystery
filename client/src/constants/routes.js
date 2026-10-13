@@ -43,6 +43,7 @@ export const ROUTES = {
   ADMIN_CONTROLS: '/admin/controls',
   ADMIN_EVENT_CONTROL: '/admin/event-control',
   ADMIN_SECURITY_LOGS: '/admin/security-logs',
+  ADMIN_PROFILE: '/admin/profile',
   ADMIN_ANALYTICS: '/admin/analytics'
 };
 

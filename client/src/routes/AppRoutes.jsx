@@ -50,6 +50,7 @@ import SubmissionLogsPage from '../pages/admin/SubmissionLogsPage';
 import EventControlsPage from '../pages/admin/EventControlsPage';
 import EventControlPage from '../pages/admin/EventControlPage';
 import SecurityLogsPage from '../pages/admin/SecurityLogsPage';
+import AdminProfilePage from '../pages/admin/AdminProfilePage';
 
 // Fallback
 
@@ -79,6 +80,7 @@ export const AppRoutes = () => {
       <Route path={ROUTES.ADMIN_CONTROLS} element={<Navigate to={ROUTES.ADMIN_EVENT_CONTROL} replace />} />
       <Route path={ROUTES.ADMIN_SECURITY_LOGS} element={<SecurityLogsPage />} />
       <Route path="/admin/logs" element={<Navigate to={ROUTES.ADMIN_SECURITY_LOGS} replace />} />
+      <Route path={ROUTES.ADMIN_PROFILE} element={<AdminProfilePage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />
       <Route path={ROUTES.PROFILE} element={<UserProfilePage />} />
@@ -134,6 +136,7 @@ export const AppRoutes = () => {
         <Route path="controls" element={<EventControlPage />} />
         <Route path="event-control" element={<EventControlPage />} />
         <Route path="leaderboard" element={<LeaderboardManagementPage />} />
+        <Route path="profile" element={<AdminProfilePage />} />
       </Route>
 
       {/* 5. 404 Catch-All */}

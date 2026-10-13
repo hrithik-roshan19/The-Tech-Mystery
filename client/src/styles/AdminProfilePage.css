@@ -1,0 +1,1468 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+/* ==========================================================================
+   Admin Profile Page Theme Tokens & Root Layout
+   ========================================================================== */
+.htg-admin-profile {
+  --bg: #0a0c0b;
+  --panel: #111412;
+  --line: #252b26;
+  --text: #f0f4ee;
+  --muted: #8b958c;
+  --lime: #b8ff3d;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  display: flex;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.htg-admin-profile * {
+  box-sizing: border-box;
+}
+
+.htg-admin-profile button,
+.htg-admin-profile input,
+.htg-admin-profile select,
+.htg-admin-profile textarea {
+  font: inherit;
+}
+
+.htg-admin-profile button {
+  cursor: pointer;
+}
+
+.htg-admin-profile a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ==========================================================================
+   Shared Admin Sidebar Styling
+   ========================================================================== */
+.htg-admin-profile .htg-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  border-right: 1px solid #202520;
+  background: #0d100e;
+  padding: 24px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: transform 0.25s ease;
+}
+
+.htg-admin-profile .htg-brand {
+  padding: 0 8px 24px;
+}
+
+.htg-admin-profile .htg-brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.htg-admin-profile .htg-brand-mark {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, rgba(184, 255, 61, 0.2), rgba(184, 255, 61, 0.05));
+  border: 1px solid rgba(184, 255, 61, 0.4);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(45deg);
+}
+
+.htg-admin-profile .htg-brand-mark i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  background: var(--lime);
+  border-radius: 2px;
+}
+
+.htg-admin-profile .htg-brand-title {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  line-height: 1.2;
+}
+
+.htg-admin-profile .htg-brand-title b {
+  color: var(--lime);
+}
+
+.htg-admin-profile .htg-brand-title small {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.htg-admin-profile .htg-sidebar-section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: #727c73;
+  padding: 0 12px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.htg-admin-profile .htg-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lime);
+  display: inline-block;
+  box-shadow: 0 0 8px rgba(184, 255, 61, 0.5);
+}
+
+.htg-admin-profile .htg-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.htg-admin-profile .htg-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  color: #9ea89e;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.htg-admin-profile .htg-nav-item:hover {
+  background: #151a16;
+  color: #ffffff;
+}
+
+.htg-admin-profile .htg-nav-item.active {
+  background: rgba(184, 255, 61, 0.08);
+  border-color: rgba(184, 255, 61, 0.25);
+  color: var(--lime);
+  font-weight: 600;
+}
+
+.htg-admin-profile .htg-nav-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.htg-admin-profile .htg-nav-label {
+  flex: 1;
+}
+
+.htg-admin-profile .htg-nav-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #879187;
+  background: #222923;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.htg-admin-profile .htg-sidebar-bottom {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.htg-admin-profile .htg-system-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  color: #9aa59a;
+  padding: 12px 8px;
+  border-top: 1px solid #222722;
+  border-bottom: 1px solid #222722;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.htg-admin-profile .htg-system-status strong {
+  display: block;
+  font-size: 9px;
+  color: #c9d2c8;
+}
+
+.htg-admin-profile .htg-system-status small {
+  display: block;
+  font-size: 8px;
+  color: #727c71;
+  margin-top: 2px;
+}
+
+.htg-admin-profile .htg-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 6px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  width: 100%;
+  text-align: left;
+}
+
+.htg-admin-profile .htg-sidebar-user.active {
+  background: rgba(184, 255, 61, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(184, 255, 61, 0.25);
+  padding: 10px 8px;
+}
+
+.htg-admin-profile .htg-admin-avatar {
+  height: 32px;
+  width: 32px;
+  border-radius: 50%;
+  background: #29342a;
+  border: 1px solid #43523e;
+  color: var(--lime);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.htg-admin-profile .htg-sidebar-user strong {
+  display: block;
+  font-size: 11px;
+}
+
+.htg-admin-profile .htg-sidebar-user small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.htg-admin-profile .htg-sidebar-user button {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #7d887c;
+  font-size: 14px;
+}
+
+.htg-admin-profile .htg-sidebar-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 99;
+}
+
+/* ==========================================================================
+   Main Content Area
+   ========================================================================== */
+.htg-ap-main {
+  min-width: 0;
+  flex: 1;
+  padding: 0 32px;
+  max-width: 1850px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Topbar */
+.htg-ap-topbar {
+  height: 68px;
+  border-bottom: 1px solid #202520;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.htg-ap-breadcrumb-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.htg-ap-mobile-toggle {
+  display: none;
+  background: #171c18;
+  border: 1px solid #293029;
+  color: #d7ded5;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.htg-ap-crumb {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #7f8980;
+}
+
+.htg-ap-crumb span {
+  padding: 0 10px;
+  color: #4e574f;
+}
+
+.htg-ap-crumb b {
+  color: #cbd2c9;
+  font-weight: 500;
+}
+
+.htg-ap-data-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.6px;
+}
+
+.htg-ap-data-pill.live {
+  background: rgba(184, 255, 61, 0.08);
+  border: 1px solid rgba(184, 255, 61, 0.3);
+  color: var(--lime);
+}
+
+.htg-ap-data-pill.live i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lime);
+  display: inline-block;
+  box-shadow: 0 0 6px var(--lime);
+}
+
+.htg-ap-data-pill.demo {
+  background: rgba(255, 170, 0, 0.08);
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  color: #ffaa00;
+}
+
+.htg-ap-data-pill.demo i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffaa00;
+  display: inline-block;
+}
+
+.htg-ap-top-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #c1c9c0;
+}
+
+.htg-ap-top-right i {
+  width: 6px;
+  height: 6px;
+  background: var(--lime);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px var(--lime);
+}
+
+.htg-ap-avatar.small {
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  background: #202b21;
+  border: 1px solid #4a6344;
+  color: var(--lime);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  display: grid;
+  place-items: center;
+}
+
+/* Page Heading */
+.htg-ap-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  padding: 26px 0 22px;
+}
+
+.htg-ap-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.3px;
+  color: var(--lime);
+  margin-bottom: 9px;
+}
+
+.htg-ap-heading h1 {
+  font-size: 30px;
+  line-height: 1.1;
+  letter-spacing: -1.2px;
+  margin: 0;
+  font-weight: 800;
+}
+
+.htg-ap-heading h1 span {
+  color: var(--lime);
+}
+
+.htg-ap-heading p {
+  margin: 9px 0 0;
+  color: #929b92;
+  font-size: 11px;
+}
+
+.htg-ap-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.htg-ap-role-pill {
+  border: 1px solid #334329;
+  background: #182114;
+  color: #c8e9a7;
+  border-radius: 100px;
+  padding: 8px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.htg-ap-btn {
+  border: 1px solid #303830;
+  border-radius: 7px;
+  padding: 10px 14px;
+  background: #191e19;
+  color: #e9eee7;
+  font-size: 10px;
+  font-weight: 700;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.htg-ap-btn.primary {
+  background: var(--lime);
+  border-color: var(--lime);
+  color: #11150d;
+}
+
+.htg-ap-btn.primary:hover {
+  filter: brightness(1.08);
+}
+
+.htg-ap-btn.secondary {
+  background: #151915;
+  color: #c5cec3;
+  border-color: #2b332b;
+}
+
+.htg-ap-btn.secondary:hover {
+  background: #1c221c;
+  color: #fff;
+}
+
+/* ==========================================================================
+   Hero Player Card / Administrator Identity
+   ========================================================================== */
+.htg-ap-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #343d31;
+  border-radius: 11px;
+  background: linear-gradient(110deg, #1b2418, #141a14 60%, #101410);
+  min-height: 160px;
+  padding: 24px 26px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.htg-ap-hero:after {
+  content: '';
+  position: absolute;
+  right: 12%;
+  top: -120px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  border: 1px solid rgba(184, 255, 61, 0.08);
+  background: repeating-radial-gradient(circle, rgba(184, 255, 61, 0.05) 0 1px, transparent 1px 16px);
+  pointer-events: none;
+}
+
+.htg-ap-avatar-wrap {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.htg-ap-avatar-large {
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+  border-radius: 22px;
+  border: 1px solid #6c8b4a;
+  background: linear-gradient(145deg, #3d5030, #202b1b);
+  display: grid;
+  place-items: center;
+  color: var(--lime);
+  font-size: 30px;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 35px rgba(184, 255, 61, 0.07);
+}
+
+.htg-ap-avatar-large span {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--lime);
+  border: 2px solid #202a1b;
+}
+
+.htg-ap-avatar-edit {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  border: 1px solid #536d3d;
+  background: #1d2818;
+  color: var(--lime);
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+
+.htg-ap-identity {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.htg-ap-verified {
+  color: var(--lime);
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+
+.htg-ap-identity h2 {
+  font-size: 23px;
+  letter-spacing: -0.5px;
+  margin: 7px 0 3px;
+}
+
+.htg-ap-identity > p {
+  color: #a3aea0;
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+}
+
+.htg-ap-identity-meta {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 13px;
+  color: #a3aea0;
+  font-size: 9px;
+}
+
+.htg-ap-hero-side {
+  position: relative;
+  z-index: 1;
+  min-width: 145px;
+  border-left: 1px solid #394337;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.htg-ap-hero-side > span,
+.htg-ap-hero-side small {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: #8b9787;
+  letter-spacing: 0.6px;
+}
+
+.htg-ap-hero-side strong {
+  font-family: 'DM Mono', monospace;
+  font-size: 20px;
+  color: var(--lime);
+  letter-spacing: -0.5px;
+}
+
+.htg-ap-access-bar {
+  height: 3px;
+  background: #303b2a;
+  border-radius: 5px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.htg-ap-access-bar i {
+  display: block;
+  width: 85%;
+  height: 100%;
+  background: var(--lime);
+}
+
+/* ==========================================================================
+   Telemetry Stat Cards
+   ========================================================================== */
+.htg-ap-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  margin: 15px 0;
+}
+
+.htg-ap-stat {
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, #131713, #101310);
+  border-radius: 9px;
+  padding: 15px 17px;
+}
+
+.htg-ap-stat > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #9aa49a;
+  font-size: 10px;
+}
+
+.htg-ap-stat > div i {
+  font-style: normal;
+  color: var(--lime);
+  font-size: 17px;
+}
+
+.htg-ap-stat > strong {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 26px;
+  letter-spacing: -0.8px;
+  margin: 9px 0 4px;
+}
+
+.htg-ap-stat > small {
+  font-size: 9px;
+  color: #7f897f;
+}
+
+/* ==========================================================================
+   Content Grid & Panels
+   ========================================================================== */
+.htg-ap-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 295px;
+  gap: 15px;
+  align-items: start;
+}
+
+.htg-ap-panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 9px;
+  min-width: 0;
+}
+
+.htg-ap-primary-panel {
+  padding: 0 21px 21px;
+}
+
+/* Tabs */
+.htg-ap-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid #252b25;
+  margin-bottom: 20px;
+}
+
+.htg-ap-tabs button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #849084;
+  padding: 15px 2px 13px;
+  font-size: 10px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.htg-ap-tabs button.active {
+  color: var(--lime);
+  border-bottom-color: var(--lime);
+}
+
+.htg-ap-panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 17px;
+}
+
+.htg-ap-panel-title h3,
+.htg-ap-side-heading h3 {
+  font-size: 12px;
+  margin: 0 0 5px;
+}
+
+.htg-ap-panel-title p {
+  font-size: 9px;
+  color: #808b7f;
+  margin: 0;
+}
+
+.htg-ap-link {
+  border: 0;
+  background: transparent;
+  color: var(--lime);
+  font-size: 9px;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+
+.htg-ap-muted-label {
+  color: #7f8a7d;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+}
+
+/* Info Grid (Overview Tab) */
+.htg-ap-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+}
+
+.htg-ap-info {
+  padding: 12px 0;
+  border-bottom: 1px solid #242a24;
+  min-width: 0;
+}
+
+.htg-ap-info span,
+.htg-ap-session-detail span {
+  display: block;
+  color: #6f7a6e;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.7px;
+  margin-bottom: 7px;
+}
+
+.htg-ap-info strong {
+  display: block;
+  color: #dbe3d8;
+  font-size: 10px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.htg-ap-bio {
+  margin-top: 17px;
+  padding: 14px;
+  background: #151a15;
+  border: 1px solid #252d25;
+  border-radius: 7px;
+}
+
+.htg-ap-bio > span {
+  color: #7e8a7d;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.8px;
+}
+
+.htg-ap-bio p {
+  color: #b0baae;
+  font-size: 10px;
+  line-height: 1.7;
+  margin: 7px 0 0;
+}
+
+.recent-title {
+  margin-top: 25px;
+}
+
+/* Recent Activity List */
+.htg-ap-activity-list {
+  display: grid;
+}
+
+.htg-ap-activity {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 0;
+  border-top: 1px solid #242a24;
+}
+
+.htg-ap-activity-icon {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #20291a;
+  color: var(--lime);
+  flex-shrink: 0;
+}
+
+.htg-ap-activity-icon.security {
+  background: #332817;
+  color: #ffc06e;
+}
+
+.htg-ap-activity-icon.event {
+  background: #202839;
+  color: #9ab8ff;
+}
+
+.htg-ap-activity-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.htg-ap-activity-copy strong {
+  display: block;
+  font-size: 10px;
+}
+
+.htg-ap-activity-copy small {
+  display: block;
+  color: #7f8a7d;
+  font-size: 9px;
+  margin-top: 4px;
+}
+
+.htg-ap-activity time {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #778277;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Settings Form (Settings Tab)
+   ========================================================================== */
+.htg-ap-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.htg-ap-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.htg-ap-field > span {
+  font-size: 9px;
+  color: #9ba69a;
+}
+
+.htg-ap-field input,
+.htg-ap-field textarea {
+  width: 100%;
+  border: 1px solid #303830;
+  background: #0c0f0c;
+  border-radius: 6px;
+  color: #eaf0e7;
+  padding: 11px;
+  outline: none;
+  font-size: 10px;
+}
+
+.htg-ap-field input:focus,
+.htg-ap-field textarea:focus {
+  border-color: #6c973a;
+  box-shadow: 0 0 0 2px rgba(184, 255, 61, 0.08);
+}
+
+.htg-ap-field input:disabled,
+.htg-ap-field textarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.htg-ap-field.bio-field {
+  margin-top: 16px;
+}
+
+.htg-ap-field textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.htg-ap-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  color: #788477;
+  font-size: 9px;
+}
+
+/* ==========================================================================
+   Security Preferences (Security Tab)
+   ========================================================================== */
+.htg-ap-secure-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: var(--lime);
+  letter-spacing: 0.8px;
+}
+
+.htg-ap-preference {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #252b25;
+}
+
+.htg-ap-preference strong {
+  display: block;
+  font-size: 10px;
+}
+
+.htg-ap-preference small {
+  display: block;
+  font-size: 9px;
+  color: #818d80;
+  margin-top: 4px;
+}
+
+.htg-ap-switch {
+  width: 36px;
+  height: 20px;
+  border: 1px solid #3c463c;
+  border-radius: 99px;
+  background: #252b25;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.htg-ap-switch span {
+  display: block;
+  width: 14px;
+  height: 14px;
+  background: #8a9589;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.htg-ap-switch.on {
+  background: #355020;
+  border-color: #587d32;
+}
+
+.htg-ap-switch.on span {
+  background: var(--lime);
+  transform: translateX(15px);
+}
+
+.htg-ap-switch:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.htg-ap-warning {
+  margin-top: 18px;
+  padding: 13px;
+  border: 1px solid #594125;
+  background: #281f12;
+  border-radius: 8px;
+}
+
+.htg-ap-warning strong {
+  font-size: 10px;
+  color: #ffc06e;
+}
+
+.htg-ap-warning p {
+  font-size: 9px;
+  line-height: 1.7;
+  color: #b7a68c;
+  margin: 4px 0 0;
+}
+
+.htg-ap-security-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* ==========================================================================
+   Side Column: Access, Session & Help Cards
+   ========================================================================== */
+.htg-ap-side {
+  display: grid;
+  gap: 14px;
+}
+
+.htg-ap-access-card,
+.htg-ap-session-card {
+  padding: 17px;
+}
+
+.htg-ap-side-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.htg-ap-side-heading > span {
+  color: var(--lime);
+  font-size: 18px;
+}
+
+.htg-ap-permission-role {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 17px 0;
+  border-bottom: 1px solid #252b25;
+}
+
+.permission-emblem {
+  width: 39px;
+  height: 39px;
+  border-radius: 10px;
+  background: #25321d;
+  color: var(--lime);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.htg-ap-permission-role strong {
+  display: block;
+  font-size: 10px;
+}
+
+.htg-ap-permission-role small {
+  display: block;
+  color: #7f8a7d;
+  font-size: 8px;
+  margin-top: 4px;
+}
+
+.htg-ap-permission-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 0;
+  border-bottom: 1px solid #242a24;
+}
+
+.htg-ap-permission-list span {
+  color: #aeb8ab;
+  font-size: 9px;
+}
+
+.htg-ap-permission-list b {
+  font-family: 'DM Mono', monospace;
+  font-size: 7px;
+  color: var(--lime);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.htg-ap-side-note {
+  color: #778277;
+  font-size: 8px;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+
+.htg-ap-session-status {
+  display: grid;
+  grid-template-columns: 7px 1fr;
+  gap: 4px 8px;
+  margin: 17px 0 10px;
+}
+
+.htg-ap-session-status > i {
+  grid-row: span 2;
+  width: 6px;
+  height: 6px;
+  background: var(--lime);
+  border-radius: 50%;
+  margin-top: 4px;
+}
+
+.htg-ap-session-status strong {
+  font-size: 10px;
+}
+
+.htg-ap-session-status small {
+  font-size: 9px;
+  color: #7f8a7d;
+}
+
+.htg-ap-session-detail {
+  border-top: 1px solid #252b25;
+  padding: 11px 0;
+}
+
+.htg-ap-session-detail strong {
+  font-size: 9px;
+  font-weight: 500;
+  display: block;
+  color: #d8e0d5;
+}
+
+.htg-ap-help-card {
+  display: flex;
+  gap: 11px;
+  padding: 15px;
+}
+
+.htg-ap-help-icon {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  background: #26331d;
+  color: var(--lime);
+  border-radius: 8px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.htg-ap-help-card strong {
+  font-size: 10px;
+  display: block;
+}
+
+.htg-ap-help-card p {
+  font-size: 9px;
+  line-height: 1.6;
+  color: #859084;
+  margin: 4px 0 6px;
+}
+
+/* ==========================================================================
+   Footer & Floating Elements
+   ========================================================================== */
+.htg-ap-footer {
+  border-top: 1px solid #222822;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 19px 0 23px;
+  margin-top: 25px;
+  color: #687368;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.4px;
+}
+
+.htg-ap-footer b {
+  color: var(--lime);
+}
+
+.htg-ap-footer i {
+  font-style: normal;
+  margin: 0 6px;
+}
+
+.htg-ap-toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 30;
+  max-width: min(480px, calc(100vw - 30px));
+  padding: 13px 15px;
+  background: #172214;
+  border: 1px solid #46652e;
+  border-radius: 8px;
+  color: #dff6cb;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  font-size: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.htg-ap-toast > span {
+  color: var(--lime);
+}
+
+.htg-ap-toast button {
+  background: transparent;
+  border: 0;
+  color: #b8c5b3;
+  font-size: 17px;
+}
+
+/* Password Modal */
+.htg-ap-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.htg-ap-modal {
+  width: 100%;
+  max-width: 420px;
+  background: #121613;
+  border: 1px solid #2d382b;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.htg-ap-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #252e24;
+}
+
+.htg-ap-modal-head h3 {
+  margin: 0;
+  font-size: 13px;
+  color: #eaf1e8;
+}
+
+.htg-ap-modal-head button {
+  background: transparent;
+  border: none;
+  color: #8c978b;
+  font-size: 18px;
+}
+
+.htg-ap-modal-body {
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.htg-ap-modal-body input {
+  width: 100%;
+  border: 1px solid #303830;
+  background: #0a0d0a;
+  border-radius: 6px;
+  color: #eaf0e7;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 11px;
+}
+
+.htg-ap-modal-body input:focus {
+  border-color: #6c973a;
+  box-shadow: 0 0 0 2px rgba(184, 255, 61, 0.08);
+}
+
+.htg-ap-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid #252e24;
+  background: #0d110e;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 1200px) {
+  .htg-ap-main {
+    padding: 0 20px;
+  }
+  .htg-admin-profile .htg-sidebar {
+    width: 210px;
+  }
+  .htg-ap-content {
+    grid-template-columns: minmax(0, 1fr) 270px;
+  }
+  .htg-ap-stat {
+    padding: 13px;
+  }
+  .htg-ap-stat > strong {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 950px) {
+  .htg-admin-profile .htg-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.8);
+  }
+  .htg-admin-profile .htg-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .htg-ap-mobile-toggle {
+    display: flex;
+  }
+  .htg-ap-content {
+    grid-template-columns: 1fr;
+  }
+  .htg-ap-side {
+    grid-template-columns: 1fr 1fr;
+  }
+  .htg-ap-access-card {
+    grid-row: span 2;
+  }
+  .htg-ap-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .htg-ap-heading-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 560px) {
+  .htg-ap-main {
+    padding: 0 12px;
+  }
+  .htg-ap-topbar {
+    height: 57px;
+  }
+  .htg-ap-crumb {
+    font-size: 8px;
+  }
+  .htg-ap-top-right {
+    gap: 7px;
+    font-size: 8px;
+  }
+  .htg-ap-heading h1 {
+    font-size: 27px;
+  }
+  .htg-ap-hero {
+    padding: 17px;
+    gap: 13px;
+    flex-wrap: wrap;
+  }
+  .htg-ap-avatar-large {
+    width: 70px;
+    height: 70px;
+    font-size: 25px;
+  }
+  .htg-ap-identity {
+    min-width: calc(100% - 85px);
+  }
+  .htg-ap-identity h2 {
+    font-size: 19px;
+  }
+  .htg-ap-identity-meta {
+    display: grid;
+    gap: 7px;
+  }
+  .htg-ap-hero-side {
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid #394337;
+    padding: 12px 0 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+  .htg-ap-hero-side > span {
+    grid-column: 1;
+  }
+  .htg-ap-hero-side strong {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    font-size: 16px;
+  }
+  .htg-ap-hero-side small {
+    grid-column: 1;
+  }
+  .htg-ap-access-bar {
+    grid-column: 1 / -1;
+  }
+  .htg-ap-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .htg-ap-stat {
+    padding: 12px;
+  }
+  .htg-ap-stat > strong {
+    font-size: 20px;
+  }
+  .htg-ap-primary-panel {
+    padding: 0 13px 15px;
+  }
+  .htg-ap-info-grid,
+  .htg-ap-edit-grid {
+    grid-template-columns: 1fr;
+  }
+  .htg-ap-side {
+    grid-template-columns: 1fr;
+  }
+  .htg-ap-access-card {
+    grid-row: auto;
+  }
+  .htg-ap-footer {
+    flex-wrap: wrap;
+    font-size: 8px;
+  }
+}
