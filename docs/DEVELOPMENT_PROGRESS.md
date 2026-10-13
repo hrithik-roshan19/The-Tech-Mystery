@@ -714,6 +714,30 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,811 modules transformed in 18.20s).
   - [x] Verified desktop (`event-control-desktop.png`), settings tab (`event-control-settings.png`), safety controls & maintenance mode (`event-control-safety.png`), announcement preview & composer (`event-control-announcements.png`), tablet (`event-control-tablet.png`), mobile (`event-control-mobile.png`), and mobile drawer (`event-control-mobile-drawer.png`) via headless Chrome CDP.
 
+---
+
+## Phase 2 Milestone — Admin Security Logs Console & Forensic Audit Stream Integration (Completed)
+- [x] **Integration of `SecurityLogsPage.jsx` & `SecurityLogsPage.css`**:
+  - [x] Integrated [`client/src/pages/admin/SecurityLogsPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/SecurityLogsPage.jsx) and [`client/src/styles/SecurityLogsPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/SecurityLogsPage.css) reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Security Logs` (`⛨ Security Logs`) highlighted on `/admin/security-logs` and `/admin/logs`.
+  - [x] Registered `/admin/security-logs` (`ROUTES.ADMIN_SECURITY_LOGS`) as a standalone full-bleed route in [`client/src/routes/AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) and redirected `/admin/logs` to `/admin/security-logs`.
+- [x] **Backend & Service Layer Integration**:
+  - [x] Created [`server/src/models/SecurityLog.js`](file:///c:/projects/Hack-The-Grid/server/src/models/SecurityLog.js) schema for persistent, append-only cybersecurity telemetry (`eventId`, `severity`, `category`, `event`, `actor`, `target`, `source`, `detail`, `status`, `reviewedBy`, `reviewedAt`, `timestamp`).
+  - [x] Implemented `getSecurityLogs` and `reviewSecurityLog` in [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) and [`server/src/routes/admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js), guarded by `authenticate` and `requireAdmin`.
+  - [x] Added `getSecurityLogs` and `reviewSecurityLog` to [`client/src/services/admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - [x] Structured security logging enabled with `logger.security` on audit review transitions.
+- [x] **Frontend Features & Security Operations (SOC) Workflow**:
+  - [x] Telemetry metrics: Critical events, Warnings, Informational, and Flagged records with live counts.
+  - [x] Alert banner with immediate "Review critical events →" shortcut.
+  - [x] Multi-criteria filters: Severity (All, Critical, Warning, Info), Category (All, Authentication, Authorization, Rate Limit, Integrity, Checkpoint, QR Checkpoint, Admin Action, Session, Configuration), Status (All, Flagged, Review, Recorded, Reviewed), Time window (1 Hour, 24 Hours, 7 Days, 30 Days).
+  - [x] Text search across event ID, event name, actor, IP source, target, and detail, with `Ctrl+K` keyboard shortcut.
+  - [x] Interactive Record Inspector panel displaying event metadata, severity/status tags, audit integrity note, "Mark as reviewed ✓" action, and "Copy record JSON" button.
+  - [x] RFC 4180 CSV export functionality with full record escaping.
+  - [x] 15-second background auto-refresh polling when live mode is engaged.
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,814 modules transformed in 1m 4s).
+  - [x] Verified desktop overview (`security-logs-desktop.png`), filtered stream (`security-logs-filtered.png`), reviewed event action & toast (`security-logs-reviewed.png`), tablet (`security-logs-tablet.png`), mobile (`security-logs-mobile.png`), and mobile drawer (`security-logs-mobile-drawer.png`) via headless Chrome CDP.
+
+
 
 
 

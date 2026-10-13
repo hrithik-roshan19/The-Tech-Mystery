@@ -92,7 +92,18 @@ export const adminService = {
     const res = await api.post('/admin/announcements', payload);
     return res.data;
   },
+
+  getSecurityLogs: async (params = {}) => {
+    const res = await api.get('/admin/security-logs', { params });
+    return res.data;
+  },
+
+  reviewSecurityLog: async (logId) => {
+    const res = await api.patch(`/admin/security-logs/${logId}/review`);
+    return res.data;
+  },
 };
 
 export default adminService;
+
 

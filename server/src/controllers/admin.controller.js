@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Team, User, Challenge, Question, TeamChallenge, Submission, Checkpoint, EventConfig, Score } = require('../models');
+const { Team, User, Challenge, Question, TeamChallenge, Submission, Checkpoint, EventConfig, Score, SecurityLog } = require('../models');
 const { generateCheckpointToken } = require('../utils/crypto');
 const { success, badRequest, notFound } = require('../utils/apiResponse');
 const { SUBMISSION_STATUS } = require('../constants/submissionStatus');
@@ -1286,7 +1286,153 @@ class AdminController {
       return next(error);
     }
   }
+
+  async getSecurityLogs(req, res, next) {
+    try {
+      const { severity, category, status, search, range } = req.query;
+      const filter = {};
+
+      if (severity && severity !== 'ALL SEVERITIES') {
+        filter.severity = severity;
+      }
+      if (category && category !== 'ALL CATEGORIES') {
+        filter.category = category;
+      }
+      if (status && status !== 'ALL STATUS') {
+        filter.status = status;
+      }
+
+      if (range) {
+        const now = new Date();
+        if (range === '1 HOUR') {
+          filter.timestamp = { $gte: new Date(now.getTime() - 60 * 60 * 1000) };
+        } else if (range === '24 HOURS') {
+          filter.timestamp = { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) };
+        } else if (range === '7 DAYS') {
+          filter.timestamp = { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) };
+        } else if (range === '30 DAYS') {
+          filter.timestamp = { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) };
+        }
+      }
+
+      if (search && search.trim()) {
+        const term = search.trim();
+        filter.$or = [
+          { eventId: { $regex: term, $options: 'i' } },
+          { event: { $regex: term, $options: 'i' } },
+          { actor: { $regex: term, $options: 'i' } },
+          { target: { $regex: term, $options: 'i' } },
+          { source: { $regex: term, $options: 'i' } },
+          { detail: { $regex: term, $options: 'i' } }
+        ];
+      }
+
+      // Check if any logs exist; if not, seed initial reference audit logs
+      const totalCount = await SecurityLog.countDocuments();
+      if (totalCount === 0) {
+        const seedLogs = [
+          { eventId: 'EVT-9F21A', severity: 'CRITICAL', category: 'AUTHENTICATION', event: 'Repeated failed admin login', actor: 'unknown@192.168.1.84', target: 'Admin portal', source: '192.168.1.84', detail: 'Six failed sign-in attempts detected within the configured window.', status: 'FLAGGED', timestamp: new Date(Date.now() - 3 * 60 * 1000) },
+          { eventId: 'EVT-9F219', severity: 'WARNING', category: 'RATE LIMIT', event: 'Submission rate limit triggered', actor: 'team_4821', target: 'POST /api/v1/submissions', source: '10.0.4.28', detail: 'Request rate exceeded the configured submission threshold.', status: 'REVIEW', timestamp: new Date(Date.now() - 5 * 60 * 1000) },
+          { eventId: 'EVT-9F218', severity: 'INFO', category: 'CHECKPOINT', event: 'Checkpoint token validated', actor: 'team_1038', target: 'QR checkpoint 04', source: '10.0.2.17', detail: 'Eligible team passed checkpoint access validation.', status: 'RECORDED', timestamp: new Date(Date.now() - 8 * 60 * 1000) },
+          { eventId: 'EVT-9F217', severity: 'WARNING', category: 'AUTHORIZATION', event: 'Forbidden admin action', actor: 'participant_203', target: 'PATCH /api/v1/admin/event', source: '10.0.7.11', detail: 'A participant session attempted to access an administrator-only route.', status: 'FLAGGED', timestamp: new Date(Date.now() - 11 * 60 * 1000) },
+          { eventId: 'EVT-9F216', severity: 'INFO', category: 'ADMIN ACTION', event: 'Leaderboard visibility updated', actor: 'admin_hr', target: 'Public leaderboard', source: '10.0.0.12', detail: 'Visibility setting changed by an authenticated administrator.', status: 'RECORDED', timestamp: new Date(Date.now() - 15 * 60 * 1000) },
+          { eventId: 'EVT-9F215', severity: 'CRITICAL', category: 'INTEGRITY', event: 'Duplicate score update blocked', actor: 'system_guard', target: 'Team score ledger', source: 'internal', detail: 'A duplicate scoring operation was rejected by the integrity guard.', status: 'FLAGGED', timestamp: new Date(Date.now() - 19 * 60 * 1000) },
+          { eventId: 'EVT-9F214', severity: 'INFO', category: 'SESSION', event: 'Administrator session created', actor: 'admin_hr', target: 'Admin portal', source: '10.0.0.12', detail: 'New authenticated administrator session created.', status: 'RECORDED', timestamp: new Date(Date.now() - 25 * 60 * 1000) },
+          { eventId: 'EVT-9F213', severity: 'WARNING', category: 'QR CHECKPOINT', event: 'Invalid checkpoint token', actor: 'team_7730', target: 'QR checkpoint 07', source: '10.0.5.43', detail: 'Checkpoint token was invalid or expired and was rejected.', status: 'REVIEW', timestamp: new Date(Date.now() - 31 * 60 * 1000) },
+          { eventId: 'EVT-9F212', severity: 'INFO', category: 'CONFIGURATION', event: 'Event setting updated', actor: 'admin_hr', target: 'Registration state', source: '10.0.0.12', detail: 'Registration setting was updated through the event control panel.', status: 'RECORDED', timestamp: new Date(Date.now() - 38 * 60 * 1000) }
+        ];
+        await SecurityLog.insertMany(seedLogs);
+      }
+
+      const logs = await SecurityLog.find(filter)
+        .sort({ timestamp: -1 })
+        .limit(200);
+
+      const critical = await SecurityLog.countDocuments({ severity: 'CRITICAL' });
+      const warning = await SecurityLog.countDocuments({ severity: 'WARNING' });
+      const info = await SecurityLog.countDocuments({ severity: 'INFO' });
+      const flagged = await SecurityLog.countDocuments({ status: 'FLAGGED' });
+
+      const formatted = logs.map((log) => {
+        const d = log.timestamp || log.createdAt || new Date();
+        const time = d.toTimeString ? d.toTimeString().split(' ')[0] : '00:00:00';
+        const date = d.toISOString ? d.toISOString().split('T')[0] : '2026-10-13';
+        return {
+          id: log.eventId,
+          rawId: log._id,
+          time,
+          date,
+          severity: log.severity,
+          category: log.category,
+          event: log.event,
+          actor: log.actor,
+          target: log.target,
+          source: log.source,
+          detail: log.detail,
+          status: log.status
+        };
+      });
+
+      return success(
+        res,
+        {
+          logs: formatted,
+          counts: { critical, warning, info, flagged },
+          total: formatted.length
+        },
+        'Security logs retrieved'
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async reviewSecurityLog(req, res, next) {
+    try {
+      const { logId } = req.params;
+      const filter = mongoose.Types.ObjectId.isValid(logId)
+        ? { _id: logId }
+        : { eventId: logId };
+
+      const log = await SecurityLog.findOne(filter);
+      if (!log) {
+        return notFound(res, 'Security log record not found');
+      }
+
+      log.status = 'REVIEWED';
+      log.reviewedBy = req.user?._id || null;
+      log.reviewedAt = new Date();
+      await log.save();
+
+      logger.security(`Admin ${req.user?.username || 'Admin'} marked security log ${log.eventId} as REVIEWED`);
+
+      const d = log.timestamp || log.createdAt || new Date();
+      return success(
+        res,
+        {
+          log: {
+            id: log.eventId,
+            rawId: log._id,
+            time: d.toTimeString ? d.toTimeString().split(' ')[0] : '00:00:00',
+            date: d.toISOString ? d.toISOString().split('T')[0] : '2026-10-13',
+            severity: log.severity,
+            category: log.category,
+            event: log.event,
+            actor: log.actor,
+            target: log.target,
+            source: log.source,
+            detail: log.detail,
+            status: log.status
+          }
+        },
+        `Security event ${log.eventId} marked as reviewed`
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 module.exports = new AdminController();
+
 

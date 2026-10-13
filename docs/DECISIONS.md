@@ -377,6 +377,25 @@ This document logs significant architectural and design choices, their context, 
   - Add announcement preview container with explicit "PREVIEW ONLY" badge so operators review broadcasts before publishing.
 - **Consequences**: Delivers a resilient Mission Control console for live competition orchestration, provides end-to-end audit logging for critical administrative actions, guarantees uninterrupted admin access during maintenance windows, and upholds strict responsive visual standards across all devices.
 
+---
+
+## ADR-0031: Reference-Matched Admin Security Logs Console, Audit Stream & Review Actions (`/admin/security-logs`)
+- **Status**: ACCEPTED
+- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Security Logs UI (`SecurityLogsPage.jsx` and `SecurityLogsPage.css`) at `/admin/security-logs` (and legacy alias `/admin/logs`), providing security operations oversight, event stream inspection, multi-criteria filtering (severity, category, status, time window), text search with `Ctrl+K` keyboard shortcut, critical event review shortcut, telemetry metric cards (critical events, warnings, informational, flagged records), live database vs demo preview awareness, 15-second background auto-refresh polling, RFC 4180 CSV export, detail inspector panel with key-value metadata and copy JSON action, and server-authorized review actions ("Mark as reviewed ✓"). Critical requirements were:
+  1. Reusing the shared `AdminSidebar` with `Security Logs` (`⛨`) highlighted as active without duplicate headers or sidebars.
+  2. Introducing an append-only `SecurityLog` schema on the server (`server/src/models/SecurityLog.js`) and admin REST endpoints (`GET /api/v1/admin/security-logs`, `PATCH /api/v1/admin/security-logs/:logId/review`).
+  3. Guaranteeing complete audit integrity: audit records track actor, IP source, target route, category, severity, and event details.
+  4. Sourcing telemetry counts dynamically and updating record status on live review with structured audit logging (`logger.security`).
+- **Decision**:
+  - Implement [`SecurityLogsPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/SecurityLogsPage.jsx) and [`SecurityLogsPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/SecurityLogsPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Security Logs` (`⛨`) highlighted as active on `/admin/security-logs` and `/admin/logs`.
+  - Mount `ROUTES.ADMIN_SECURITY_LOGS` (`/admin/security-logs`) as a standalone full-bleed route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) and redirect `/admin/logs` to `/admin/security-logs`.
+  - Create [`SecurityLog.js`](file:///c:/projects/Hack-The-Grid/server/src/models/SecurityLog.js) Mongoose model with fields for `eventId`, `severity`, `category`, `event`, `actor`, `target`, `source`, `detail`, `status`, `reviewedBy`, `reviewedAt`, and compound indices for chronological timeline queries.
+  - Implement `getSecurityLogs` and `reviewSecurityLog` in [`admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js) and mount them in [`admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) guarded by `authenticate` and `requireAdmin`.
+  - Add `getSecurityLogs` and `reviewSecurityLog` methods to [`admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - Clearly distinguish live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) with badges and interactive fallback handling.
+- **Consequences**: Equips competition organizers with an audit-ready, real-time Security Operations Center (SOC) telemetry feed, provides one-click incident review and CSV export capabilities, guarantees zero tampering with append-only security trails, and maintains visual and functional parity across all 12 responsive breakpoints.
+
+
 
 
 

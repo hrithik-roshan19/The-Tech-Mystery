@@ -48,8 +48,10 @@ import CheckpointManagerPage from '../pages/admin/CheckpointManagerPage';
 import SubmissionLogsPage from '../pages/admin/SubmissionLogsPage';
 import EventControlsPage from '../pages/admin/EventControlsPage';
 import EventControlPage from '../pages/admin/EventControlPage';
+import SecurityLogsPage from '../pages/admin/SecurityLogsPage';
 
 // Fallback
+
 import NotFoundPage from '../pages/NotFoundPage';
 
 export const AppRoutes = () => {
@@ -74,6 +76,8 @@ export const AppRoutes = () => {
       <Route path={ROUTES.ADMIN_LEADERBOARD} element={<LeaderboardManagementPage />} />
       <Route path={ROUTES.ADMIN_EVENT_CONTROL} element={<EventControlPage />} />
       <Route path={ROUTES.ADMIN_CONTROLS} element={<Navigate to={ROUTES.ADMIN_EVENT_CONTROL} replace />} />
+      <Route path={ROUTES.ADMIN_SECURITY_LOGS} element={<SecurityLogsPage />} />
+      <Route path="/admin/logs" element={<Navigate to={ROUTES.ADMIN_SECURITY_LOGS} replace />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />
 
@@ -123,7 +127,8 @@ export const AppRoutes = () => {
         <Route path="questions" element={<ChallengePoolPage />} />
         <Route path="checkpoints" element={<CheckpointManagerPage />} />
         <Route path="submissions" element={<SubmissionLogsPage />} />
-        <Route path="security-logs" element={<SubmissionLogsPage />} />
+        <Route path="security-logs" element={<SecurityLogsPage />} />
+        <Route path="logs" element={<Navigate to={ROUTES.ADMIN_SECURITY_LOGS} replace />} />
         <Route path="controls" element={<EventControlPage />} />
         <Route path="event-control" element={<EventControlPage />} />
         <Route path="leaderboard" element={<LeaderboardManagementPage />} />

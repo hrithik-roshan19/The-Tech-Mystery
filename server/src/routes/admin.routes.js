@@ -36,5 +36,9 @@ router.patch('/submissions/:submissionId/review', adminController.reviewSubmissi
 router.patch('/event-config', adminController.updateEventConfig);
 router.post('/announcements', adminController.createAnnouncement);
 
+// Security & Audit Logs
+router.get('/security-logs', adminController.getSecurityLogs);
+router.patch('/security-logs/:logId/review', adminController.reviewSecurityLog);
+
 module.exports = router;
 

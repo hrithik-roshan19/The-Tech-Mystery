@@ -7,6 +7,7 @@ const Submission = require('./Submission');
 const Checkpoint = require('./Checkpoint');
 const Score = require('./Score');
 const EventConfig = require('./EventConfig');
+const SecurityLog = require('./SecurityLog');
 
 module.exports = {
   User,
@@ -17,6 +18,7 @@ module.exports = {
   Submission,
   Checkpoint,
   Score,
-  EventConfig
+  EventConfig,
+  SecurityLog
 };
 
