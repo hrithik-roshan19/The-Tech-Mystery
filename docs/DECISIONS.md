@@ -294,6 +294,19 @@ This document logs significant architectural and design choices, their context, 
   - Clearly distinguish live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) when unauthenticated or when the backend is offline, and label the `challenge-materials.zip` attachment card as a non-uploaded demo placeholder until binary storage is configured.
 - **Consequences**: Provides full end-to-end admin challenge lifecycle management (`Create`, `Edit`, `Publish`, `Pause`, `Filter`, `Export CSV`, and `Questions`/`QR Checkpoints` inspection) while preserving sequential level progression and zero-trust server-side flag storage.
 
+---
+
+## ADR-0026: Reference-Matched Admin Question Management UI & Backend Integration (`/admin/questions`)
+- **Status**: ACCEPTED
+- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Question Management UI (`Hack-The-Grid-Question-Management-UI.zip`) at `/admin/questions`, supporting question statistics (total, published, drafts, paused, available points), search across titles/IDs/challenges/prompts, status/type/level filtering, Table/Grid view toggling, Add/Edit Question modal, hint & max attempts configuration, pause/publish controls, CSV export, and an admin-only secret answer preview with an explicit "Reveal" toggle while ensuring secret flags are never exposed to participants.
+- **Decision**:
+  - Implement [`QuestionManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/QuestionManagementPage.jsx) and [`QuestionManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/QuestionManagementPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Questions` (`☰`) highlighted as active on `/admin/questions`.
+  - Mount `ROUTES.ADMIN_QUESTIONS` (`/admin/questions`) as a standalone full-bleed route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) (preventing duplicate sidebars/headers from `AdminLayout.jsx`).
+  - Extend [`Question.js`](file:///c:/projects/Hack-The-Grid/server/src/models/Question.js) and [`challengeTypes.js`](file:///c:/projects/Hack-The-Grid/server/src/constants/challengeTypes.js) with `type` (`Text Answer`, `Flag`, `Multiple Choice`, `File Upload`), `points`, `status` (`Published`, `Draft`, `Paused`), `attempts`, `required`, and category constants, maintaining `isActive: status === 'Published'` synchronization and `flag: { select: false }`.
+  - Add `PATCH /api/v1/admin/questions/:questionId` and enhance `GET /api/v1/admin/questions` and `POST /api/v1/admin/questions` in [`admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js). Support `.select('+flag')` only for authorized admins via `includeFlag=true`, while strictly preserving `.select('-flag')` for participant-facing APIs (`/mission-map`, `/current`, `/checkpoints/scan`).
+  - Distinguish live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) with clear UI badges and dismissible banners when unauthenticated or when the backend is offline.
+- **Consequences**: Enables full admin question authoring and pool configuration with zero chance of flag leakage to participants, complete visual fidelity with the Mission Control design system, and full responsiveness across desktop, tablet, and mobile devices.
+
 
 
 

@@ -620,3 +620,21 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,752 modules transformed in 6.33s).
   - [x] Verified desktop (`challenge-management-desktop.png`), Add Challenge modal (`challenge-management-modal.png`), grid view (`challenge-management-grid.png`), tablet (`challenge-management-tablet.png`), mobile (`challenge-management-mobile.png`), and mobile drawer (`challenge-management-mobile-drawer.png`) via headless Chrome CDP.
 
+---
+
+## Phase 2 Milestone — Admin Question Management UI & Backend Integration (Completed)
+- [x] **Integration of `Hack-The-Grid-Question-Management-UI.zip`**:
+  - [x] Inspected `README-INTEGRATION.md`, existing `Question` and `Challenge` models, and admin routes/controllers.
+  - [x] Integrated [`client/src/pages/admin/QuestionManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/QuestionManagementPage.jsx) and [`client/src/styles/QuestionManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/QuestionManagementPage.css) reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Questions` (`☰ Questions`) highlighted on `/admin/questions`.
+  - [x] Registered `/admin/questions` (`ROUTES.ADMIN_QUESTIONS`) as a standalone full-bleed route in [`client/src/routes/AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) without duplicate `AdminLayout` sidebars or headers.
+- [x] **Backend & Service Layer Integration**:
+  - [x] Extended [`server/src/constants/challengeTypes.js`](file:///c:/projects/Hack-The-Grid/server/src/constants/challengeTypes.js) and [`server/src/models/Question.js`](file:///c:/projects/Hack-The-Grid/server/src/models/Question.js) to support `type` (`Text Answer`, `Flag`, `Multiple Choice`, `File Upload`), `points`, `status` (`Published`, `Draft`, `Paused` synced with `isActive`), `attempts`, `required`, and question categories (`Cryptography`, `Web Security`, `Networking`, `Encoding`).
+  - [x] Added `PATCH /api/v1/admin/questions/:questionId` and enhanced `GET /api/v1/admin/questions` and `POST /api/v1/admin/questions` in [`server/src/routes/admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) and [`server/src/controllers/admin.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/admin.controller.js).
+  - [x] Strictly protected secret flags: `Question.flag` remains `select: false` by default and is never exposed to participant APIs (`/mission-map`, `/current`, `/checkpoints/scan`). Authenticated admin endpoints allow flags only via explicit `includeFlag=true`, and the client UI preview panel requires an explicit "Reveal" click.
+  - [x] Added `updateQuestion` to [`client/src/services/admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - [x] Clearly distinguished live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`).
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,754 modules transformed in 12.67s).
+  - [x] Verified desktop (`question-management-desktop.png`), secret answer reveal (`demo-answer-not-for-production`), Add Question modal (`question-management-modal.png`), grid view (`question-management-grid.png`), tablet (`question-management-tablet.png`), mobile (`question-management-mobile.png`), and mobile drawer (`question-management-mobile-drawer.png`) via headless Chrome CDP.
+
+

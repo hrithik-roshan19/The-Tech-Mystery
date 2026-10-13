@@ -21,6 +21,7 @@ router.post('/challenges', adminController.createChallenge);
 router.patch('/challenges/:challengeId', adminController.updateChallenge);
 router.get('/questions', adminController.getQuestions);
 router.post('/questions', adminController.createQuestion);
+router.patch('/questions/:questionId', adminController.updateQuestion);
 
 // Checkpoints
 router.get('/checkpoints', adminController.getCheckpoints);

@@ -19,7 +19,11 @@ const CHALLENGE_TYPES = {
   PWN: 'Pwn',
   STEGO: 'Stego',
   NETWORK: 'Network',
-  MIXED: 'Mixed'
+  MIXED: 'Mixed',
+  CRYPTOGRAPHY_TITLE: 'Cryptography',
+  WEB_SECURITY: 'Web Security',
+  NETWORKING: 'Networking',
+  ENCODING: 'Encoding'
 };
 
 const ALL_CHALLENGE_TYPES = Object.values(CHALLENGE_TYPES);

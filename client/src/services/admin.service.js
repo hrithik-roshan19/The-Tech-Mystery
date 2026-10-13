@@ -63,6 +63,11 @@ export const adminService = {
     return res.data;
   },
 
+  updateQuestion: async (questionId, payload) => {
+    const res = await api.patch(`/admin/questions/${questionId}`, payload);
+    return res.data;
+  },
+
   updateEventConfig: async (payload) => {
     const res = await api.patch('/admin/event-config', payload);
     return res.data;

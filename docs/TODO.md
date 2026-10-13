@@ -210,7 +210,9 @@
 - [ ] Implement live submission stream polling in Admin SOC.
 - [x] Implement one-click squad disqualification and restoration action (`PATCH /api/v1/admin/teams/:teamId/disqualify`).
 - [x] Implement admin challenge listing, creation, editing, and publish/pause status management (`GET / POST / PATCH /api/v1/admin/challenges`).
-- [ ] Implement admin challenge deletion (`DELETE /api/v1/admin/challenges/:challengeId`) and question edit/delete (`PATCH / DELETE /api/v1/admin/questions/:questionId`).
+- [x] Implement admin question listing, creation, editing, and publish/pause status management (`GET / POST / PATCH /api/v1/admin/questions`).
+- [x] Integrate reference Question Management page (`/admin/questions`) with search, status/type/level filtering, table/grid views, answer reveal toggle, CSV export, and live/demo state sync.
+- [ ] Implement admin challenge deletion (`DELETE /api/v1/admin/challenges/:challengeId`) and question deletion (`DELETE /api/v1/admin/questions/:questionId`).
 - [ ] Implement admin team creation endpoint (`POST /api/v1/admin/teams`), admin team details edit endpoint (`PATCH /api/v1/admin/teams/:teamId`), admin member assignment endpoint (`POST /api/v1/admin/teams/:teamId/members`), and add `college` field to `Team` Mongoose schema (`server/src/models/Team.js`).
 
 ---

@@ -38,6 +38,30 @@ const questionSchema = new mongoose.Schema(
       enum: Object.values(CHALLENGE_DIFFICULTY),
       default: CHALLENGE_DIFFICULTY.MEDIUM
     },
+    type: {
+      type: String,
+      enum: ['Text Answer', 'Flag', 'Multiple Choice', 'File Upload'],
+      default: 'Flag'
+    },
+    points: {
+      type: Number,
+      default: 100,
+      min: 0
+    },
+    status: {
+      type: String,
+      enum: ['Published', 'Draft', 'Paused'],
+      default: 'Published'
+    },
+    attempts: {
+      type: Number,
+      default: 3,
+      min: 1
+    },
+    required: {
+      type: Boolean,
+      default: true
+    },
     // The expected answer / flag string.
     // select: false ensures that questions queries NEVER include the flag unless explicitly requested with .select('+flag')
     flag: {

@@ -329,10 +329,19 @@ class AdminController {
         filter.challengeId = req.query.challengeId;
       }
 
-      const questions = await Question.find(filter)
-        .select('-flag')
+      // Admins are authenticated & authorized via requireAdmin middleware.
+      // Include flag if admin explicitly requests it or by default for admin question manager.
+      const query = Question.find(filter)
         .populate('challengeId', 'levelNumber title category difficulty points status isActive')
         .sort({ levelNumber: 1, createdAt: -1 });
+
+      if (req.query.includeFlag === 'true' || req.query.withFlag === 'true') {
+        query.select('+flag');
+      } else {
+        query.select('-flag');
+      }
+
+      const questions = await query;
 
       return success(res, { questions });
     } catch (error) {
@@ -342,45 +351,214 @@ class AdminController {
 
   async createQuestion(req, res, next) {
     try {
-      const { challengeId, levelNumber, title, prompt, category, difficulty, flag, isCaseSensitive, hints, assetUrls } = req.body;
+      const {
+        challengeId,
+        challenge: challengeName,
+        levelNumber,
+        level,
+        title,
+        prompt,
+        category,
+        difficulty,
+        flag,
+        answer,
+        type,
+        points,
+        status,
+        attempts,
+        required,
+        hint,
+        isCaseSensitive,
+        hints,
+        assetUrls
+      } = req.body;
 
-      if (!title || !prompt || !flag) {
-        return badRequest(res, 'Question title, prompt, and secret flag are required');
+      const secretFlag = flag || answer;
+      if (!title || !prompt || !secretFlag) {
+        return badRequest(res, 'Question title, prompt, and secret flag / answer are required');
       }
 
+      const targetLevel = levelNumber !== undefined ? Number(levelNumber) : (level !== undefined ? Number(level) : undefined);
       let targetChallenge = null;
       if (challengeId && /^[0-9a-fA-F]{24}$/.test(challengeId)) {
         targetChallenge = await Challenge.findById(challengeId);
-      } else if (levelNumber !== undefined) {
-        targetChallenge = await Challenge.findOne({ levelNumber: Number(levelNumber) });
+      } else if (challengeName && typeof challengeName === 'string') {
+        targetChallenge = await Challenge.findOne({ title: challengeName.trim() });
+      }
+      if (!targetChallenge && targetLevel !== undefined) {
+        targetChallenge = await Challenge.findOne({ levelNumber: targetLevel });
       }
 
       if (!targetChallenge) {
         return badRequest(
           res,
-          `No challenge level found for ${challengeId ? `ID ${challengeId}` : `Level ${levelNumber}`}. Create the Challenge level first.`
+          `No challenge level found for ${challengeId ? `ID ${challengeId}` : challengeName ? `Challenge "${challengeName}"` : `Level ${targetLevel}`}. Create the Challenge level first.`
         );
       }
+
+      const formattedHints = Array.isArray(hints)
+        ? hints
+        : hint && typeof hint === 'string' && hint.trim()
+        ? [{ hintIndex: 1, content: hint.trim(), penaltyPoints: 20 }]
+        : [];
+
+      const initialStatus = ['Published', 'Draft', 'Paused'].includes(status) ? status : 'Published';
 
       const question = await Question.create({
         challengeId: targetChallenge._id,
         levelNumber: targetChallenge.levelNumber,
         title: String(title).trim(),
         prompt: String(prompt).trim(),
+        type: ['Text Answer', 'Flag', 'Multiple Choice', 'File Upload'].includes(type) ? type : 'Flag',
         category: category || targetChallenge.category,
         difficulty: difficulty
           ? String(difficulty).trim().toUpperCase()
           : targetChallenge.difficulty,
-        flag: String(flag).trim(),
+        points: points !== undefined && !Number.isNaN(Number(points)) ? Math.max(0, Number(points)) : 100,
+        status: initialStatus,
+        isActive: initialStatus === 'Published',
+        attempts: attempts !== undefined && !Number.isNaN(Number(attempts)) ? Math.max(1, Number(attempts)) : 3,
+        required: required !== undefined ? Boolean(required) : true,
+        flag: String(secretFlag).trim(),
         isCaseSensitive: isCaseSensitive !== undefined ? Boolean(isCaseSensitive) : true,
-        hints: Array.isArray(hints) ? hints : [],
+        hints: formattedHints,
         assetUrls: Array.isArray(assetUrls) ? assetUrls : []
       });
 
-      const safeQuestion = question.toObject();
-      delete safeQuestion.flag;
+      const populatedQuestion = await Question.findById(question._id)
+        .select('+flag')
+        .populate('challengeId', 'levelNumber title category difficulty points status isActive');
 
-      return success(res, { question: safeQuestion }, 'Question added to challenge pool', 201);
+      return success(res, { question: populatedQuestion }, 'Question added to challenge pool', 201);
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async updateQuestion(req, res, next) {
+    try {
+      const { questionId } = req.params;
+      if (!questionId || !/^[0-9a-fA-F]{24}$/.test(questionId)) {
+        return badRequest(res, 'Valid question ID is required');
+      }
+
+      const existing = await Question.findById(questionId).select('+flag');
+      if (!existing) {
+        return notFound(res, 'Question not found');
+      }
+
+      const {
+        title,
+        prompt,
+        challengeId,
+        challenge: challengeName,
+        levelNumber,
+        level,
+        type,
+        category,
+        difficulty,
+        points,
+        status,
+        isActive,
+        attempts,
+        required,
+        flag,
+        answer,
+        hint,
+        hints,
+        isCaseSensitive,
+        assetUrls
+      } = req.body;
+
+      if (title !== undefined) {
+        if (typeof title !== 'string' || !title.trim()) {
+          return badRequest(res, 'Question title cannot be empty');
+        }
+        existing.title = title.trim();
+      }
+      if (prompt !== undefined) {
+        if (typeof prompt !== 'string' || !prompt.trim()) {
+          return badRequest(res, 'Question prompt cannot be empty');
+        }
+        existing.prompt = prompt.trim();
+      }
+      if (type !== undefined && ['Text Answer', 'Flag', 'Multiple Choice', 'File Upload'].includes(type)) {
+        existing.type = type;
+      }
+      if (category !== undefined) {
+        existing.category = category;
+      }
+      if (difficulty !== undefined) {
+        existing.difficulty = String(difficulty).trim().toUpperCase();
+      }
+      if (points !== undefined) {
+        const pts = Number(points);
+        if (Number.isNaN(pts) || pts < 0) {
+          return badRequest(res, 'Points must be a non-negative number');
+        }
+        existing.points = pts;
+      }
+      if (attempts !== undefined) {
+        const att = Number(attempts);
+        if (Number.isNaN(att) || att < 1) {
+          return badRequest(res, 'Attempts must be a positive integer');
+        }
+        existing.attempts = att;
+      }
+      if (required !== undefined) {
+        existing.required = Boolean(required);
+      }
+
+      const validStatuses = ['Published', 'Draft', 'Paused'];
+      if (status !== undefined && validStatuses.includes(status)) {
+        existing.status = status;
+        existing.isActive = status === 'Published';
+      } else if (isActive !== undefined) {
+        existing.isActive = Boolean(isActive);
+        existing.status = existing.isActive ? 'Published' : 'Paused';
+      }
+
+      const secretFlag = flag !== undefined ? flag : answer;
+      if (secretFlag !== undefined && typeof secretFlag === 'string' && secretFlag.trim()) {
+        existing.flag = secretFlag.trim();
+      }
+
+      if (hint !== undefined && typeof hint === 'string') {
+        existing.hints = [{ hintIndex: 1, content: hint.trim(), penaltyPoints: 20 }];
+      } else if (Array.isArray(hints)) {
+        existing.hints = hints;
+      }
+
+      if (isCaseSensitive !== undefined) {
+        existing.isCaseSensitive = Boolean(isCaseSensitive);
+      }
+      if (Array.isArray(assetUrls)) {
+        existing.assetUrls = assetUrls;
+      }
+
+      // Check if challenge/level was modified
+      const targetLevel = levelNumber !== undefined ? Number(levelNumber) : (level !== undefined ? Number(level) : undefined);
+      let targetChallenge = null;
+      if (challengeId && /^[0-9a-fA-F]{24}$/.test(challengeId)) {
+        targetChallenge = await Challenge.findById(challengeId);
+      } else if (challengeName && typeof challengeName === 'string') {
+        targetChallenge = await Challenge.findOne({ title: challengeName.trim() });
+      } else if (targetLevel !== undefined && targetLevel !== existing.levelNumber) {
+        targetChallenge = await Challenge.findOne({ levelNumber: targetLevel });
+      }
+
+      if (targetChallenge) {
+        existing.challengeId = targetChallenge._id;
+        existing.levelNumber = targetChallenge.levelNumber;
+      }
+
+      await existing.save();
+
+      const populated = await Question.findById(existing._id)
+        .select('+flag')
+        .populate('challengeId', 'levelNumber title category difficulty points status isActive');
+
+      return success(res, { question: populated }, `Question "${existing.title}" updated`);
     } catch (error) {
       return badRequest(res, error.message);
     }

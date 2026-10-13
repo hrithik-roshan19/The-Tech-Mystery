@@ -147,13 +147,13 @@ hack-the-grid/
 │   │   │   ├── auth/           # LoginPage.jsx, RegisterPage.jsx
 │   │   │   ├── participant/    # ParticipantDashboard, QRCheckpointPage, TeamDashboardPage, MissionMapPage,
 │   │   │   │                   # ChallengeViewPage, CheckpointScannerPage, LeaderboardPage, TeamProfilePage, MasterFlagPage, FinalFlagPage
-│   │   │   ├── admin/          # AdminDashboardPage, TeamManagementPage, ChallengePoolPage,
-│   │   │   │                   # CheckpointManagerPage, SubmissionLogsPage, EventControlsPage
+│   │   │   ├── admin/          # AdminDashboardPage, TeamManagementPage, ChallengeManagementPage, QuestionManagementPage,
+│   │   │   │                   # ChallengePoolPage, CheckpointManagerPage, SubmissionLogsPage, EventControlsPage
 │   │   │   ├── public/         # HomePage, MissionPage, ChallengeLevelsPage, RulesPage, LeaderboardPage, AboutPage, SchedulePage, FAQPage
 │   │   │   └── NotFoundPage.jsx
 │   │   ├── routes/             # AppRoutes.jsx, ProtectedRoute.jsx
-│   │   ├── services/           # api.js, auth.service.js, challenge.service.js, team.service.js, etc.
-│   │   ├── styles/             # Navbar.css, HomePage.css, LoginPage.css, RegisterPage.css, RulesPage.css, MissionPage.css, ChallengeLevelsPage.css, ParticipantDashboard.css, QRCheckpointPage.css, LeaderboardPage.css, FinalFlagPage.css, index.css
+│   │   ├── services/           # api.js, auth.service.js, challenge.service.js, team.service.js, admin.service.js, etc.
+│   │   ├── styles/             # Navbar.css, HomePage.css, LoginPage.css, RegisterPage.css, RulesPage.css, MissionPage.css, ChallengeLevelsPage.css, ParticipantDashboard.css, QRCheckpointPage.css, LeaderboardPage.css, FinalFlagPage.css, AdminDashboard.css, TeamManagementPage.css, ChallengeManagementPage.css, QuestionManagementPage.css, index.css
 │   │   ├── utils/              # storage.js, formatters.js
 │   │   ├── App.jsx
 │   │   └── main.jsx
