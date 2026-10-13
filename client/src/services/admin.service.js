@@ -82,6 +82,11 @@ export const adminService = {
     const res = await api.patch('/admin/event-config', payload);
     return res.data;
   },
+
+  getLeaderboard: async () => {
+    const res = await api.get('/leaderboard');
+    return res.data;
+  },
 };
 
 export default adminService;

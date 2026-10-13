@@ -675,5 +675,23 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,807 modules transformed in 6.45s).
   - [x] Verified desktop (`submission-management-desktop.png`), answer reveal (`submission-management-reveal.png`), pending queue filter & approve review action (`submission-management-reviewed.png`), grid view (`submission-management-grid.png`), tablet (`submission-management-tablet.png`), mobile (`submission-management-mobile.png`), and mobile drawer (`submission-management-mobile-drawer.png`) via headless Chrome CDP.
 
+---
+
+## Phase 2 Milestone — Admin Leaderboard Management UI & Deterministic Scoring Controls (Completed)
+- [x] **Integration of `LeaderboardManagementPage.jsx` & `LeaderboardManagementPage.css`**:
+  - [x] Integrated [`client/src/pages/admin/LeaderboardManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/LeaderboardManagementPage.jsx) and [`client/src/styles/LeaderboardManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/LeaderboardManagementPage.css) reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Leaderboard` (`♜ Leaderboard`) highlighted on `/admin/leaderboard`.
+  - [x] Registered `/admin/leaderboard` (`ROUTES.ADMIN_LEADERBOARD`) as a standalone full-bleed route in [`client/src/routes/AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) without duplicate `AdminLayout` sidebars or headers.
+- [x] **Backend, Service Layer & Ranking Integrity Integration**:
+  - [x] Connected live data fetching to [`adminService.getAllTeams()`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js), `adminService.getDashboardStats()`, and [`leaderboardService.getLeaderboard()`](file:///c:/projects/Hack-The-Grid/client/src/services/leaderboard.service.js), with deterministic tie-breaking: `(b.score - a.score) || ((a.lastSolveTimestamp || 0) - (b.lastSolveTimestamp || 0))` which mirrors [`LeaderboardController.getLiveLeaderboard`](file:///c:/projects/Hack-The-Grid/server/src/controllers/leaderboard.controller.js).
+  - [x] Connected public leaderboard visibility switch directly with `adminService.updateEventConfig({ isLeaderboardFrozen })`, synchronizing participant visibility across `EventConfig.isLeaderboardFrozen`.
+  - [x] Strictly disabled client-side demo score adjustments (`↑ Demo Move Up`) in live database mode to maintain ranking integrity, displaying an explanatory callout note in the detail panel.
+  - [x] Implemented 15-second background auto-refresh polling interval when enabled, with manual refresh trigger and time indicator.
+  - [x] Supported multi-criteria sorting (Highest score, Challenges solved, Highest level), search by team name or code, level filtering (1-10), Table/Grid view toggling, and RFC 4180 CSV export.
+  - [x] Added `getLeaderboard` to [`client/src/services/admin.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/admin.service.js).
+  - [x] Clearly distinguished live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`).
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,810 modules transformed in 7.63s).
+  - [x] Verified desktop (`leaderboard-management-desktop.png`), search filtering (`leaderboard-management-filtered.png`), visibility switch toggle (`leaderboard-management-visibility.png`), grid view (`leaderboard-management-grid.png`), tablet (`leaderboard-management-tablet.png`), mobile (`leaderboard-management-mobile.png`), and mobile drawer (`leaderboard-management-mobile-drawer.png`) via headless Chrome CDP.
+
 
 

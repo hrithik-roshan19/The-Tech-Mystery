@@ -42,6 +42,7 @@ import ChallengeManagementPage from '../pages/admin/ChallengeManagementPage';
 import QuestionManagementPage from '../pages/admin/QuestionManagementPage';
 import QRCheckpointManagementPage from '../pages/admin/QRCheckpointManagementPage';
 import SubmissionManagementPage from '../pages/admin/SubmissionManagementPage';
+import LeaderboardManagementPage from '../pages/admin/LeaderboardManagementPage';
 import ChallengePoolPage from '../pages/admin/ChallengePoolPage';
 import CheckpointManagerPage from '../pages/admin/CheckpointManagerPage';
 import SubmissionLogsPage from '../pages/admin/SubmissionLogsPage';
@@ -69,6 +70,7 @@ export const AppRoutes = () => {
       <Route path={ROUTES.ADMIN_QUESTIONS} element={<QuestionManagementPage />} />
       <Route path={ROUTES.ADMIN_CHECKPOINTS} element={<QRCheckpointManagementPage />} />
       <Route path={ROUTES.ADMIN_SUBMISSIONS} element={<SubmissionManagementPage />} />
+      <Route path={ROUTES.ADMIN_LEADERBOARD} element={<LeaderboardManagementPage />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />
 
@@ -121,7 +123,7 @@ export const AppRoutes = () => {
         <Route path="security-logs" element={<SubmissionLogsPage />} />
         <Route path="controls" element={<EventControlsPage />} />
         <Route path="event-control" element={<EventControlsPage />} />
-        <Route path="leaderboard" element={<Navigate to={ROUTES.LEADERBOARD} replace />} />
+        <Route path="leaderboard" element={<LeaderboardManagementPage />} />
       </Route>
 
       {/* 5. 404 Catch-All */}

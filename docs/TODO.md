@@ -199,9 +199,9 @@
 
 ---
 
-## Phase 9: Live Leaderboard & Freeze Engine (Medium Priority)
-- [ ] Implement live polling / Server-Sent Events (SSE) for automatic leaderboard updates.
-- [ ] Test freeze switch toggle: ensure scores continue logging in database while public view freezes.
+## Phase 9: Live Leaderboard & Freeze Engine (COMPLETED)
+- [x] Implement live polling / Server-Sent Events (SSE) for automatic leaderboard updates (15s auto-refresh polling implemented on `/admin/leaderboard`).
+- [x] Test freeze switch toggle: ensure scores continue logging in database while public view freezes (`EventConfig.isLeaderboardFrozen` synchronized via `PATCH /api/v1/admin/event-config`).
 
 ---
 
@@ -216,6 +216,7 @@
 - [x] Implement admin checkpoint listing, creation, and updating (`GET / POST / PATCH /api/v1/admin/checkpoints`).
 - [x] Integrate reference Submission Management page (`/admin/submissions`) with search, result/level/team filtering, table/grid views, answer reveal toggle, pending review queue shortcut, CSV export, and live/demo state sync.
 - [x] Implement admin submission review endpoint with server-side validation, duplicate scoring protection, and atomic team score updates (`PATCH /api/v1/admin/submissions/:submissionId/review`).
+- [x] Integrate reference Leaderboard Management page (`/admin/leaderboard`) with deterministic server-side ranking, public visibility freeze toggle, 15s auto-refresh polling, search, level filtering, table/grid views, team performance inspector panel, and CSV export.
 - [ ] Implement admin challenge deletion (`DELETE /api/v1/admin/challenges/:challengeId`) and question deletion (`DELETE /api/v1/admin/questions/:questionId`).
 - [ ] Implement admin team creation endpoint (`POST /api/v1/admin/teams`), admin team details edit endpoint (`PATCH /api/v1/admin/teams/:teamId`), admin member assignment endpoint (`POST /api/v1/admin/teams/:teamId/members`), and add `college` field to `Team` Mongoose schema (`server/src/models/Team.js`).
 
