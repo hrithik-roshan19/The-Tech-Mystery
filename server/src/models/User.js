@@ -57,6 +57,49 @@ const userSchema = new mongoose.Schema(
       default: null,
       index: true
     },
+    college: {
+      type: String,
+      default: "Tula's University",
+      trim: true
+    },
+    course: {
+      type: String,
+      default: "B.Tech CSE",
+      trim: true
+    },
+    year: {
+      type: String,
+      default: "3rd Year",
+      trim: true
+    },
+    bio: {
+      type: String,
+      maxlength: 180,
+      default: "",
+      trim: true
+    },
+    github: {
+      type: String,
+      default: "",
+      trim: true
+    },
+    linkedin: {
+      type: String,
+      default: "",
+      trim: true
+    },
+    publicProfile: {
+      type: Boolean,
+      default: true
+    },
+    emailUpdates: {
+      type: Boolean,
+      default: true
+    },
+    avatar: {
+      type: String,
+      default: ""
+    },
     isActive: {
       type: Boolean,
       default: true
@@ -70,6 +113,7 @@ const userSchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
 
 /**
  * Pre-save hook: Hash password if modified

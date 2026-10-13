@@ -55,6 +55,13 @@ The primary objective of Hack the Grid is to provide a cheat-resilient, scalable
   - Team creation with auto-generated cryptographic join codes (`HTG-XXXXXX`).
   - Team joining with capacity enforcement (2–4 members).
   - Role-Based Access Control (`ADMIN`, `TEAM_LEADER`, `TEAM_MEMBER`).
+- **Participant Portal & User Profile Identity Hub**:
+  - Standalone User Profile Console (`/profile` & `/portal/profile` -> `UserProfilePage.jsx` + `UserProfilePage.css`) with cyber player card hero, radial radar graphic, live rank standings (`#08`), quick telemetry stats (`Total XP`, `Challenges solved`, `Checkpoints`, `Team contribution`), tabbed panels (`Overview`, `Achievements`, `Settings`), side cards (Team identity, Recent badges, Account security), and mobile slide-down drawer.
+  - Dedicated participant cyber navbar (`.htg-up-navbar`) with React Router links (`Home`, `Challenges`, `Leaderboard`, `Rules`, `Team`, `Profile`), user menu dropdown with direct settings/team/sign-out actions, and mobile hamburger toggle.
+  - Backend profile synchronization (`GET /api/v1/auth/profile`, `PATCH /api/v1/auth/profile`, `POST /api/v1/auth/avatar`, `POST /api/v1/auth/change-password`) with `User` model extension (`college`, `course`, `year`, `bio`, `github`, `linkedin`, `publicProfile`, `emailUpdates`, `avatar`).
+  - Read-only score and rank integrity: official scores, ranks, team assignments, and roles are calculated server-side and immutable via client updates.
+  - Secure account management: avatar photo upload (base64, 500KB limit) and modal password change requiring current password verification with zero secret leakage.
+  - Transparent state pill badges (`● LIVE DATABASE` vs `● DEMO PREVIEW`).
 - **Challenge Engine & Persistent Pool**:
   - 10 structured levels covering Cryptography, Binary/ASCII, Base64, Web Inspection, Steganography, Debugging, Logic Puzzles, Multi-stage Ciphers, and Master Flag.
   - Question pools per level containing multiple unique variations.

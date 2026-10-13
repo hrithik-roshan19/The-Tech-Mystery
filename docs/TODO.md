@@ -150,6 +150,16 @@
   - [x] Verify search, status/difficulty/category filters, reset, CSV export, List/Grid toggle, Add/Edit modal, and responsive desktop/tablet/mobile layouts.
 - [x] Verify all 12 target viewports (1440px, 1366px, 1280px, 1024px, 900px, 768px, 600px, 480px, 430px, 390px, 360px, 320px).
 - [x] Verify zero build or console errors.
+- [x] Integrate Reference-Matched Participant User Profile UI (`Hack-The-Grid-User-Profile-UI.zip`):
+  - [x] Implement `client/src/pages/participant/UserProfilePage.jsx` and `client/src/styles/UserProfilePage.css` with responsive cyber layout.
+  - [x] Mount at `ROUTES.PROFILE` (`/profile`) and `/portal/profile`, resolving previous redirect to `/portal/team`.
+  - [x] Integrate participant cyber navbar (`.htg-up-navbar`) with React Router navigation, active links, mobile drawer, and user menu dropdown.
+  - [x] Connect backend `User` schema extension with `college`, `course`, `year`, `bio`, `github`, `linkedin`, `publicProfile`, `emailUpdates`, `avatar`.
+  - [x] Implement authenticated profile endpoints (`GET /api/v1/auth/profile`, `PATCH /api/v1/auth/profile`, `POST /api/v1/auth/avatar`, `POST /api/v1/auth/change-password`).
+  - [x] Strictly preserve read-only constraints for official rank, total XP, challenges solved, checkpoints scanned, team membership, and role.
+  - [x] Connect secure avatar upload (base64, 500KB client limit) and password change modal with current password verification and zero secret leakage.
+  - [x] Support 3 interactive tabs (`Overview`, `Achievements`, `Settings`), right-side telemetry cards (Team identity, Badges, Account security), and live database vs demo preview state pills.
+  - [x] Verified build (`npm run build --workspace=client`) with 0 errors and captured 7 headless Chrome CDP screenshots across desktop, tabs, modal, tablet, and mobile.
 
 ---
 

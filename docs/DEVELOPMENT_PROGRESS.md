@@ -737,6 +737,31 @@
   - [x] `npm run build --workspace=client` succeeded with 0 errors (1,814 modules transformed in 1m 4s).
   - [x] Verified desktop overview (`security-logs-desktop.png`), filtered stream (`security-logs-filtered.png`), reviewed event action & toast (`security-logs-reviewed.png`), tablet (`security-logs-tablet.png`), mobile (`security-logs-mobile.png`), and mobile drawer (`security-logs-mobile-drawer.png`) via headless Chrome CDP.
 
+---
+
+## Phase 2 Milestone — Participant User Profile Console & Preference Management Integration (Completed)
+- [x] **Integration of `UserProfilePage.jsx` & `UserProfilePage.css`**:
+  - [x] Integrated [`client/src/pages/participant/UserProfilePage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/participant/UserProfilePage.jsx) and [`client/src/styles/UserProfilePage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/UserProfilePage.css) featuring a player card hero with circular radar styling, live rank standings `#08`, stats cards (Total XP, Challenges solved, Checkpoints explored, Team contribution), tabbed workspace (`Overview`, `Achievements`, `Settings`), right-side telemetry cards (Team identity, Recent badges, Account security), and mobile slide-down drawer.
+  - [x] Replaced legacy `/profile -> /portal/team` redirect in [`client/src/routes/AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) by mounting `ROUTES.PROFILE` (`/profile`) as a standalone full-bleed page and `/portal/profile` under participant routes.
+  - [x] Reused the dedicated participant cyber navbar (`.htg-up-navbar`) with React Router navigation (`Link` to Home, Challenges, Leaderboard, Rules, Team, Profile), user avatar dropdown with settings / team / sign-out shortcuts, and mobile hamburger toggle.
+- [x] **Backend & Service Layer Integration**:
+  - [x] Extended [`server/src/models/User.js`](file:///c:/projects/Hack-The-Grid/server/src/models/User.js) schema with `college`, `course`, `year`, `bio` (maxlength 180), `github`, `linkedin`, `publicProfile`, `emailUpdates`, and `avatar`.
+  - [x] Implemented `getProfile` in [`server/src/controllers/auth.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/auth.controller.js), dynamically aggregating user identity, team standings, solve counts, checkpoints scanned, rank percentile, achievements unlocked, and recent activity timeline.
+  - [x] Implemented `updateProfile` in [`server/src/controllers/auth.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/auth.controller.js) with validation for `fullName`, unique `username`, unique `email`, `bio`, and preferences. Strictly enforced read-only boundaries: attempts to alter `role`, `teamId`, `score`, or `rank` are ignored/rejected.
+  - [x] Implemented `updateAvatar` (`POST /api/v1/auth/avatar`) with base64 parsing and 500KB payload limit.
+  - [x] Implemented `changePassword` (`POST /api/v1/auth/change-password`) verifying `currentPassword` against bcrypt hash, checking minimum 6-character length, updating via model pre-save hook, and logging security events with `logger.security`.
+  - [x] Mounted routes in [`server/src/routes/auth.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/auth.routes.js) and added API service methods in [`client/src/services/auth.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/auth.service.js).
+- [x] **Frontend Features & State Management**:
+  - [x] Live vs demo preview transparency badge (`● LIVE DATABASE` vs `● DEMO PREVIEW`).
+  - [x] Profile editing in `Settings` tab with inline validation, disabled team name field, and cancel/save controls.
+  - [x] Interactive switches for `Public profile` and `Event email updates`.
+  - [x] Account security modal with backdrop blur, password fields, validation error banner, and success toast.
+  - [x] Avatar upload trigger with client-side file type and 500KB file size checks.
+- [x] **Build & Empirical Verification**:
+  - [x] `npm run build --workspace=client` succeeded with 0 errors (1,816 modules transformed in 30.94s).
+  - [x] Verified desktop overview (`user-profile-desktop.png`), achievements tab (`user-profile-achievements.png`), settings tab with edit mode (`user-profile-settings.png`), account security password modal (`user-profile-security-modal.png`), tablet (`user-profile-tablet.png`), mobile (`user-profile-mobile.png`), and mobile drawer (`user-profile-mobile-drawer.png`) via headless Chrome CDP.
+
+
 
 
 

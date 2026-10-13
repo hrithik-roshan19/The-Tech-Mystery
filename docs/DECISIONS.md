@@ -395,6 +395,26 @@ This document logs significant architectural and design choices, their context, 
   - Clearly distinguish live database state (`● LIVE DATABASE`) from demo preview fallback (`● DEMO PREVIEW DATA`) with badges and interactive fallback handling.
 - **Consequences**: Equips competition organizers with an audit-ready, real-time Security Operations Center (SOC) telemetry feed, provides one-click incident review and CSV export capabilities, guarantees zero tampering with append-only security trails, and maintains visual and functional parity across all 12 responsive breakpoints.
 
+---
+
+## ADR-0032: Participant User Profile Console, Identity Management & Account Security (`/profile` & `/portal/profile`)
+- **Status**: ACCEPTED
+- **Context**: The participant experience required integrating the reference Hack the Grid User Profile page (`UserProfilePage.jsx` and `UserProfilePage.css`) at `/profile` (and `/portal/profile`), providing individual player identity inspection, player card hero presentation with radial radar grid, live/preview data status badge (`● LIVE DATABASE` vs `● DEMO PREVIEW`), stat grid (Total XP, Challenges solved, Checkpoints explored, Team contribution), tabbed workspace (`Overview`, `Achievements`, `Settings`), player identity card, badges preview, and account security controls. Critical constraints were:
+  1. Reusing the dedicated participant cyber navbar (`.htg-up-navbar`) with React Router navigation (`Link` to `/`, `/challenges`, `/leaderboard`, `/rules`, `/portal/team`, `/profile`), mobile drawer toggle, and user avatar dropdown with sign-out.
+  2. Resolving the previous route redirect where `/profile` previously redirected to `/portal/team`.
+  3. Extending the backend `User` schema (`server/src/models/User.js`) with identity and preference fields (`college`, `course`, `year`, `bio`, `github`, `linkedin`, `publicProfile`, `emailUpdates`, `avatar`).
+  4. Implementing authenticated API endpoints (`GET /api/v1/auth/profile`, `PATCH /api/v1/auth/profile`, `POST /api/v1/auth/avatar`, `POST /api/v1/auth/change-password`) guarded by `authenticate`.
+  5. Strictly enforcing read-only boundaries: participants can update their personal details and privacy preferences, but official score, current level, leaderboard rank, team membership, role, and verification status are strictly calculated server-side and immutable via client profile payloads.
+  6. Secure account management: changing password requires `currentPassword` verification against bcrypt hash, validates `newPassword` length (min 6 characters), never returns or leaks hashes/tokens, and records security audit logs.
+- **Decision**:
+  - Implement [`UserProfilePage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/participant/UserProfilePage.jsx) and [`UserProfilePage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/UserProfilePage.css), matching the dark charcoal (`#0a0c0b` / `#111412`) and electric-lime (`#b8ff3d`) cybersecurity theme.
+  - Mount `ROUTES.PROFILE` (`/profile`) as a standalone full-bleed route and `/portal/profile` in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx), eliminating the previous redirect.
+  - Extend [`User.js`](file:///c:/projects/Hack-The-Grid/server/src/models/User.js) schema and implement `getProfile`, `updateProfile`, `updateAvatar`, and `changePassword` in [`auth.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/auth.controller.js) and [`auth.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/auth.routes.js).
+  - Add API client bindings in [`auth.service.js`](file:///c:/projects/Hack-The-Grid/client/src/services/auth.service.js).
+  - Integrate modal password change flow with client validation, progress state, and backdrop dismissal.
+  - Distinguish live database state (`● LIVE DATABASE`) from offline demo preview (`● DEMO PREVIEW`) with responsive pill badges and fallback handling.
+- **Consequences**: Delivers a complete, secure participant identity hub that respects event score integrity, provides seamless mobile navigation, and enables participants to manage preferences and credentials without exposing sensitive security data.
+
 
 
 

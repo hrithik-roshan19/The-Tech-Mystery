@@ -24,6 +24,8 @@ export const ROUTES = {
   CHALLENGE: '/portal/challenge',
   CHECKPOINT: '/portal/checkpoint',
   LEADERBOARD: '/leaderboard',
+  PROFILE: '/profile',
+  PORTAL_PROFILE: '/portal/profile',
   TEAM_PROFILE: '/portal/team',
   MASTER_FLAG: '/final-flag',
   FINAL_FLAG: '/final-flag',

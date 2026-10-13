@@ -31,6 +31,7 @@ import ChallengeViewPage from '../pages/participant/ChallengeViewPage';
 import CheckpointScannerPage from '../pages/participant/CheckpointScannerPage';
 import LeaderboardPage from '../pages/public/LeaderboardPage';
 import TeamProfilePage from '../pages/participant/TeamProfilePage';
+import UserProfilePage from '../pages/participant/UserProfilePage';
 import FinalFlagPage from '../pages/participant/FinalFlagPage';
 import MasterFlagPage from '../pages/participant/MasterFlagPage';
 
@@ -80,6 +81,7 @@ export const AppRoutes = () => {
       <Route path="/admin/logs" element={<Navigate to={ROUTES.ADMIN_SECURITY_LOGS} replace />} />
       <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
       <Route path={ROUTES.RULES} element={<RulesPage />} />
+      <Route path={ROUTES.PROFILE} element={<UserProfilePage />} />
 
       {/* 2. Public Pages using Shared Layout */}
       <Route element={<PublicLayout />}>
@@ -90,7 +92,6 @@ export const AppRoutes = () => {
         <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />
         <Route path={ROUTES.FAQ} element={<FAQPage />} />
         <Route path="/team" element={<Navigate to={ROUTES.TEAM_PROFILE} replace />} />
-        <Route path="/profile" element={<Navigate to={ROUTES.TEAM_PROFILE} replace />} />
         <Route path="/resources" element={<Navigate to={ROUTES.FAQ} replace />} />
       </Route>
 
@@ -110,6 +111,7 @@ export const AppRoutes = () => {
         <Route path="challenge" element={<ChallengeViewPage />} />
         <Route path="checkpoint" element={<CheckpointScannerPage />} />
         <Route path="team" element={<TeamProfilePage />} />
+        <Route path="profile" element={<UserProfilePage />} />
         <Route path="master-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
         <Route path="final-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
       </Route>
