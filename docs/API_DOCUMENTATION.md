@@ -1,4 +1,4 @@
-# REST API DOCUMENTATION: HACK THE GRID
+# REST API DOCUMENTATION: THE TECH MYSTERY
 
 Base URL: `http://localhost:5000/api/v1` (Development) / `https://<backend-domain>/api/v1` (Production)
 
@@ -47,7 +47,7 @@ Authorization: Bearer <jwt_access_token>
   ```json
   {
     "success": true,
-    "message": "Hack the Grid Core API is healthy and operational",
+    "message": "The Tech Mystery Core API is healthy and operational",
     "data": {
       "status": "ONLINE",
       "uptime": 3600.42,

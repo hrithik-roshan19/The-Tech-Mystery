@@ -1,8 +1,16 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import "../../styles/RulesPage.css";
 import { ROUTES } from "../../constants/routes";
 import Navbar from "../../components/navigation/Navbar";
+import {
+  PageTransition,
+  RevealSection,
+  StaggerContainer,
+  StaggerItem,
+} from "../../components/common/Motion";
+import { cardHoverMotion, buttonHoverTap } from "../../utils/motion";
 
 const groups = [
   {
@@ -41,7 +49,7 @@ const groups = [
     sub: "Follow your team's route",
     summary: "Use official checkpoints and solve the challenge assigned to your team.",
     rules: [
-      "Scan only official Hack the Grid QR codes placed or shared by organizers.",
+      "Scan only official The Tech Mystery QR codes placed or shared by organizers.",
       "A QR checkpoint may provide a team-specific challenge; do not attempt to access another team's content.",
       "Submit answers through the official event platform wherever required.",
       "Do not tamper with, damage or relocate QR codes and checkpoint materials."
@@ -55,7 +63,7 @@ const groups = [
     sub: "Stay inside the sandbox",
     summary: "All technical activity must remain within authorized event challenges.",
     rules: [
-      "Only interact with systems and challenge environments explicitly authorized for Hack the Grid.",
+      "Only interact with systems and challenge environments explicitly authorized for The Tech Mystery.",
       "Attacking real accounts, personal devices, university networks or external systems is prohibited.",
       "Do not use phishing, malware, denial-of-service attacks or unauthorized access against real systems or people.",
       "Report broken challenges or security concerns to an organizer."
@@ -98,7 +106,6 @@ function Icon({ children }) {
 export default function RulesPage() {
   const [open, setOpen] = useState(["team", "fair"]);
   const [accepted, setAccepted] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggle = (id) =>
     setOpen((old) =>
@@ -106,7 +113,7 @@ export default function RulesPage() {
     );
 
   return (
-    <div className="htg-rules">
+    <PageTransition className="htg-rules">
       <div className="rp-bg" />
       <div className="rp-overlay" />
       <div className="rp-grid" />
@@ -115,7 +122,11 @@ export default function RulesPage() {
 
       <main className="rp-main">
         <section className="rp-hero">
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
             <p className="rp-eyebrow"><i /> PARTICIPANT HANDBOOK / 01</p>
             <h1>KNOW THE<br /><span>RULES.</span></h1>
             <h2>PLAY FAIR. WIN SMART.</h2>
@@ -123,34 +134,47 @@ export default function RulesPage() {
             <p className="rp-intro">
               Your mission starts with understanding the rules. Read the guidelines, respect your fellow participants and prepare to enter the Grid.
             </p>
-          </div>
-          <div className="rp-seal">
+          </motion.div>
+          <motion.div
+            className="rp-seal"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.45, delay: 0.1 }}
+          >
             <div>⬡</div>
             <b>FAIR PLAY PROTOCOL</b>
             <small>HTG // 2026</small>
-          </div>
+          </motion.div>
         </section>
 
-        <section className="rp-stats">
-          <div>
-            <Icon>♧</Icon>
-            <p><strong>2–4</strong><small>MEMBERS / TEAM</small></p>
-          </div>
-          <div>
-            <Icon>▦</Icon>
-            <p><strong>10</strong><small>CHALLENGE LEVELS</small></p>
-          </div>
-          <div>
-            <Icon>◷</Icon>
-            <p><strong>90–120</strong><small>MINUTES</small></p>
-          </div>
-          <div>
-            <Icon>⬡</Icon>
-            <p><strong>ONE</strong><small>FAIR PLAY POLICY</small></p>
-          </div>
-        </section>
+        <StaggerContainer className="rp-stats">
+          <StaggerItem>
+            <div>
+              <Icon>♧</Icon>
+              <p><strong>2–4</strong><small>MEMBERS / TEAM</small></p>
+            </div>
+          </StaggerItem>
+          <StaggerItem>
+            <div>
+              <Icon>▦</Icon>
+              <p><strong>10</strong><small>CHALLENGE LEVELS</small></p>
+            </div>
+          </StaggerItem>
+          <StaggerItem>
+            <div>
+              <Icon>◷</Icon>
+              <p><strong>90–120</strong><small>MINUTES</small></p>
+            </div>
+          </StaggerItem>
+          <StaggerItem>
+            <div>
+              <Icon>⬡</Icon>
+              <p><strong>ONE</strong><small>FAIR PLAY POLICY</small></p>
+            </div>
+          </StaggerItem>
+        </StaggerContainer>
 
-        <section className="rp-content">
+        <RevealSection className="rp-content">
           <div className="rp-content-heading">
             <div>
               <p className="rp-kicker">THE PARTICIPANT GUIDE</p>
@@ -181,40 +205,50 @@ export default function RulesPage() {
                       </span>
                       <span className="rp-plus">{active ? "−" : "+"}</span>
                     </button>
-                    {active && (
-                      <div className="rp-panel" id={`rp-${g.id}`}>
-                        <p>{g.sub}</p>
-                        <ul>
-                          {g.rules.map((r, i) => (
-                            <li key={i}>{r}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {active && (
+                        <motion.div
+                          className="rp-panel"
+                          id={`rp-${g.id}`}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.22, ease: 'easeOut' }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <p>{g.sub}</p>
+                          <ul>
+                            {g.rules.map((r, i) => (
+                              <li key={i}>{r}</li>
+                            ))}
+                          </ul>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </article>
                 );
               })}
             </div>
 
             <aside className="rp-sidebar">
-              <div className="rp-side-card">
+              <motion.div className="rp-side-card" {...cardHoverMotion}>
                 <div className="rp-side-symbol">⬡</div>
                 <p className="rp-kicker">THE GOLDEN RULE</p>
                 <h3>Stay inside<br /><span>the sandbox.</span></h3>
                 <p>Only test what the event explicitly authorizes. Curiosity is encouraged; unauthorized access is not.</p>
-              </div>
+              </motion.div>
 
-              <div className="rp-side-card rp-help">
+              <motion.div className="rp-side-card rp-help" {...cardHoverMotion}>
                 <p className="rp-kicker">NEED CLARIFICATION?</p>
                 <h3>Ask an organizer.</h3>
                 <p>If a rule or challenge is unclear, pause and ask an authorized event volunteer instead of guessing.</p>
                 <Link to={ROUTES.MISSION}>ABOUT THE EVENT ↗</Link>
-              </div>
+              </motion.div>
             </aside>
           </div>
-        </section>
+        </RevealSection>
 
-        <section className="rp-ack">
+        <RevealSection className="rp-ack">
           <div>
             <p className="rp-kicker">BEFORE YOU ENTER</p>
             <h2>PLAY WITH<br /><span>INTEGRITY.</span></h2>
@@ -230,23 +264,25 @@ export default function RulesPage() {
               <span className="rp-check">{accepted ? "✓" : ""}</span>
               <span>I have read and understood the event rules.</span>
             </label>
-            <Link
-              className={!accepted ? "disabled" : ""}
-              to={accepted ? ROUTES.REGISTER : "#"}
-              onClick={(e) => {
-                if (!accepted) e.preventDefault();
-              }}
-            >
-              I UNDERSTAND THE RULES <b>→</b>
-            </Link>
+            <motion.div {...buttonHoverTap}>
+              <Link
+                className={!accepted ? "disabled" : ""}
+                to={accepted ? ROUTES.REGISTER : "#"}
+                onClick={(e) => {
+                  if (!accepted) e.preventDefault();
+                }}
+              >
+                I UNDERSTAND THE RULES <b>→</b>
+              </Link>
+            </motion.div>
             {!accepted && <small>Check the box to continue to team registration.</small>}
           </div>
-        </section>
+        </RevealSection>
       </main>
 
       <footer className="rp-footer">
         <Link className="rp-brand" to="/">
-          <strong>HACK THE <span>GRID</span></strong>
+          <strong>THE TECH <span>MYSTERY</span></strong>
           <small>CODESPHERE × UTKRISHT 2026</small>
         </Link>
         <p>CodeSphere Coding Club · Tula's University, Dehradun</p>
@@ -256,6 +292,6 @@ export default function RulesPage() {
           <Link to={ROUTES.REGISTER}>REGISTER</Link>
         </div>
       </footer>
-    </div>
+    </PageTransition>
   );
 }

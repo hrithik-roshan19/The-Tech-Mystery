@@ -1,7 +1,9 @@
+const transaction = require('../utils/transaction');
+const { eventFor, teamFor } = require('../services/eligibility.service');
+const { participantQuestion, safeContent, privateAnswers } = require('../utils/participantData');
 const { Challenge, Team, TeamChallenge } = require('../models');
 const questionAssignmentService = require('../services/questionAssignment.service');
-const scoringService = require('../services/scoring.service');
-const { success, badRequest, notFound, forbidden } = require('../utils/apiResponse');
+const { success } = require('../utils/apiResponse');
 
 /**
  * Challenge Controller
@@ -13,7 +15,7 @@ class ChallengeController {
    */
   async getMissionMap(req, res, next) {
     try {
-      const challenges = await Challenge.find({ isActive: true }).sort({ levelNumber: 1 });
+      const challenges = await Challenge.find({ status: 'Published', isActive: true }).sort({ levelNumber: 1 });
       const teamId = req.user.teamId;
 
       const teamChallenges = await TeamChallenge.find({ teamId });
@@ -22,6 +24,7 @@ class ChallengeController {
 
       const team = await Team.findById(teamId);
 
+      const answers = await privateAnswers();
       const mapData = challenges.map((ch) => {
         const tc = teamChallengeMap.get(ch.levelNumber);
         const isSolved = tc?.status === 'SOLVED';
@@ -30,7 +33,7 @@ class ChallengeController {
 
         return {
           levelNumber: ch.levelNumber,
-          title: ch.title,
+          title: safeContent(ch.title, answers),
           category: ch.category,
           points: ch.points,
           difficulty: ch.difficulty,
@@ -52,38 +55,29 @@ class ChallengeController {
    */
   async getCurrentChallenge(req, res, next) {
     try {
-      const team = await Team.findById(req.user.teamId);
-      if (!team) return notFound(res, 'Team not found');
-
-      const challenge = await Challenge.findOne({ levelNumber: team.currentLevel, isActive: true });
-      if (!challenge) {
-        return notFound(res, `No active challenge found for Level ${team.currentLevel}`);
-      }
-
-      // Check if checkpoint scan is required and if scanned
-      let teamChallenge = await TeamChallenge.findOne({ teamId: team._id, levelNumber: team.currentLevel })
-        .populate('assignedQuestionId', '-flag');
-
-      if (challenge.requiresCheckpointScan && (!teamChallenge || !teamChallenge.checkpointScanned)) {
-        return forbidden(res, 'Physical checkpoint QR must be scanned to unlock this level challenge');
-      }
-
-      // If not yet assigned, retrieve or assign
-      if (!teamChallenge) {
+      const data = await transaction(async () => {
+        const config = await eventFor('challenge');
+        const team = await teamFor(req.user.teamId, req.user.userId, config);
+        const challenge = await Challenge.findOne({ levelNumber: team.currentLevel, status: 'Published', isActive: true });
+        if (!challenge) throw new Error('No active challenge for the current level');
         const result = await questionAssignmentService.getOrAssignQuestion(team._id, team.currentLevel);
-        teamChallenge = result.teamChallenge;
-      }
-
+        const teamChallenge = result.teamChallenge;
+        if (challenge.requiresCheckpointScan && !teamChallenge.checkpointScanned) throw new Error('Physical checkpoint QR must be scanned to unlock this level challenge');
+        const question = await require('../models').Question.findById(teamChallenge.assignedQuestionId).select('+flag');
+        return { team, challenge, teamChallenge, question };
+      });
+      const { team, challenge, teamChallenge, question } = data;
+      const answers = await privateAnswers();
       return success(res, {
         levelNumber: team.currentLevel,
         challenge: {
-          title: challenge.title,
+          title: safeContent(challenge.title, answers),
           category: challenge.category,
           points: challenge.points,
           difficulty: challenge.difficulty,
-          description: challenge.description
+          description: safeContent(challenge.description, answers)
         },
-        question: teamChallenge.assignedQuestionId,
+        question: await participantQuestion(question),
         teamChallenge: {
           status: teamChallenge.status,
           unlockedHints: teamChallenge.unlockedHints,
@@ -92,7 +86,7 @@ class ChallengeController {
         }
       });
     } catch (error) {
-      return next(error);
+      return res.status(error.statusCode || 400).json({ success: false, message: error.message });
     }
   }
 }

@@ -1,18 +1,14 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { useAuth } from "../../hooks/useAuth";
 import { checkpointService } from "../../services/checkpoint.service";
+import { challengeService } from "../../services/challenge.service";
+import { teamService } from "../../services/team.service";
 import { ROUTES } from "../../constants/routes";
 import Navbar from "../../components/navigation/Navbar";
 import "../../styles/QRCheckpointPage.css";
 
-const checkpointData = [
-  { id: "CP-01", name: "Main Gate", status: "completed", time: "Scanned 12 min ago", points: "+100 pts" },
-  { id: "CP-02", name: "Central Lawn", status: "completed", time: "Scanned 35 min ago", points: "+150 pts" },
-  { id: "CP-03", name: "Library Block", status: "pending", time: "Pending", points: "—" },
-  { id: "CP-04", name: "CSE Block", status: "locked", time: "Locked", points: "—" },
-];
 
 const navLinks = [
   ["Mission", ROUTES.MISSION],
@@ -29,22 +25,27 @@ const navLinks = [
  * - Raw string: CP-01
  */
 function parseCheckpointPayload(raw) {
-  if (!raw) return { code: "", token: "" };
+  if (!raw) return { code: "", token: "", questionId: "" };
 
   try {
     // 1. Try URL parsing
     if (raw.includes("?") || raw.startsWith("http://") || raw.startsWith("https://")) {
       const url = new URL(raw, window.location.origin);
-      const code = url.searchParams.get("code") || "";
+      const code = url.searchParams.get("code") || url.searchParams.get("checkpointCode") || "";
       const token = url.searchParams.get("token") || "";
-      if (code || token) return { code, token };
+      const questionId = url.searchParams.get("qid") || url.searchParams.get("questionId") || "";
+      if (code || token) return { code, token, questionId };
     }
 
     // 2. Try JSON parsing
     if (raw.trim().startsWith("{")) {
       const parsed = JSON.parse(raw);
       if (parsed.code || parsed.token) {
-        return { code: parsed.code || "", token: parsed.token || "" };
+        return {
+          code: parsed.code || parsed.checkpointCode || "",
+          token: parsed.token || "",
+          questionId: parsed.qid || parsed.questionId || ""
+        };
       }
     }
   } catch {
@@ -52,14 +53,19 @@ function parseCheckpointPayload(raw) {
   }
 
   // 3. Fallback: treat as raw code
-  return { code: raw.trim(), token: "" };
+  return { code: raw.trim(), token: "", questionId: "" };
 }
 
 export default function QRCheckpointPage() {
   const { isAuthenticated } = useAuth();
+  const [searchParams] = useSearchParams();
   const fileInputRef = useRef(null);
   const scannerRef = useRef(null);
   const hasScannedRef = useRef(false);
+
+  const [activeTab, setActiveTab] = useState("camera"); // "camera" | "manual"
+  const [manualCode, setManualCode] = useState("");
+  const [manualToken, setManualToken] = useState("");
 
   const [cameras, setCameras] = useState([]);
   const [selectedCameraId, setSelectedCameraId] = useState("");
@@ -69,10 +75,74 @@ export default function QRCheckpointPage() {
   const [cameraActive, setCameraActive] = useState(false);
   const [decodedValue, setDecodedValue] = useState("");
   const [cameraError, setCameraError] = useState("");
+  const [team, setTeam] = useState(null);
+  const [submissionFlag, setSubmissionFlag] = useState("");
+  const [submittingFlag, setSubmittingFlag] = useState(false);
+  const [solveResult, setSolveResult] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchTeamData() {
+      if (isAuthenticated) {
+        try {
+          const res = await teamService.getMyTeam();
+          if (isMounted && res.success && res.data?.team) {
+            setTeam(res.data.team);
+          }
+        } catch {
+          // ignore error
+        }
+      }
+    }
+    fetchTeamData();
+    return () => { isMounted = false; };
+  }, [isAuthenticated]);
+
+  const checkpointItems = useMemo(() => {
+    const curLevel = team?.currentLevel || 1;
+    const defaultStations = [
+      { id: "CP-01", name: "Main Gate", level: 1 },
+      { id: "CP-02", name: "Central Lawn", level: 2 },
+      { id: "CP-03", name: "Library Block", level: 3 },
+      { id: "CP-04", name: "CSE Block", level: 4 },
+    ];
+
+    return defaultStations.map((st) => {
+      const isCompleted = Boolean(team && curLevel > st.level);
+      const isCurrent = Boolean(team && curLevel === st.level);
+      const status = isCompleted ? "completed" : isCurrent ? "pending" : "locked";
+      const time = isCompleted ? "Completed" : isCurrent ? "Active Station" : "Locked";
+      const points = isCompleted ? "Cleared" : "—";
+      return {
+        ...st,
+        status,
+        time,
+        points
+      };
+    });
+  }, [team]);
 
   // Server verification state
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState(null);
+
+  // Pre-fill from URL parameters (e.g. direct mobile QR scan: /checkpoint/scan?code=HTG-CP01&token=...)
+  useEffect(() => {
+    const codeParam = searchParams.get("code") || searchParams.get("checkpointCode");
+    const tokenParam = searchParams.get("token");
+    if (codeParam) {
+      const cleanCode = codeParam.trim().toUpperCase();
+      const cleanToken = tokenParam ? tokenParam.trim() : "";
+      setManualCode(cleanCode);
+      if (cleanToken) setManualToken(cleanToken);
+
+      const raw = cleanToken
+        ? `${window.location.origin}/checkpoint/scan?code=${encodeURIComponent(cleanCode)}&token=${encodeURIComponent(cleanToken)}`
+        : cleanCode;
+      setDecodedValue(raw);
+      setScanMessage(`Checkpoint Station ${cleanCode} detected from scan URL. Click "Verify with Server" below.`);
+    }
+  }, [searchParams]);
 
   // Stop live scanner and safely release camera resources
   const stopLiveScan = useCallback(async () => {
@@ -284,7 +354,7 @@ export default function QRCheckpointPage() {
   async function handleVerifyWithServer() {
     if (!decodedValue) return;
 
-    const { code, token } = parseCheckpointPayload(decodedValue);
+    const { code, token, questionId } = parseCheckpointPayload(decodedValue);
     if (!code) {
       setVerifyResult({
         success: false,
@@ -297,7 +367,7 @@ export default function QRCheckpointPage() {
     setVerifyResult(null);
 
     try {
-      const res = await checkpointService.scanCheckpoint(code, token);
+      const res = await checkpointService.scanCheckpoint(code, token, questionId);
       setVerifyResult({
         success: true,
         message: res.message || `Checkpoint verified: ${res.data?.checkpoint?.name || code}. Level unlocked!`,
@@ -310,6 +380,71 @@ export default function QRCheckpointPage() {
       });
     } finally {
       setVerifying(false);
+    }
+  }
+
+  // Handle manual code entry verification
+  async function handleManualVerify(e) {
+    if (e) e.preventDefault();
+    const cleanCode = manualCode.trim().toUpperCase();
+    if (!cleanCode) {
+      setVerifyResult({
+        success: false,
+        message: "Please enter a valid checkpoint station code (e.g., HTG-CP01)."
+      });
+      return;
+    }
+
+    setVerifying(true);
+    setVerifyResult(null);
+
+    try {
+      const res = await checkpointService.scanCheckpoint(cleanCode, manualToken.trim());
+      setVerifyResult({
+        success: true,
+        message: res.message || `Checkpoint verified: ${res.data?.checkpoint?.name || cleanCode}. Level unlocked!`,
+        data: res.data
+      });
+      setScanMessage(`Station ${cleanCode} verified with event server!`);
+    } catch (err) {
+      setVerifyResult({
+        success: false,
+        message: err.response?.data?.message || err.message || "Checkpoint verification rejected by server."
+      });
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  // Handle inline flag submission for the unlocked question
+  async function handleSubmitFlagInline(e) {
+    if (e) e.preventDefault();
+    const cleanFlag = submissionFlag.trim();
+    const targetLevel = verifyResult?.data?.checkpoint?.levelNumber || team?.currentLevel || 1;
+    if (!cleanFlag) return;
+
+    setSubmittingFlag(true);
+    setSolveResult(null);
+
+    try {
+      const res = await challengeService.submitFlag(targetLevel, cleanFlag);
+      setSolveResult({
+        success: true,
+        message: res.message || "FLAG ACCEPTED! Level cleared and points awarded to your team!"
+      });
+      setSubmissionFlag("");
+      // Refresh team data to update currentLevel and score
+      const teamRes = await teamService.getMyTeam();
+      if (teamRes.success && teamRes.data?.team) {
+        setTeam(teamRes.data.team);
+      }
+    } catch (err) {
+      setSolveResult({
+        success: false,
+        message: err.response?.data?.message || err.message || "Incorrect flag. Access denied."
+      });
+    } finally {
+      setSubmittingFlag(false);
     }
   }
 
@@ -345,7 +480,7 @@ export default function QRCheckpointPage() {
           </div>
           <blockquote className="htg-qr-quote">
             “ The campus is your playground.<br />Every QR code is a new mystery. ”
-            <small>— Hack the Grid 2026</small>
+            <small>— The Tech Mystery 2026</small>
           </blockquote>
         </section>
 
@@ -355,141 +490,365 @@ export default function QRCheckpointPage() {
             <h2>Scan <span>the Code</span></h2>
             <p className="htg-qr-panel-subtitle">Find a QR code at a checkpoint and scan it to get your challenge.</p>
 
-            <div className={`htg-qr-scan-frame ${selectedFile ? "has-image" : ""} ${cameraActive ? "camera-active" : ""}`}>
-              <i className="corner top-left" />
-              <i className="corner top-right" />
-              <i className="corner bottom-left" />
-              <i className="corner bottom-right" />
-
-              {/* Cross-browser Html5Qrcode live viewfinder container */}
-              <div
-                id="htg-qr-reader"
-                style={{ display: cameraActive ? "block" : "none" }}
-              />
-
-              {!cameraActive && (
-                previewUrl ? (
-                  <img src={previewUrl} alt="Selected QR code image preview" />
-                ) : (
-                  <span className="htg-qr-scan-symbol">▣</span>
-                )
-              )}
-
-              <strong>{cameraActive ? "Live camera scanning…" : selectedFile ? selectedFile.name : "Scan QR Code"}</strong>
-              <small>
-                {cameraActive
-                  ? "Move the QR code into view and hold it steady."
-                  : selectedFile
-                  ? "Image selected for preview"
-                  : "Start the camera and align an official checkpoint QR code inside the frame."}
-              </small>
+            {/* Mode Selector Tabs */}
+            <div className="htg-qr-mode-tabs" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "camera"}
+                className={`htg-qr-mode-tab ${activeTab === "camera" ? "is-active" : ""}`}
+                onClick={() => setActiveTab("camera")}
+              >
+                <span>◉</span> Live Camera &amp; Upload
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "manual"}
+                className={`htg-qr-mode-tab ${activeTab === "manual" ? "is-active" : ""}`}
+                onClick={() => setActiveTab("manual")}
+              >
+                <span>⌨</span> Manual Code Entry
+              </button>
             </div>
 
-            {/* Hidden container for file-based decoding */}
-            <div id="htg-qr-file-decoder" style={{ display: "none" }} aria-hidden="true" />
+            {/* Tab 1: Live Camera & Upload */}
+            {activeTab === "camera" && (
+              <>
+                <div className={`htg-qr-scan-frame ${selectedFile ? "has-image" : ""} ${cameraActive ? "camera-active" : ""}`}>
+                  <i className="corner top-left" />
+                  <i className="corner top-right" />
+                  <i className="corner bottom-left" />
+                  <i className="corner bottom-right" />
 
-            {/* Camera selector if multiple cameras detected */}
-            {cameras.length > 1 && !cameraActive && (
-              <div className="htg-qr-camera-picker">
-                <label htmlFor="camera-select">Camera:</label>
-                <select
-                  id="camera-select"
-                  value={selectedCameraId}
-                  onChange={(e) => setSelectedCameraId(e.target.value)}
-                  className="htg-qr-select"
-                >
-                  {cameras.map((cam) => (
-                    <option key={cam.id} value={cam.id}>
-                      {cam.label || `Camera ${cam.id}`}
-                    </option>
-                  ))}
-                </select>
+                  {/* Cross-browser Html5Qrcode live viewfinder container */}
+                  <div
+                    id="htg-qr-reader"
+                    style={{ display: cameraActive ? "block" : "none" }}
+                  />
+
+                  {!cameraActive && (
+                    previewUrl ? (
+                      <img src={previewUrl} alt="Selected QR code image preview" />
+                    ) : (
+                      <span className="htg-qr-scan-symbol">▣</span>
+                    )
+                  )}
+
+                  <strong>{cameraActive ? "Live camera scanning…" : selectedFile ? selectedFile.name : "Scan QR Code"}</strong>
+                  <small>
+                    {cameraActive
+                      ? "Move the QR code into view and hold it steady."
+                      : selectedFile
+                      ? "Image selected for preview"
+                      : "Start the camera and align an official checkpoint QR code inside the frame."}
+                  </small>
+                </div>
+
+                {/* Hidden container for file-based decoding */}
+                <div id="htg-qr-file-decoder" style={{ display: "none" }} aria-hidden="true" />
+
+                {/* Camera selector if multiple cameras detected */}
+                {cameras.length > 1 && !cameraActive && (
+                  <div className="htg-qr-camera-picker">
+                    <label htmlFor="camera-select">Camera:</label>
+                    <select
+                      id="camera-select"
+                      value={selectedCameraId}
+                      onChange={(e) => setSelectedCameraId(e.target.value)}
+                      className="htg-qr-select"
+                    >
+                      {cameras.map((cam) => (
+                        <option key={cam.id} value={cam.id}>
+                          {cam.label || `Camera ${cam.id}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="htg-qr-camera-actions">
+                  {!cameraActive ? (
+                    <button type="button" className="htg-qr-live-button" onClick={startLiveScan}>
+                      <span>◉</span> Start Live Scan
+                    </button>
+                  ) : (
+                    <button type="button" className="htg-qr-stop-button" onClick={stopLiveScan}>
+                      Stop Camera
+                    </button>
+                  )}
+                </div>
+
+                {cameraError && <p className="htg-qr-message htg-qr-error" role="alert">{cameraError}</p>}
+
+                {decodedValue && (
+                  <div className="htg-qr-result" role="status">
+                    <strong>QR detected:</strong>
+                    <code>{decodedValue}</code>
+                    <small>Detected QR payload. Click below to authenticate your team with the event server.</small>
+                    <div style={{ display: "flex", gap: "10px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
+                      {isAuthenticated ? (
+                        <button
+                          type="button"
+                          className="htg-qr-verify-btn"
+                          onClick={handleVerifyWithServer}
+                          disabled={verifying}
+                        >
+                          {verifying ? "Verifying with Server..." : "Verify with Server →"}
+                        </button>
+                      ) : (
+                        <Link
+                          to={ROUTES.LOGIN}
+                          className="htg-qr-verify-btn"
+                          style={{ textDecoration: "none", display: "inline-block" }}
+                        >
+                          Login to Verify Checkpoint →
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDecodedValue("");
+                          setVerifyResult(null);
+                          setScanMessage("Ready to scan another checkpoint.");
+                        }}
+                      >
+                        Clear result
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="htg-qr-or"><span />OR<span /></div>
+                <button type="button" className="htg-qr-upload" onClick={() => fileInputRef.current?.click()}>
+                  <span className="htg-qr-upload-icon">▧</span>
+                  <span>
+                    <strong>Upload QR Code Image</strong>
+                    <small>Select an image from your device</small>
+                  </span>
+                  <span className="htg-qr-upload-arrow">↗</span>
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="htg-qr-file-input"
+                  onChange={handleFileChange}
+                />
+              </>
+            )}
+
+            {/* Tab 2: Manual Code Entry */}
+            {activeTab === "manual" && (
+              <form onSubmit={handleManualVerify} className="htg-qr-manual-form">
+                <div className="htg-qr-input-group">
+                  <label htmlFor="manual-code-input">Checkpoint Station Code</label>
+                  <input
+                    id="manual-code-input"
+                    type="text"
+                    required
+                    placeholder="e.g. HTG-CP01"
+                    value={manualCode}
+                    onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                  />
+                  <small style={{ color: "#a5b0a7", fontSize: "11px" }}>
+                    Enter the code visible at the physical checkpoint banner or placard.
+                  </small>
+                </div>
+                <div className="htg-qr-input-group">
+                  <label htmlFor="manual-token-input">Security HMAC Token (Optional / From Placard)</label>
+                  <input
+                    id="manual-token-input"
+                    type="text"
+                    placeholder="e.g. 64-character token if printed on station"
+                    value={manualToken}
+                    onChange={(e) => setManualToken(e.target.value)}
+                  />
+                </div>
+                {isAuthenticated ? (
+                  <button
+                    type="submit"
+                    className="htg-qr-manual-submit"
+                    disabled={verifying || !manualCode.trim()}
+                  >
+                    {verifying ? "Authenticating Station..." : "Authenticate Checkpoint →"}
+                  </button>
+                ) : (
+                  <Link
+                    to={ROUTES.LOGIN}
+                    className="htg-qr-manual-submit"
+                    style={{ textDecoration: "none" }}
+                  >
+                    Login to Authenticate Checkpoint →
+                  </Link>
+                )}
+              </form>
+            )}
+
+            {/* Error Feedback */}
+            {verifyResult && !verifyResult.success && (
+              <div className="htg-qr-verify-status error" style={{ marginTop: "14px" }} role="alert">
+                <strong>⚠ Verification Failed: </strong>
+                {verifyResult.message}
               </div>
             )}
 
-            <div className="htg-qr-camera-actions">
-              {!cameraActive ? (
-                <button type="button" className="htg-qr-live-button" onClick={startLiveScan}>
-                  <span>◉</span> Start Live Scan
-                </button>
-              ) : (
-                <button type="button" className="htg-qr-stop-button" onClick={stopLiveScan}>
-                  Stop Camera
-                </button>
-              )}
-            </div>
+            {/* Success Unlocked Station Card */}
+            {verifyResult?.success && verifyResult.data && (
+              <div className="htg-qr-unlocked-card" role="region" aria-label="Unlocked Station Information">
+                <div className="htg-qr-unlocked-header">
+                  <span className="htg-qr-unlocked-badge">
+                    LEVEL {verifyResult.data.checkpoint?.levelNumber} UNLOCKED
+                  </span>
+                  <span style={{ fontSize: "11px", color: "var(--qr-lime)", fontWeight: 700 }}>
+                    {verifyResult.data.alreadyScanned ? "✓ Station Already Active" : "✓ Newly Authenticated"}
+                  </span>
+                </div>
+                <h3 className="htg-qr-unlocked-title">
+                  {verifyResult.data.checkpoint?.name}
+                </h3>
+                <div className="htg-qr-unlocked-loc">
+                  <span>📍</span>
+                  <span>{verifyResult.data.checkpoint?.locationDescription}</span>
+                </div>
 
-            {cameraError && <p className="htg-qr-message htg-qr-error" role="alert">{cameraError}</p>}
+                {verifyResult.data.question && (
+                  <div className="htg-qr-question-preview" style={{ marginTop: "12px", border: "1px solid rgba(184, 255, 61, 0.25)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                      <strong style={{ fontSize: "14px", margin: 0 }}>
+                        {verifyResult.data.question.title}
+                      </strong>
+                      <span style={{ fontSize: "11px", color: "var(--qr-lime)", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
+                        {verifyResult.data.question.points || 100} PTS · {verifyResult.data.question.difficulty || "MEDIUM"}
+                      </span>
+                    </div>
 
-            {decodedValue && (
-              <div className="htg-qr-result" role="status">
-                <strong>QR detected</strong>
-                <code>{decodedValue}</code>
-                <small>Detection only — checkpoint validation and challenge loading must be handled by the backend.</small>
-                {verifyResult && (
-                  <div className={`htg-qr-verify-status ${verifyResult.success ? "success" : "error"}`}>
-                    {verifyResult.message}
+                    <p style={{ margin: "0 0 12px 0", opacity: 0.95, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                      {verifyResult.data.question.prompt}
+                    </p>
+
+                    {verifyResult.data.question.hints?.[0]?.content && (
+                      <div style={{ background: "rgba(255,255,255,0.03)", padding: "8px 10px", borderRadius: "4px", fontSize: "11px", marginBottom: "12px", borderLeft: "2px solid var(--qr-lime)" }}>
+                        <span style={{ color: "var(--qr-lime)", fontWeight: 700 }}>HINT: </span>
+                        {verifyResult.data.question.hints[0].content}
+                      </div>
+                    )}
+
+                    {/* Solve Result Notice */}
+                    {solveResult && (
+                      <div
+                        style={{
+                          padding: "10px",
+                          borderRadius: "4px",
+                          marginBottom: "12px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          background: solveResult.success ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)",
+                          border: solveResult.success ? "1px solid #10b981" : "1px solid #ef4444",
+                          color: solveResult.success ? "#10b981" : "#fca5a5"
+                        }}
+                        role="alert"
+                      >
+                        {solveResult.success ? "✓ " : "⚠ "}
+                        {solveResult.message}
+                      </div>
+                    )}
+
+                    {/* Inline Flag Submission */}
+                    {isAuthenticated ? (
+                      <form onSubmit={handleSubmitFlagInline} style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                        <input
+                          type="text"
+                          required
+                          value={submissionFlag}
+                          onChange={(e) => setSubmissionFlag(e.target.value)}
+                          placeholder="HTG{flag_here}"
+                          style={{
+                            flex: 1,
+                            background: "rgba(0,0,0,0.5)",
+                            border: "1px solid rgba(255,255,255,0.2)",
+                            borderRadius: "4px",
+                            padding: "8px 12px",
+                            color: "#fff",
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "12px"
+                          }}
+                        />
+                        <button
+                          type="submit"
+                          disabled={submittingFlag || !submissionFlag.trim()}
+                          style={{
+                            background: "var(--qr-lime)",
+                            color: "#051105",
+                            border: "none",
+                            borderRadius: "4px",
+                            padding: "8px 16px",
+                            fontWeight: 700,
+                            fontSize: "11px",
+                            cursor: "pointer",
+                            letterSpacing: "0.05em",
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          {submittingFlag ? "VERIFYING..." : "SUBMIT FLAG →"}
+                        </button>
+                      </form>
+                    ) : (
+                      <Link
+                        to={ROUTES.LOGIN}
+                        style={{
+                          display: "inline-block",
+                          color: "var(--qr-lime)",
+                          fontSize: "11px",
+                          textDecoration: "underline"
+                        }}
+                      >
+                        Log in with team account to submit captured flag
+                      </Link>
+                    )}
                   </div>
                 )}
-                <div style={{ display: "flex", gap: "10px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
-                  {isAuthenticated ? (
-                    <button
-                      type="button"
-                      className="htg-qr-verify-btn"
-                      onClick={handleVerifyWithServer}
-                      disabled={verifying}
-                    >
-                      {verifying ? "Verifying..." : "Verify with Server →"}
-                    </button>
-                  ) : (
-                    <Link
-                      to={ROUTES.LOGIN}
-                      className="htg-qr-verify-btn"
-                      style={{ textDecoration: "none", display: "inline-block" }}
-                    >
-                      Login to Verify Checkpoint →
-                    </Link>
-                  )}
+
+                <div className="htg-qr-points-notice" style={{ marginTop: "12px" }}>
+                  ℹ First-Come-First-Served QR question active. Submit your flag directly above or open the full terminal console.
+                </div>
+
+                <div className="htg-qr-unlocked-actions">
+                  <Link to="/portal/challenge" className="htg-qr-proceed-btn">
+                    OPEN TERMINAL CHALLENGE →
+                  </Link>
+                  <Link to={ROUTES.CHALLENGES} className="htg-qr-secondary-btn">
+                    VIEW MISSION MAP
+                  </Link>
                   <button
                     type="button"
                     onClick={() => {
-                      setDecodedValue("");
                       setVerifyResult(null);
-                      setScanMessage("Ready to scan another checkpoint.");
+                      setDecodedValue("");
+                      setManualCode("");
+                      setManualToken("");
+                      setSolveResult(null);
+                      setSubmissionFlag("");
+                      setScanMessage("Ready for next checkpoint scan.");
                     }}
+                    style={{ background: "transparent", border: "none", color: "#b0b8b2", fontSize: "11px", cursor: "pointer", textDecoration: "underline" }}
                   >
-                    Clear result
+                    Clear &amp; Scan Another
                   </button>
                 </div>
               </div>
             )}
 
-            <div className="htg-qr-or"><span />OR<span /></div>
-            <button type="button" className="htg-qr-upload" onClick={() => fileInputRef.current?.click()}>
-              <span className="htg-qr-upload-icon">▧</span>
-              <span>
-                <strong>Upload QR Code Image</strong>
-                <small>Select an image from your device</small>
-              </span>
-              <span className="htg-qr-upload-arrow">↗</span>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="htg-qr-file-input"
-              onChange={handleFileChange}
-            />
-            {scanMessage && <p className="htg-qr-message" role="status">{scanMessage}</p>}
+            {scanMessage && !verifyResult && <p className="htg-qr-message" role="status">{scanMessage}</p>}
           </div>
 
           <section className="htg-qr-recent-panel">
             <div className="htg-qr-panel-heading">
-              <h2>Recent Checkpoints <small style={{ fontSize: "10px", color: "#8a968c", fontWeight: 400 }}>(Sample Preview)</small></h2>
+              <h2>Recent Checkpoints <small style={{ fontSize: "10px", color: "#8a968c", fontWeight: 400 }}>Station Status</small></h2>
               <Link to={ROUTES.CHALLENGES}>View All <span>→</span></Link>
             </div>
             <div className="htg-qr-checkpoint-grid">
-              {checkpointData.map((cp) => (
+              {checkpointItems.map((cp) => (
                 <article className={`htg-qr-checkpoint-card ${cp.status}`} key={cp.id}>
                   <div className="htg-qr-checkpoint-top">
                     <strong>{cp.id}</strong>

@@ -33,7 +33,7 @@ export const FAQPage = () => {
           COMMUNICATION <span className="text-cyber-cyan">FAQ</span>
         </h1>
         <p className="font-mono text-xs sm:text-sm text-cyber-muted max-w-xl mx-auto">
-          Frequently asked tactical inquiries regarding Hack the Grid.
+          Frequently asked tactical inquiries regarding The Tech Mystery.
         </p>
       </div>
 

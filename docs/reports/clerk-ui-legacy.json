@@ -1,0 +1,31 @@
+{
+  "expected": "legacy",
+  "results": [
+    {
+      "route": "/login",
+      "clerkVisible": false,
+      "legacyVisible": true,
+      "blank": false,
+      "loading": false
+    },
+    {
+      "route": "/register",
+      "clerkVisible": false,
+      "legacyVisible": true,
+      "blank": false,
+      "loading": false
+    },
+    {
+      "route": "/admin/login",
+      "clerkVisible": false,
+      "legacyVisible": true,
+      "blank": false,
+      "loading": false
+    }
+  ],
+  "signedOutProtectedRedirectPassed": true,
+  "pageErrors": 0,
+  "consoleErrors": 0,
+  "failedRequests": 0,
+  "httpFailures": []
+}

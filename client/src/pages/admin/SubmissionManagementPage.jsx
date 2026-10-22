@@ -6,160 +6,6 @@ import adminService from "../../services/admin.service";
 import AdminSidebar from "../../components/navigation/AdminSidebar";
 import "../../styles/SubmissionManagementPage.css";
 
-const initialSubmissions = [
-  {
-    id: "SUB-1048",
-    rawId: "sub-1048-mock",
-    team: "Null Pointers",
-    teamCode: "TEAM-07",
-    question: "Decode the Signal",
-    challenge: "Lost Transmission",
-    level: 3,
-    answer: "Uifsf jt b tfdsfu nfttbhf",
-    result: "Correct",
-    points: 100,
-    maxPoints: 100,
-    submittedAt: "10:42:18",
-    date: "Oct 13, 2026",
-    attempts: 1,
-    reviewed: true,
-    mode: "Text Answer",
-    isLive: false,
-  },
-  {
-    id: "SUB-1047",
-    rawId: "sub-1047-mock",
-    team: "Byte Bandits",
-    teamCode: "TEAM-12",
-    question: "Find the Hidden Clue",
-    challenge: "Hidden in Plain Sight",
-    level: 2,
-    answer: "HTG{hidden_clue}",
-    result: "Correct",
-    points: 75,
-    maxPoints: 75,
-    submittedAt: "10:40:51",
-    date: "Oct 13, 2026",
-    attempts: 2,
-    reviewed: true,
-    mode: "Flag",
-    isLive: false,
-  },
-  {
-    id: "SUB-1046",
-    rawId: "sub-1046-mock",
-    team: "Stack Smashers",
-    teamCode: "TEAM-03",
-    question: "Inspect the Metadata",
-    challenge: "Digital Forensics",
-    level: 5,
-    answer: "metadata_author=guest",
-    result: "Pending Review",
-    points: 0,
-    maxPoints: 100,
-    submittedAt: "10:39:03",
-    date: "Oct 13, 2026",
-    attempts: 2,
-    reviewed: false,
-    mode: "Text Answer",
-    isLive: false,
-  },
-  {
-    id: "SUB-1045",
-    rawId: "sub-1045-mock",
-    team: "Cyber Wolves",
-    teamCode: "TEAM-15",
-    question: "Spot the Weakness",
-    challenge: "System Breach",
-    level: 4,
-    answer: "input-validation",
-    result: "Incorrect",
-    points: 0,
-    maxPoints: 100,
-    submittedAt: "10:36:44",
-    date: "Oct 13, 2026",
-    attempts: 3,
-    reviewed: true,
-    mode: "Text Answer",
-    isLive: false,
-  },
-  {
-    id: "SUB-1044",
-    rawId: "sub-1044-mock",
-    team: "Packet Pirates",
-    teamCode: "TEAM-02",
-    question: "Master Grid Fragment",
-    challenge: "The Final Grid",
-    level: 10,
-    answer: "HTG{final_fragment_demo}",
-    result: "Pending Review",
-    points: 0,
-    maxPoints: 250,
-    submittedAt: "10:34:11",
-    date: "Oct 13, 2026",
-    attempts: 1,
-    reviewed: false,
-    mode: "Flag",
-    isLive: false,
-  },
-  {
-    id: "SUB-1043",
-    rawId: "sub-1043-mock",
-    team: "Logic Legends",
-    teamCode: "TEAM-09",
-    question: "Caesar's Secret",
-    challenge: "Lost Transmission",
-    level: 3,
-    answer: "A substitution cipher",
-    result: "Correct",
-    points: 50,
-    maxPoints: 50,
-    submittedAt: "10:31:28",
-    date: "Oct 13, 2026",
-    attempts: 1,
-    reviewed: true,
-    mode: "Multiple Choice",
-    isLive: false,
-  },
-  {
-    id: "SUB-1042",
-    rawId: "sub-1042-mock",
-    team: "Kernel Kings",
-    teamCode: "TEAM-04",
-    question: "Read the Packet",
-    challenge: "Lateral Movement",
-    level: 9,
-    answer: "tcp.stream eq 2",
-    result: "Incorrect",
-    points: 0,
-    maxPoints: 150,
-    submittedAt: "10:27:09",
-    date: "Oct 13, 2026",
-    attempts: 2,
-    reviewed: true,
-    mode: "Text Answer",
-    isLive: false,
-  },
-  {
-    id: "SUB-1041",
-    rawId: "sub-1041-mock",
-    team: "Root Access",
-    teamCode: "TEAM-11",
-    question: "Base64 Vault",
-    challenge: "Encrypted Shadows",
-    level: 7,
-    answer: "mission-control",
-    result: "Correct",
-    points: 200,
-    maxPoints: 200,
-    submittedAt: "10:24:36",
-    date: "Oct 13, 2026",
-    attempts: 1,
-    reviewed: true,
-    mode: "Text Answer",
-    isLive: false,
-  },
-];
 
 const resultOptions = ["Correct", "Incorrect", "Pending Review"];
 const resultClass = (value) =>
@@ -171,7 +17,7 @@ const statusIcon = (value) =>
 
 export default function SubmissionManagementPage() {
   const { user } = useAuth();
-  const [submissions, setSubmissions] = useState(initialSubmissions);
+  const [submissions, setSubmissions] = useState([]);
   const [selectedId, setSelectedId] = useState("SUB-1046");
   const [search, setSearch] = useState("");
   const [resultFilter, setResultFilter] = useState("All Results");
@@ -183,44 +29,38 @@ export default function SubmissionManagementPage() {
   const [reviewPoints, setReviewPoints] = useState("100");
   const [showAnswer, setShowAnswer] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isLiveDb, setIsLiveDb] = useState(false);
+  const [isLiveDb, setIsLiveDb] = useState(true);
   const [dbBannerDismissed, setDbBannerDismissed] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
 
-  // Sync live submissions from backend if available
+  // Sync live submissions from backend
   useEffect(() => {
     let isMounted = true;
     async function fetchSubmissions() {
       try {
         const res = await adminService.getSubmissionLogs({ limit: 100 });
-        if (
-          isMounted &&
-          res?.data?.submissions &&
-          res.data.submissions.length > 0
-        ) {
-          setSubmissions(res.data.submissions);
+        if (isMounted) {
+          const apiSubs = res?.data?.submissions || [];
+          setSubmissions(apiSubs);
           setIsLiveDb(true);
-          const firstPending = res.data.submissions.find(
-            (s) => s.result === "Pending Review"
-          );
-          if (firstPending) {
-            setSelectedId(firstPending.id);
-            setReviewPoints(String(firstPending.maxPoints || 100));
+          if (apiSubs.length > 0) {
+            const firstPending = apiSubs.find((s) => s.result === "Pending Review");
+            if (firstPending) {
+              setSelectedId(firstPending.id);
+              setReviewPoints(String(firstPending.maxPoints || 100));
+            } else {
+              setSelectedId(apiSubs[0].id);
+              setReviewPoints(String(apiSubs[0].points || apiSubs[0].maxPoints || 100));
+            }
           } else {
-            setSelectedId(res.data.submissions[0].id);
-            setReviewPoints(
-              String(
-                res.data.submissions[0].points ||
-                  res.data.submissions[0].maxPoints ||
-                  100
-              )
-            );
+            setSelectedId(null);
           }
         }
-      } catch {
-        // Fall back to demo data smoothly if unauthenticated or offline
+      } catch (err) {
         if (isMounted) {
-          setIsLiveDb(false);
+          setSubmissions([]);
+          setSelectedId(null);
+          setIsLiveDb(true);
         }
       }
     }
@@ -233,7 +73,7 @@ export default function SubmissionManagementPage() {
   const selected =
     submissions.find((item) => item.id === selectedId) ||
     submissions[0] ||
-    initialSubmissions[0];
+    null;
 
   const filtered = useMemo(() => {
     return submissions.filter((item) => {
@@ -320,7 +160,7 @@ export default function SubmissionManagementPage() {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `hack-the-grid-submissions-${
+    link.download = `the-tech-mystery-submissions-${
       new Date().toISOString().split("T")[0]
     }.csv`;
     link.click();
@@ -455,11 +295,7 @@ export default function SubmissionManagementPage() {
         <section className="subm-hero">
           <div className="subm-breadcrumb">
             Admin <span>›</span> Submissions
-            {isLiveDb ? (
-              <span className="subm-data-pill live">● LIVE DATABASE</span>
-            ) : (
-              <span className="subm-data-pill demo">● DEMO PREVIEW DATA</span>
-            )}
+            <span className="subm-data-pill live">● LIVE DATABASE</span>
           </div>
           <div className="subm-heading-row">
             <div>
@@ -483,27 +319,7 @@ export default function SubmissionManagementPage() {
           </div>
         </section>
 
-        {/* Live/Demo info banner */}
-        {!isLiveDb && !dbBannerDismissed && (
-          <div className="subm-api-banner">
-            <div>
-              <strong>● DEMO PREVIEW DATA</strong> — Connect authenticated
-              administrator session for live database synchronization.
-            </div>
-            <div className="subm-api-banner-actions">
-              <Link to={ROUTES.ADMIN_LOGIN} className="subm-banner-link">
-                Admin Login →
-              </Link>
-              <button
-                type="button"
-                onClick={() => setDbBannerDismissed(true)}
-                aria-label="Dismiss banner"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
+        
 
         {notice && (
           <div className="subm-notice" role="status">
@@ -803,7 +619,7 @@ export default function SubmissionManagementPage() {
                     {filtered.length === 0 && (
                       <tr>
                         <td colSpan="8" className="subm-empty">
-                          No submissions match these filters.
+                          submissions.length === 0 ? "No submissions recorded yet." : "No submissions match these filters."
                         </td>
                       </tr>
                     )}
@@ -981,7 +797,7 @@ export default function SubmissionManagementPage() {
         {/* Footer */}
         <footer className="subm-footer">
           Build with <span>♥</span> by Hrithik Roshan{" "}
-          <small>HACK THE GRID · MISSION CONTROL</small>
+          <small>THE TECH MYSTERY · MISSION CONTROL</small>
         </footer>
       </main>
     </div>

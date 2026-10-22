@@ -8,6 +8,7 @@ const { CHALLENGE_TYPES, CHALLENGE_DIFFICULTY } = require('../constants/challeng
  */
 const challengeSchema = new mongoose.Schema(
   {
+    securityRevision: { type: Number, default: 0 },
     levelNumber: {
       type: Number,
       required: [true, 'Level number is required'],
@@ -66,7 +67,7 @@ const challengeSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Published', 'Draft', 'Paused'],
+      enum: ['Published', 'Draft', 'Paused', 'Archived'],
       default: 'Published',
       index: true
     },

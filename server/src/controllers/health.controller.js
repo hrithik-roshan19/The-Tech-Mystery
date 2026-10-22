@@ -23,7 +23,7 @@ const getHealth = (req, res) => {
       database: dbStateMap[dbState] || 'unknown',
       nodeVersion: process.version
     },
-    'Hack the Grid Core API is healthy and operational'
+    'The Tech Mystery Core API is healthy and operational'
   );
 };
 

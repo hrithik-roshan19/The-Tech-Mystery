@@ -1,4 +1,16 @@
-# DEVELOPMENT PROGRESS & PHASE TRACKER: HACK THE GRID
+# DEVELOPMENT PROGRESS & PHASE TRACKER: THE TECH MYSTERY
+
+## Clerk authentication preparation ? 19 October 2026
+
+Clerk integration is implemented as an explicit opt-in provider; existing JWT mode remains the
+default and its implementation is retained. No live connection, data migration, deployment,
+account linking or registration opening occurred. MongoDB still owns roles, membership and
+active status. Linking requires verified matching email plus existing password; ADMIN recovery
+requires organizer approval. New Clerk participants remain unteamed and registration-gated.
+See [implementation, exact files, setup, verification and rollback](CLERK_AUTHENTICATION.md).
+Real Clerk credentials, browser acceptance, index setup, transaction-capable deployment and cutover
+remain approval-gated. Earlier phase status statements below describe those phases historically.
+
 
 > **RULE:** Update this tracker every time a phase or major architectural milestone is advanced.
 
@@ -10,10 +22,9 @@
 |---|---|---|---|
 | **Phase 1** | **Architecture & Project Setup** | **COMPLETED** | Oct 08, 2026 |
 | **Phase 2** | **Frontend UI & Design System (Homepage)** | **COMPLETED** | Oct 08, 2026 |
-| **Phase 3** | Authentication & Registration System | READY TO START | Pending |
-| **Phase 4** | Team Management & Join Code Engine | Planned | Pending |
-
-| **Phase 5** | Challenge Engine & Asset Pipeline | Planned | Pending |
+| **Phase 3** | **Authentication, Database & Complete Backend Integration** | **COMPLETED** | Oct 13, 2026 |
+| **Phase 4** | **QR Checkpoint and Submission Engine** | **COMPLETED** | Oct 15, 2026 |
+| **Phase 5** | **Leaderboard, Final Flag & End-to-End Verification** | **COMPLETED** | Oct 15, 2026 |
 | **Phase 6** | Team-Specific Question Allocation Engine | Planned | Pending |
 | **Phase 7** | QR Checkpoint Cryptographic System | Planned | Pending |
 | **Phase 8** | Timer, Scoring Engine & Hint System | Planned | Pending |
@@ -78,7 +89,7 @@
   - [x] Replaced `overflow: hidden` with `overflow-x: hidden; min-height: 100dvh;` allowing smooth vertical scrolling on all mobile screens.
   - [x] Added responsive hamburger menu button and mobile drawer for navigation on screens <= 900px.
   - [x] Adjusted background position to `50% 18%` on mobile devices to keep Tula's University campus building recognizable.
-  - [x] Implemented fluid clamp typography for title `HACK THE GRID` preventing text clipping on ultra-small screens.
+  - [x] Implemented fluid clamp typography for title `THE TECH MYSTERY` preventing text clipping on ultra-small screens.
   - [x] Compacted login card padding and tab buttons for 320px–389px viewports.
   - [x] Validated across all 12 target viewport sizes (1440x900, 1366x768, 1280x800, 1024x768, 900x800, 768x1024, 600x900, 480x932, 430x932, 390x844, 360x800, 320x740).
 - [x] Verification:
@@ -409,7 +420,7 @@
 ## Phase 2 / Phase 5 Integration — Final Flag / Victory UI (`/final-flag`) Complete (Completed)
 ## Phase 2 / Phase 5 Integration — Final Flag UI Visual Alignment with Reference Design (Completed)
 - [x] **Visual Redesign & Component Architecture (`FinalFlagPage.jsx`)**:
-  - [x] Replaced previous generic HUD header with full-width top navigation bar (`HACK THE GRID`, `CODESPHERE × UTKRISHT 2026`, nav links: `MISSION`, `HOW IT WORKS`, `CHALLENGES`, `QR CHECKPOINT`, `LEADERBOARD`, active `FINAL FLAG` underlined in electric lime, `DASHBOARD` bordered button, and electric lime `REGISTER` button).
+  - [x] Replaced previous generic HUD header with full-width top navigation bar (`THE TECH MYSTERY`, `CODESPHERE × UTKRISHT 2026`, nav links: `MISSION`, `HOW IT WORKS`, `CHALLENGES`, `QR CHECKPOINT`, `LEADERBOARD`, active `FINAL FLAG` underlined in electric lime, `DASHBOARD` bordered button, and electric lime `REGISTER` button).
   - [x] **Hero Section**:
     - [x] Left column: Small lime flag icon + `FINAL CHALLENGE`, large bold heading `THE LAST FLAG` (white) / `AWAITS` (lime `#b8ff3d`), uppercase tracked tagline `YOU'VE SCANNED. YOU'VE SOLVED. NOW CLAIM VICTORY.`, description paragraph, and 3 stat cards in a row (`Level 10 — Final Challenge`, `1 Flag — Ultimate Goal`, `Maximum Points — 500 pts`).
     - [x] Right column: High-impact cinematic artwork with the dark tattered flag, glowing lime hood/skull emblem on rocks with green fissures, and Tula's University campus behind it (`/final-flag-hero-art.png`).
@@ -424,7 +435,7 @@
     - [x] **Right Panel (43% width)**:
       - [x] Radial lime-glowing trophy icon, `VICTORY AWAITS` heading in lime, and subtitle.
       - [x] 6-checkpoint horizontal progression timeline with checkmark nodes (`CP-01 Main Gate`, `CP-02 Central Lawn`, `CP-03 Library Block`, `CP-04 CSE Block`, `CP-09 Final Room`), green connecting line, and glowing target node (`CP-10 Final Flag`).
-      - [x] Centered quotation card with stylized lime quotes: *"It's not just a flag. It's proof that you conquered the grid." — Hack the Grid 2026*.
+      - [x] Centered quotation card with stylized lime quotes: *"It's not just a flag. It's proof that you conquered the grid." — The Tech Mystery 2026*.
   - [x] Functional backend connection preserved to authenticated `challengeService.submitFlag(10, flag)` (`POST /api/v1/submissions/submit`) with error handling and victory alert banner.
 - [x] **Stylesheet Updates (`FinalFlagPage.css`)**:
   - [x] Rebuilt with exact electric lime (`#b8ff3d`), obsidian backgrounds (`#070908`), glowing accents, DM Mono typography for badges and codes, and Manrope grotesque fonts.
@@ -453,7 +464,7 @@
 - [x] **Unified Stylesheet (`client/src/styles/Navbar.css`)**:
   - [x] Standardized typography: 13px font size, uppercase letter-spacing (0.05em–0.08em), 600 font weight, and muted state `#a3b899`.
   - [x] Active page indicator: 2px electric lime `#b8ff3d` underline with glowing box-shadow (`rgba(184, 255, 61, 0.4)`).
-  - [x] Brand lockup: "HACK THE GRID" with neon dot + "CODESPHERE × UTKRISHT 2026" sub-badge.
+  - [x] Brand lockup: "THE TECH MYSTERY" with neon dot + "CODESPHERE × UTKRISHT 2026" sub-badge.
   - [x] Responsive layout: full 7 links visible on desktop (≥1024px), hamburger toggle below 1024px opening dark slide-down mobile drawer with all 7 links in identical order.
   - [x] Fixed mobile horizontal blowout with `overflow-x: hidden` in `client/src/styles/index.css`.
 - [x] **Complete Multi-Page Header Consolidation (Replaced Duplicate Inlined Navbars Across 9 Pages)**:
@@ -549,7 +560,7 @@
   - [x] 3-column responsive grid on desktop, neatly stacked cards on mobile.
 - [x] **Footer Updates**:
   - [x] Added explicit credit: `Built with ♥ by Hrithik Roshan` with glowing accent styling.
-  - [x] Preserved CodeSphere / Hack the Grid branding and copyright.
+  - [x] Preserved CodeSphere / The Tech Mystery branding and copyright.
 - [x] **Empirical Verification & Testing**:
   - [x] Clean client build: `npm run build --workspace=client` (1,745 modules transformed, 0 errors, built in 12.23s).
   - [x] Automated visual and layout tests:
@@ -569,7 +580,7 @@
   - [x] Registered standalone `/admin/dashboard` (`ROUTES.ADMIN_DASHBOARD`) to avoid duplicate sidebars/headers from `AdminLayout.jsx`.
   - [x] Registered `/admin/login` (`ROUTES.ADMIN_LOGIN`) rendering `LoginPage` with the `Admin Login` tab pre-selected while preserving `/login` unchanged.
 - [x] **Theme, Assets & Dashboard Sections Verified**:
-  - [x] Preserved Hack the Grid dark (`#080b0a` / `#0e1311`) + electric-lime (`#b8ff3d`) theme and reused `/campus-hero.png` in `.ad-hero-banner`.
+  - [x] Preserved The Tech Mystery dark (`#080b0a` / `#0e1311`) + electric-lime (`#b8ff3d`) theme and reused `/campus-hero.png` in `.ad-hero-banner`.
   - [x] Verified all dashboard sections:
     - **Overview statistics** (`.ad-metrics`): Registered Teams (`32`), Total Participants (`128`), Flags Captured (`146`), Active Checkpoints (`10`).
     - **Challenge activity** (`.ad-chart-panel`): Live Event Pulse SVG area/line chart.
@@ -795,7 +806,7 @@
   - [x] Removed deprecated `.htg-header` and `.htg-nav` rules from [`HomePage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/HomePage.css) and adjusted hero fixed background offset to 72px (`inset: 72px 0 0`).
 - [x] **Standardized Shared Navbar (`Navbar.jsx` & `Navbar.css`)**:
   - [x] Container with 3 horizontally aligned sections:
-    - **Left — Branding (`.nav-brand`)**: `HACK THE GRID` with “GRID” in electric lime (`#B8FF3D`) and `CODESPHERE × UTKRISHT 2026` monospace subtitle.
+    - **Left — Branding (`.nav-brand`)**: `THE TECH MYSTERY` with “GRID” in electric lime (`#B8FF3D`) and `CODESPHERE × UTKRISHT 2026` monospace subtitle.
     - **Center — Navigation Links (`.nav-links`)**: All seven links displayed in a single horizontal row in the required sequence:
       1. `HOME` (`/`)
       2. `LEADERBOARD` (`/leaderboard`)
@@ -815,6 +826,194 @@
   - [x] Verified mobile 390x844 (`homepage-navbar-mobile.png`, `homepage-navbar-mobile-drawer.png`): Hamburger toggle, 7 drawer links, Login and Register buttons, and Escape key dismissal verified.
   - [x] Verified all 7 links click through to canonical routes (`/`, `/leaderboard`, `/mission`, `/challenges`, `/rules`), and other public pages using `<Navbar />` render without regressions.
 
+---
+
+## Phase 3 Milestone — Complete Backend Integration & Live Database Synchronization (Completed)
+- [x] **Local MongoDB & Database Seeding Engine**:
+  - [x] Configured fallback to local MongoDB instance (`mongodb://127.0.0.1:27017/hack_the_grid`) in `server/src/config/environment.js` when Atlas placeholder domains or template passwords exist.
+  - [x] Created and executed comprehensive seed engine (`server/src/utils/seed.js`):
+    - Singleton `EventConfig` set to `LIVE` status, registration open, hints active, maintenance mode off.
+    - Default Administrator account (`admin@codesphere.tulas.edu.in` / `12345`).
+    - 10 Challenges covering all 10 progression levels with categories, points, and unlock requirements.
+    - 17 Questions across question pools with zero flag leakage (`flag: { select: false }`).
+    - 10 Physical Checkpoints (`HTG-CP01` to `HTG-CP10`) across campus locations with HMAC tokens.
+    - 5 Active Teams (`Null Pointers`, `Byte Bandits`, `Stack Smashers`, `Cyber Wolves`, `PacketRiders`) with member rosters, progression, and live `Score` snapshots.
+    - 3 Initial `SecurityLog` audit records.
+- [x] **Backend Middleware & Dynamic Token Synchronization**:
+  - [x] Enhanced `auth.middleware.js` to dynamically look up operative `teamId` and role from MongoDB `User` if missing from JWT payload, ensuring users who join/create a team after registration are never blocked.
+  - [x] Updated `team.controller.js` to issue refreshed `accessToken` and `refreshToken` upon squad creation and squad join.
+  - [x] Updated `challenge.controller.js` to populate newly assigned questions immediately (`populate('assignedQuestionId', '-flag')`), guaranteeing consistent API response structures.
+- [x] **Frontend Client Live Integration**:
+  - [x] Connected 4-step `RegisterPage.jsx` wizard to `authService.register` and `teamService.createTeam`. Displays generated uppercase join code (`HTG-XXXXXX`) with copy action and direct links to Mission Dashboard.
+  - [x] Connected `LeaderboardPage.jsx` to live `leaderboardService.getLeaderboard()` with 15s auto-refresh polling, `● LIVE DATABASE` state pill, user squad highlight (`YOU`), and frozen state handling.
+  - [x] Connected `ParticipantDashboard.jsx` to live `teamService.getMyTeam()`, `challengeService.getMissionMap()`, and Top 5 live standings from `leaderboardService`.
+  - [x] Connected `ChallengeLevelsPage.jsx` to live team solve states and active target from `challengeService.getMissionMap()`.
+- [x] **Comprehensive End-to-End Verification**:
+  - [x] Authored and executed 16-point automated integration test suite (`test_phase3_integration.js`).
+  - [x] 100% test pass rate across Health check, Admin JWT auth, Admin stats, Security logs, Public leaderboard, Operative registration, Profile sync, Team creation, Join code enrollment, Mission map, Idempotent question assignment, Incorrect flag rejection (400), Correct flag submission (points + level increment), Checkpoint enforcement (403), Checkpoint 02 QR scan, Level 2 unlock, and Leaderboard rank/score update.
+  - [x] Captured headless Chrome CDP screenshots: `phase3-leaderboard-live.png`, `phase3-challenges-live.png`, `phase3-register-live.png`, `phase3-dashboard-live.png`.
+
+---
+
+## Separate Admin and User Navigation + Backend Authorization (Completed)
+- [x] **Canonical Admin Navigation Suite**:
+  - [x] Implemented self-contained styles in [`AdminSidebar.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/AdminSidebar.css) supporting desktop fixed sidebar (248px), tablet compact icon mode (76px at `<= 1050px`), and mobile sliding drawer with overlay (`<= 700px`).
+  - [x] Implemented canonical [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with all 9 exact items in sequential order:
+    1. Overview (`/admin/dashboard`)
+    2. Teams (`/admin/teams`)
+    3. Challenges (`/admin/challenges`)
+    4. Questions (`/admin/questions`)
+    5. QR Checkpoints (`/admin/checkpoints`)
+    6. Submissions (`/admin/submissions`)
+    7. Leaderboard (`/admin/leaderboard`)
+    8. Event Control (`/admin/event-control`)
+    9. Security Logs (`/admin/security-logs`)
+  - [x] Real API-backed badge counts for Teams and Submissions via `adminService.getDashboardStats()`. Purged all hardcoded mock counts ("32", "8"). Badges hide gracefully if data is unpopulated.
+  - [x] Eliminated duplicate inlined sidebar markup across [`AdminDashboard.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/AdminDashboard.jsx).
+- [x] **Layout Isolation**:
+  - [x] `AdminLayout`: renders exclusively the `<AdminSidebar />` and admin page content. The public navbar and public footer never render on admin consoles.
+  - [x] `PublicLayout`: renders the 7-item public `<Navbar />`, main page content, and cyber `<Footer />`. The admin sidebar never renders on public pages.
+  - [x] `ParticipantLayout`: renders the participant HUD navigation for operatives inside `/portal`.
+- [x] **Public & Participant Navbar Integrity**:
+  - [x] Canonical 7-item public navigation in single desktop horizontal row: `HOME`, `LEADERBOARD`, `MISSION`, `CHALLENGES`, `QR CHECKPOINT`, `FINAL FLAG`, `RULES`.
+  - [x] Role-aware right-hand authentication actions:
+    - Guests: `LOGIN` + `REGISTER ↗`
+    - Authenticated Participants: `DASHBOARD` + `DISCONNECT`
+    - Authenticated Administrators: `ADMIN SOC` + `DISCONNECT`
+- [x] **Backend & Frontend Route Authorization**:
+  - [x] `ProtectedRoute.jsx`: verifies authentication state, displays cyber HUD loading spinner during session initialization, redirects unauthenticated users to `/admin/login` preserving deep links in `location.state`, and bounces unauthorized participants (`role !== 'ADMIN'`) to `/dashboard`.
+  - [x] `auth.middleware.js`: Authoritative database role verification on every authenticated request (`req.user.role = freshUser.role`), preventing token forgery and privilege escalation.
+  - [x] `auth.controller.js`: Guarantees new registrations are strictly assigned `TEAM_MEMBER` role.
+  - [x] `AppRoutes.jsx`: Grouped all 10 admin console pages under `<ProtectedRoute requiredRole="ADMIN"><AdminLayout /></ProtectedRoute>`.
+- [x] **Automated Verification**:
+  - [x] Created and executed comprehensive automated test suite [`scratch/verify_navigation_auth_suite.js`](file:///C:/Users/ritik/.gemini/antigravity/brain/d1bb63c4-64e8-47ab-a638-1c2f536674e8/scratch/verify_navigation_auth_suite.js).
+  - [x] Verified 401 Unauthorized for unauthenticated API requests.
+  - [x] Verified 403 Forbidden for participant attempts to access administrative endpoints.
+  - [x] Verified 200 OK for administrative API access.
+  - [x] Verified unauthenticated redirect from `/admin/dashboard` to `/admin/login`.
+  - [x] Verified participant bounce from `/admin/teams` to `/dashboard`.
+  - [x] Verified admin access to `/admin/dashboard` with 9 canonical sidebar items and real DB count badges.
+  - [x] Verified public navbar 7-link sequence and complete absence of admin sidebar on public routes.
+  - [x] Verified responsive desktop (1440px), tablet (1024px), and mobile (390px) rendering.
+
+---
+
+## Team, Challenge and Question Integration Milestone (Completed)
+- [x] **Team Management Integration**:
+  - [x] Backend team CRUD services (`createTeam`, `createAdminTeam`, `updateTeam`, `addMemberToTeam`, `removeMemberFromTeam`, `deleteTeam`) in `team.service.js`.
+  - [x] Enforced team capacity rules (min 2, max 4 members) and duplicate enrollment protection.
+  - [x] Synchronized team score adjustments atomically with `Score` leaderboard snapshot records.
+  - [x] Admin endpoints: `POST /api/v1/admin/teams`, `PATCH /api/v1/admin/teams/:teamId`, `POST /api/v1/admin/teams/:teamId/members`, `DELETE /api/v1/admin/teams/:teamId/members/:userId`, `DELETE /api/v1/admin/teams/:teamId`.
+  - [x] Connected `TeamManagementPage.jsx` with interactive modal interfaces for Add Team, Edit Team, Add Member, Remove Member, and Delete Team with loading/notice/error states.
+- [x] **Challenge Management Integration**:
+  - [x] Full challenge lifecycle support: `'Draft'`, `'Published'`, `'Paused'`, `'Archived'`.
+  - [x] Checkpoint associations (`checkpointId`) and physical QR scan requirement toggle (`requiresCheckpointScan`).
+  - [x] Strictly restricted participant endpoints (`getMissionMap` and `getCurrentChallenge`) to `{ status: 'Published', isActive: true }`, completely hiding drafts, paused, and archived challenges from participants.
+  - [x] Connected `ChallengeManagementPage.jsx` to live API with Checkpoint dropdown selector, status options including Archived, and Delete Challenge confirmation handler.
+- [x] **Question Management Integration**:
+  - [x] Question bank items support checkpoint association (`checkpointId`), hints with penalties, max attempts, and question types.
+  - [x] Zero-leakage flag security: `flag: { select: false }` maintained across participant APIs, securely exposed only to authenticated admins with explicit projection.
+  - [x] Connected `QuestionManagementPage.jsx` with interactive detail tabs (Preview, Answer Settings, QR Mapping), Checkpoint selector, Archived status, and Delete Question handler.
+- [x] **Participant Dashboard Integration**:
+  - [x] Connected live `getCurrentChallenge()` in `ParticipantDashboard.jsx` to dynamically display the active challenge title, category, description, and difficulty instead of static text.
+  - [x] Connected live team member avatars and initials rendered dynamically from `team.members`.
+- [x] **Empirical Verification**:
+---
+
+## Phase 4: QR Checkpoint and Submission Engine (Completed)
+- [x] **Admin QR Checkpoint Management**:
+  - [x] Connected [`QRCheckpointManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/QRCheckpointManagementPage.jsx) to live backend APIs (`adminService.getCheckpoints()`, `createCheckpoint()`, `updateCheckpoint()`).
+  - [x] Guaranteed real scannable QR generation with `QRCode.toDataURL` encoding canonical verification URLs with server HMAC signatures (`/checkpoint/scan?code=...&token=...`).
+  - [x] Supported printable station placard downloads and live state synchronization.
+  - [x] Verified checkpoint status transitions ('Active', 'Paused', 'Draft'), mode configurations ('Public QR', 'Team-bound QR'), and physical scan counts.
+- [x] **Participant QR Scanner & Checkpoint Verification**:
+  - [x] Connected [`QRCheckpointPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/participant/QRCheckpointPage.jsx) to `POST /api/v1/checkpoints/scan`.
+  - [x] Implemented dual-mode scanning: live camera scan (`Html5Qrcode`) / image upload and fallback manual code entry.
+  - [x] Enabled automatic URL parameter detection (`/checkpoint/scan?code=...&token=...`), enabling native smartphone cameras to scan stickers and verify immediately.
+  - [x] Registered canonical `/checkpoint/scan` route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx).
+  - [x] Handled all validation edge cases with clear participant feedback:
+    - Invalid checkpoint codes (400 Bad Request with descriptive message).
+    - Tampered or forged HMAC tokens (400 Bad Request with security alert).
+    - Locked progression levels (400 Bad Request requiring prior levels to be solved).
+    - Inactive / disabled checkpoints (400 Bad Request explaining station status).
+    - Already scanned checkpoints (200 OK with `alreadyScanned: true` and direct link to challenge).
+  - [x] Strictly ensured 0 points are awarded merely for scanning a QR code.
+  - [x] Strictly kept secret challenge flags and answers out of participant checkpoint payloads.
+- [x] **Submission Engine & Flag Verification**:
+  - [x] Implemented constant-time string equality verification via `crypto.timingSafeEqual` in `crypto.js` and `submission.controller.js`, preventing timing attacks.
+  - [x] Enforced physical checkpoint scan gating: flags cannot be submitted for challenges requiring a scan (`requiresCheckpointScan: true`) until the checkpoint has been verified.
+  - [x] Enforced attempt limits: tracked `attemptsCount`, enforced lockout when `attemptsCount >= maxAttempts`, and returned `attemptsRemaining`.
+  - [x] Recorded immutable audit logs in `Submission` collection with `pointsDelta`, timestamps, IP address, and user agent.
+- [x] **Scoring & Progression Engine**:
+  - [x] Implemented atomic, race-condition-safe challenge solve recording in `scoring.service.js` using `TeamChallenge.findOneAndUpdate({ _id, status: { $ne: 'SOLVED' } })`.
+  - [x] Idempotent exactly-once point awards: blocked duplicate points, replay submissions, and concurrent double-claims.
+  - [x] Synchronized points atomically to `Team.totalScore` and `Score` collection for instant leaderboard rankings.
+  - [x] Advanced team level (`currentLevel: levelNumber + 1`) and unlocked subsequent level challenges on solve.
+- [x] **Testing & Verification**:
+  - [x] Authored and executed dedicated Phase 4 test suite [`test_phase4_qr_submission.js`](file:///c:/projects/Hack-The-Grid/test_phase4_qr_submission.js): 51/51 tests PASSED (100% success).
+  - [x] Executed Phase 3 integration suite [`test_phase3_integration.js`](file:///c:/projects/Hack-The-Grid/test_phase3_integration.js): 16/16 tests PASSED (100% success).
+  - [x] Executed Team, Challenge, and Question integration suite [`test_team_challenge_question_integration.js`](file:///c:/projects/Hack-The-Grid/test_team_challenge_question_integration.js): 20/20 tests PASSED (100% success).
+  - [x] Total passing integration test assertions: 87/87 (100% success).
+  - [x] Executed client production build: `npm run build:client` completed with exit code 0 (`✓ built in 7.51s`, 0 errors).
+
+---
+
+## Phase 5: Leaderboard, Final Flag & End-to-End Verification (Completed)
+- [x] **Authoritative Public Leaderboard**:
+  - [x] Connected [`LeaderboardPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/public/LeaderboardPage.jsx) directly to `/api/v1/leaderboard`.
+  - [x] Implemented deterministic server-side tie-breaking: `totalScore DESC, lastSolveTimestamp ASC, createdAt ASC, _id ASC`.
+  - [x] Handled all telemetry UI states:
+    - **Loading State**: Displays animated dark/electric-lime spinner and telemetry connecting state.
+    - **Error State**: Displays clear connection failure banner with an interactive "RETRY" button.
+    - **Empty State**: Displays arena open placeholder ("THE ARENA IS OPEN — No teams ranked yet").
+    - **Concealed State**: Displays warning banner ("LEADERBOARD CONCEALED BY SOC — Public standings hidden by event administrators").
+    - **Frozen State**: Displays frozen banner and badge ("LEADERBOARD FROZEN — Final round standings frozen").
+    - **Manual Refresh**: Added "↻ REFRESH" button alongside 15-second background auto-polling.
+  - [x] Strictly eliminated client-side score modification and prohibited falling back to hardcoded demo data when live database records are present.
+- [x] **Admin Leaderboard & Event Control**:
+  - [x] Connected [`LeaderboardManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/LeaderboardManagementPage.jsx) to `/api/v1/admin/leaderboard`.
+  - [x] Removed nonfunctional demo controls (`moveTeam` client rank manipulation buttons) to guarantee official ranks derive strictly from server-verified submission timestamps.
+  - [x] Connected [`EventControlPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/EventControlPage.jsx) to persist event configuration (`isLeaderboardVisible`, `isLeaderboardFrozen`, `state`, `maintenanceMode`, `registrationOpen`, `maxTeams`, `duration`) and broadcast announcements directly to MongoDB.
+  - [x] Added automated audit trail: recorded privileged administrative actions (`updateEventConfig` under `CONFIGURATION`, `disqualifyTeam` under `ADMIN ACTION`) in [`SecurityLog`](file:///c:/projects/Hack-The-Grid/server/src/models/SecurityLog.js).
+- [x] **Backend Event State Enforcement**:
+  - [x] In `submission.controller.js`: Rejected flag submissions with 403 Forbidden when `state === 'PAUSED'`, `state === 'CONCLUDED'`, or `maintenanceMode: true`.
+  - [x] In `checkpoint.service.js`: Rejected physical scans with 400 Bad Request when `state === 'PAUSED'`, `state === 'CONCLUDED'`, `maintenanceMode: true`, or `qrCheckpoints === false`.
+  - [x] In `team.service.js`: Rejected team creation and enrollment when `registrationOpen === false`, `state === 'REGISTRATION_CLOSED'`, `state === 'CONCLUDED'`, `maintenanceMode: true`, or `maxTeams` capacity limit reached.
+- [x] **Final Flag (Level 10) & Victory HUD**:
+  - [x] Connected [`FinalFlagPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/participant/FinalFlagPage.jsx) to `challengeService.submitFlag(10, flag)`.
+  - [x] Enforced progression prerequisites: teams at lower levels cannot submit for Level 10 (rejected with 400).
+  - [x] Validated physical checkpoint scan requirement for Level 10 (`HTG-CP10`) prior to submission.
+  - [x] Verified constant-time string comparison with zero flag exposure to participants.
+  - [x] Advanced team to Level 11 upon capture, transitioning client UI to Victory HUD celebration banner.
+  - [x] Enforced anti-replay: duplicate Level 10 flag submissions rejected with 400 (`Level has already been solved by your team`) and 0 additional points awarded.
+- [x] **Comprehensive Verification**:
+  - [x] Created and executed [`test_phase5_e2e_gameplay.js`](file:///c:/projects/Hack-The-Grid/test_phase5_e2e_gameplay.js): 48/48 tests PASSED (100% success).
+  - [x] Re-executed [`test_phase4_qr_submission.js`](file:///c:/projects/Hack-The-Grid/test_phase4_qr_submission.js): 51/51 tests PASSED (100% success).
+  - [x] Re-executed [`test_team_challenge_question_integration.js`](file:///c:/projects/Hack-The-Grid/test_team_challenge_question_integration.js): 20/20 tests PASSED (100% success).
+  - [x] Re-executed [`test_phase3_integration.js`](file:///c:/projects/Hack-The-Grid/test_phase3_integration.js): 16/16 tests PASSED (100% success).
+  - [x] **Grand Total Automated Tests Passing: 153/153 (100% success rate across all test suites)**.
+  - [x] Client production build [`npm run build:client`](file:///c:/projects/Hack-The-Grid/client) verified: exit code 0 (`✓ built in 7.26s`, 0 errors).
+
+---
+
+## Security Hardening — JWT Authentication & Admin Authorization (Completed)
+- [x] **Stateless Token Verification with Authoritative MongoDB Synchronization**:
+  - [x] Updated `authenticate` middleware in [`auth.middleware.js`](file:///c:/projects/Hack-The-Grid/server/src/middleware/auth.middleware.js) to verify JWT signature/expiration and query `User.findById(decoded.userId).select('role teamId isActive')`.
+  - [x] Reject deleted users with HTTP 401 (`User account no longer exists`).
+  - [x] Reject deactivated accounts (`isActive: false`) with HTTP 401 (`Account has been deactivated. Please contact an administrator.`).
+  - [x] Authoritatively overwrite `req.user.role` from the database, preventing token claim tampering.
+  - [x] Authoritatively synchronize `req.user.teamId`, explicitly clearing stale claims to `null` if the user is unenrolled in the database.
+- [x] **Public & Optional Authentication Hardening**:
+  - [x] Hardened `optionalAuth` to initialize `req.user = null` and preserve public access for unauthenticated requests.
+  - [x] Verified active user state in MongoDB for incoming tokens; inactive or deleted users do not populate an authenticated identity (`req.user = null`).
+  - [x] Wrapped database operations so that database errors trigger `next(error)` rather than silently converting to authenticated sessions.
+- [x] **Admin Authorization Verification**:
+  - [x] Verified all admin routes in [`admin.routes.js`](file:///c:/projects/Hack-The-Grid/server/src/routes/admin.routes.js) execute `authenticate` followed by `requireAdmin`.
+  - [x] Enforced that non-admin users (`TEAM_MEMBER`, `TEAM_LEADER`) receive HTTP 403 Forbidden on all administrative endpoints.
+- [x] **Dedicated Automated Test Suite**:
+  - [x] Created [`test_jwt_admin_auth.js`](file:///c:/projects/Hack-The-Grid/test_jwt_admin_auth.js) verifying 18 test assertions: missing, non-Bearer, empty Bearer, corrupted, forged, and expired tokens; deleted user 401; inactive user 401; active admin 200; active non-admin 403; instant role upgrade/downgrade reflection; instant team removal reflection (403 on team-required routes, 404 on `/teams/my-team`); optional auth public access; optional auth inactive/deleted isolation.
+  - [x] Result: **18/18 tests PASSED (100% success rate)**.
+  - [x] Regression suite results: `test_phase3_integration.js` (16/16), `test_team_challenge_question_integration.js` (20/20), `test_phase4_qr_submission.js` (51/51), `test_phase5_e2e_gameplay.js` (48/48) — **153/153 total tests passing**.
 
 
 
@@ -822,3 +1021,62 @@
 
 
 
+
+
+
+
+
+
+
+
+
+## Security Remediation ? 19 October 2026
+
+Implemented participant DTOs and answer-bearing text containment; leader/admin-only
+invitations and rotation; expiring scoped QR signatures; transaction-backed enrollment,
+attempts, solves and score review; LIVE/publication/roster eligibility; token-version
+revocation; production configuration validation; production demo-seed refusal; and
+historical-record deletion guards. The four project documents now distinguish code
+changes from deployment/data operations. Existing user work was preserved; no live
+migration, reseed, deployment, or Clerk integration was performed.
+
+Executed evidence:
+- `npm test --workspace=server`: 38 passed, 0 failed, 5 suites; final observed run took
+  55.39 seconds. Uses newly provisioned temporary MongoDB servers, not the event database.
+  Covers concurrent correct/wrong submissions, competing reviews and memberships, score
+  corrections/reversals, injected-failure rollback, standalone write refusal, public
+  sanitization, signatures, lifecycle controls, production validation, and JWT revocation.
+- `npm run lint --workspace=server`: passed after correcting unused imports/bindings and
+  narrowing an overbroad validation edit. An intermediate regression failed one test;
+  the corrected final suite passed all 38.
+- `npm run build:client`: passed; large JavaScript chunk warning remains.
+- `npm audit --omit=dev --json`: zero runtime advisories. Full audit: 6 high and 2 moderate
+  development-tool advisories; no forced Tailwind major migration.
+- Source scan: zero seed answer literals found in client/src.
+
+Old root integration scripts were inspected, not executed: they target the default event
+server and assume weaker historical behavior. Browser/camera interaction and production
+load testing were not executed. See PROJECT_CONTEXT.md's latest security section for
+replica-set setup, token/placard replacement, invitation rotation and historical-solve
+reconciliation requirements. No existing event records were changed.
+
+## Event-data preparation - 19 October 2026
+
+Implemented native-driver read-only reconciliation collection/classification and a safe
+loopback HTTP deployment probe. Generated redacted JSON/Markdown evidence preserving
+original record IDs: 6 unsupported totals, 3 amount discrepancies, 14 owner candidates,
+20 orphan submissions across 5 deleted teams. Source hashes and process-start evidence
+identify a stale runtime boundary without pretending to recover loaded source.
+
+Prepared authenticated isolated replica-set staging Compose/env/init/launcher files;
+no staging services were provisioned or started. Proposed minimal organizer-approved
+account/roster workflow and shared-campus signed Public QR policy, without changing UI,
+enrollment modes, records or real QR payloads. Added 10 preparation tests and 3 isolated
+admin-roster/self-registration tests. Combined suite: 51 passed, 0 failed; final combined run included all 10
+preparation tests. Lint and Compose config validation passed.
+
+Artifacts: DEPLOYMENT_VERIFICATION_CHECKLIST.md, EVENT_INGESTION_PREPARATION.md,
+reports/HISTORICAL_RECONCILIATION_2026-10-19.md and sibling JSON snapshots, staging/README.md.
+Remaining: organizer choices, actual staging provisioning/runtime checks, UI/backend mode
+implementation, backups/reconciliation/deployment/ingestion approvals. Existing live
+connections and data were untouched. No frontend build/browser tests were run this phase.

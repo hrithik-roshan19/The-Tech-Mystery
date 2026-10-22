@@ -8,6 +8,10 @@ const { ROLES } = require('../constants/roles');
  */
 const userSchema = new mongoose.Schema(
   {
+    clerkUserId: { type: String, unique: true, sparse: true, select: false },
+    clerkLinkedAt: { type: Date, select: false },
+    tokenVersion: { type: Number, default: 0, select: false },
+    securityRevision: { type: Number, default: 0 },
     username: {
       type: String,
       required: [true, 'Username is required'],
@@ -29,7 +33,7 @@ const userSchema = new mongoose.Schema(
     },
     passwordHash: {
       type: String,
-      required: [true, 'Password hash is required'],
+      required: function () { return !this.clerkUserId; },
       select: false // Never exposed in queries by default
     },
     fullName: {
@@ -154,6 +158,7 @@ userSchema.pre('save', async function (next) {
  * Helper instance method: Compare raw password with stored hash
  */
 userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.passwordHash || typeof candidatePassword !== 'string') return false;
   return bcrypt.compare(candidatePassword, this.passwordHash);
 };
 

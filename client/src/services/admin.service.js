@@ -1,3 +1,4 @@
+import { storage } from '../utils/storage';
 import api from './api';
 
 /**
@@ -12,6 +13,31 @@ export const adminService = {
 
   getAllTeams: async () => {
     const res = await api.get('/admin/teams');
+    return res.data;
+  },
+
+  createTeam: async (payload) => {
+    const res = await api.post('/admin/teams', payload);
+    return res.data;
+  },
+
+  updateTeam: async (teamId, payload) => {
+    const res = await api.patch(`/admin/teams/${teamId}`, payload);
+    return res.data;
+  },
+
+  addTeamMember: async (teamId, payload) => {
+    const res = await api.post(`/admin/teams/${teamId}/members`, payload);
+    return res.data;
+  },
+
+  removeTeamMember: async (teamId, userId) => {
+    const res = await api.delete(`/admin/teams/${teamId}/members/${userId}`);
+    return res.data;
+  },
+
+  deleteTeam: async (teamId) => {
+    const res = await api.delete(`/admin/teams/${teamId}`);
     return res.data;
   },
 
@@ -35,6 +61,11 @@ export const adminService = {
 
   getCheckpoints: async () => {
     const res = await api.get('/admin/checkpoints');
+    return res.data;
+  },
+
+  getCheckpointQr: async (checkpointId) => {
+    const res = await api.get(`/admin/checkpoints/${checkpointId}/qr`);
     return res.data;
   },
 
@@ -63,8 +94,23 @@ export const adminService = {
     return res.data;
   },
 
+  deleteChallenge: async (challengeId) => {
+    const res = await api.delete(`/admin/challenges/${challengeId}`);
+    return res.data;
+  },
+
   getQuestions: async (params = {}) => {
     const res = await api.get('/admin/questions', { params });
+    return res.data;
+  },
+
+  uploadQuestions: async (questions) => {
+    const res = await api.post('/admin/questions/upload', questions);
+    return res.data;
+  },
+
+  getQuestionQr: async (questionId) => {
+    const res = await api.get(`/admin/questions/${questionId}/qr`);
     return res.data;
   },
 
@@ -78,13 +124,23 @@ export const adminService = {
     return res.data;
   },
 
+  deleteQuestion: async (questionId) => {
+    const res = await api.delete(`/admin/questions/${questionId}`);
+    return res.data;
+  },
+
+  releaseQuestionClaim: async (questionId) => {
+    const res = await api.post(`/admin/questions/${questionId}/release-claim`);
+    return res.data;
+  },
+
   updateEventConfig: async (payload) => {
     const res = await api.patch('/admin/event-config', payload);
     return res.data;
   },
 
   getLeaderboard: async () => {
-    const res = await api.get('/leaderboard');
+    const res = await api.get('/admin/leaderboard');
     return res.data;
   },
 
@@ -115,10 +171,9 @@ export const adminService = {
 
   revokeSessions: async () => {
     const res = await api.post('/admin/sessions/revoke');
+    if (res.data?.data?.accessToken) storage.setToken(res.data.data.accessToken);
     return res.data;
   },
 };
 
 export default adminService;
-
-

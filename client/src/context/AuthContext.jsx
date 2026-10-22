@@ -2,9 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage } from '../utils/storage';
 import { authService } from '../services/auth.service';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+export const LegacyAuthProvider = ({ children }) => {
   const [user, setUser] = useState(storage.getUser());
   const [token, setToken] = useState(storage.getToken());
   const [loading, setLoading] = useState(true);
@@ -21,11 +21,20 @@ export const AuthProvider = ({ children }) => {
           console.error('Failed to restore session:', err);
           logout();
         }
+      } else {
+        setUser(null);
+        storage.clearAll();
       }
       setLoading(false);
     };
 
     initAuth();
+  }, []);
+
+  useEffect(() => {
+    const clearSession = () => { setUser(null); setToken(null); };
+    window.addEventListener('htg:unauthorized', clearSession);
+    return () => window.removeEventListener('htg:unauthorized', clearSession);
   }, []);
 
   const login = (userData, accessToken) => {
@@ -36,6 +45,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    // Capture the credential before clearing local state.
+    const tokenToRevoke = storage.getToken();
+    if (tokenToRevoke) authService.logout(tokenToRevoke).catch(() => {});
     storage.clearAll();
     setUser(null);
     setToken(null);
@@ -72,3 +84,5 @@ export const useAuth = () => {
   return context;
 };
 
+
+export { AuthProvider } from './ClerkAuthProvider';

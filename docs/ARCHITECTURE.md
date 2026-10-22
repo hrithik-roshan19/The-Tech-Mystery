@@ -1,12 +1,12 @@
-# SYSTEM ARCHITECTURE SPECIFICATION: HACK THE GRID
+# SYSTEM ARCHITECTURE SPECIFICATION: THE TECH MYSTERY
 
-This document defines the high-level and component architecture of the **Hack the Grid** platform.
+This document defines the high-level and component architecture of the **The Tech Mystery** platform.
 
 ---
 
 ## 1. System Topology Overview
 
-Hack the Grid is organized into distinct decoupled tiers:
+The Tech Mystery is organized into distinct decoupled tiers:
 
 ```mermaid
 graph TD

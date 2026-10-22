@@ -32,14 +32,6 @@ const navLinks = [
   { label: "FINAL FLAG", path: ROUTES.FINAL_FLAG, active: true },
 ];
 
-const timelineCheckpoints = [
-  { id: "CP-01", name: "Main Gate", solved: true },
-  { id: "CP-02", name: "Central Lawn", solved: true },
-  { id: "CP-03", name: "Library Block", solved: true },
-  { id: "CP-04", name: "CSE Block", solved: true },
-  { id: "CP-09", name: "Final Room", solved: true },
-  { id: "CP-10", name: "Final Flag", isTarget: true },
-];
 
 export default function FinalFlagPage() {
   const navigate = useNavigate();
@@ -52,6 +44,23 @@ export default function FinalFlagPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const normalizedFlag = useMemo(() => flag.trim(), [flag]);
+
+  const timelineCheckpoints = useMemo(() => {
+    const curLevel = team?.currentLevel || 1;
+    const stages = [
+      { id: "CP-01", name: "Main Gate", level: 1 },
+      { id: "CP-02", name: "Central Lawn", level: 2 },
+      { id: "CP-03", name: "Library Block", level: 3 },
+      { id: "CP-04", name: "CSE Block", level: 4 },
+      { id: "CP-09", name: "Final Room", level: 9 },
+      { id: "CP-10", name: "Final Flag", level: 10, isTarget: true },
+    ];
+    return stages.map((cp) => ({
+      ...cp,
+      solved: !cp.isTarget && Boolean(team && curLevel > cp.level),
+      isTarget: Boolean(cp.isTarget),
+    }));
+  }, [team]);
 
   // Load team info on mount
   useEffect(() => {
@@ -85,6 +94,12 @@ export default function FinalFlagPage() {
     if (!isAuthenticated) {
       setStatus("error");
       setErrorMessage("Please login with your team account to submit the Final Flag.");
+      return;
+    }
+
+    if (!user?.teamId) {
+      setStatus("error");
+      setErrorMessage("You must create or join a registered squad before attempting the Final Flag.");
       return;
     }
 
@@ -150,7 +165,7 @@ export default function FinalFlagPage() {
               <div className="ff-victory-banner-text">
                 <h3>VICTORY CONFIRMED! THE FINAL GATE HAS BEEN BREACHED.</h3>
                 <p>
-                  Your squad has captured the Master Flag and conquered Hack the Grid 2026.
+                  Your squad has captured the Master Flag and conquered The Tech Mystery 2026.
                   {solveStats?.pointsAwarded && ` +${solveStats.pointsAwarded} PTS awarded.`}
                 </p>
               </div>
@@ -229,7 +244,7 @@ export default function FinalFlagPage() {
             <div className="ff-art-frame">
               <img
                 src="/final-flag-hero-art.png"
-                alt="Hack the Grid Final Flag artwork on rocky peak"
+                alt="The Tech Mystery Final Flag artwork on rocky peak"
                 className="ff-hero-artwork-img"
               />
             </div>
@@ -442,7 +457,7 @@ export default function FinalFlagPage() {
                 </div>
                 <span className="ff-quote-mark right">”</span>
               </div>
-              <div className="ff-quote-author">— Hack the Grid 2026</div>
+              <div className="ff-quote-author">— The Tech Mystery 2026</div>
             </div>
           </article>
         </section>

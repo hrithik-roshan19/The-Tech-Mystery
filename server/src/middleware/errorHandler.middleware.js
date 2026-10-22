@@ -1,5 +1,4 @@
 const logger = require('../utils/logger');
-const config = require('../config/environment');
 const { error } = require('../utils/apiResponse');
 
 /**
@@ -8,8 +7,8 @@ const { error } = require('../utils/apiResponse');
  * preventing stack trace leakage in production.
  */
 const errorHandler = (err, req, res, next) => {
-  logger.error(`[UnhandledError] ${err.name || 'Error'}: ${err.message}`, {
-    stack: config.isProduction ? undefined : err.stack,
+  logger.error(`[UnhandledError] ${err.name || 'Error'}`, {
+    stack: undefined,
     url: req.originalUrl,
     method: req.method,
     ip: req.ip
@@ -52,9 +51,9 @@ const errorHandler = (err, req, res, next) => {
   // Fallback 500 Internal Error
   return error(
     res,
-    config.isProduction ? 'An unexpected internal server error occurred' : err.message,
+    err.statusCode && err.statusCode < 500 ? err.message : 'An unexpected internal server error occurred',
     err.statusCode || 500,
-    config.isProduction ? null : err.stack,
+    null,
     'INTERNAL_SERVER_ERROR'
   );
 };

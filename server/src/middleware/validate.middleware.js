@@ -17,8 +17,7 @@ const validate = (validations) => {
 
     const formattedErrors = errors.array().map((err) => ({
       field: err.path || err.param,
-      message: err.msg,
-      value: err.value
+      message: err.msg
     }));
 
     return badRequest(res, 'Request validation failed', formattedErrors);

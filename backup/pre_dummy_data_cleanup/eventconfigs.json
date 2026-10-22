@@ -1,0 +1,45 @@
+[
+  {
+    "_id": "6ace7c2af5fda84bd9c5fc01",
+    "eventName": "The Tech Mystery",
+    "organizer": "CodeSphere Coding Club, Tula's University",
+    "state": "LIVE",
+    "startTime": "2026-10-13T16:44:58.789Z",
+    "endTime": "2026-10-14T00:44:58.789Z",
+    "registrationDeadline": null,
+    "totalLevels": 10,
+    "isLeaderboardFrozen": false,
+    "frozenAt": null,
+    "maxTeamSize": 4,
+    "minTeamSize": 2,
+    "subtitle": "CodeSphere × UTKRISHT 2026",
+    "duration": 120,
+    "maxTeams": 50,
+    "registrationOpen": true,
+    "qrCheckpoints": true,
+    "hintsEnabled": true,
+    "maintenanceMode": false,
+    "announcementsEnabled": true,
+    "location": "Tula's University, Dehradun",
+    "announcements": [
+      {
+        "title": "Event is LIVE!",
+        "content": "The Tech Mystery 2026 has officially commenced. Scan checkpoints and conquer levels!",
+        "priority": "HIGH",
+        "createdAt": "2026-10-13T16:44:58.789Z",
+        "_id": "6ace7c2af5fda84bd9c5fc02"
+      },
+      {
+        "title": "Checkpoint 04 Activated",
+        "content": "Library reading room beacon is online and accepting eligible scans.",
+        "priority": "MEDIUM",
+        "createdAt": "2026-10-13T17:44:58.789Z",
+        "_id": "6ace7c2af5fda84bd9c5fc03"
+      }
+    ],
+    "createdAt": "2026-10-13T18:44:58.805Z",
+    "updatedAt": "2026-10-19T07:59:37.237Z",
+    "__v": 0,
+    "isLeaderboardVisible": true
+  }
+]

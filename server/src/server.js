@@ -53,7 +53,7 @@ const startServer = async () => {
 
     const server = app.listen(config.port, () => {
       logger.info(`=======================================================`);
-      logger.info(`  HACK THE GRID - CTF CORE ENGINE READY`);
+      logger.info(`  THE TECH MYSTERY - CTF CORE ENGINE READY`);
       logger.info(`  Environment: ${config.env.toUpperCase()}`);
       logger.info(`  Listening on: http://localhost:${config.port}`);
       logger.info(`  API Prefix:   ${config.apiPrefix}`);

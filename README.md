@@ -1,4 +1,4 @@
-# ⚡ HACK THE GRID
+# ⚡ THE TECH MYSTERY
 
 > **Flagship Hybrid Cybersecurity Capture-the-Flag (CTF) Platform**  
 > Organized by **CodeSphere Coding Club** at **Tula's University, Dehradun**
@@ -13,7 +13,7 @@
 
 ## 🛰️ Project Overview
 
-**Hack the Grid** is a modern, production-grade cybersecurity competition platform designed to bridge virtual problem-solving with the physical university campus. 
+**The Tech Mystery** is a modern, production-grade cybersecurity competition platform designed to bridge virtual problem-solving with the physical university campus. 
 
 Teams of 2 to 4 students traverse **10 progressive containment levels** ranging from reconnaissance, cryptography, and steganography to web inspection, binary reverse-engineering, and the climactic **Master Flag**.
 
@@ -119,7 +119,7 @@ For developers and AI coding agents resuming work on this codebase:
 
 ## 🏛️ Event Organization
 
-- **Event**: Hack the Grid (Annual CTF)
+- **Event**: The Tech Mystery (Annual CTF)
 - **Club**: CodeSphere Coding Club
 - **Institution**: Tula's University, Dehradun, Uttarakhand, India
 - **Year**: 2026

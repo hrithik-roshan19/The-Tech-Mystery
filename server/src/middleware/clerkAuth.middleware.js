@@ -1,0 +1,37 @@
+const clerk = require('../services/clerk.service');
+const { User } = require('../models');
+
+const sendFailure = (res, error) => res.status(error.statusCode || 503).json({ success: false,
+  message: error.statusCode ? error.message : 'Authentication verification unavailable', errorCode: error.errorCode });
+
+async function verifyIdentity(req) {
+  const match = /^Bearer ([^\s]+)$/.exec(req.headers.authorization || '');
+  if (!match) throw clerk.failure(401, 'Clerk Bearer session token required');
+  return clerk.verifySession(match[1]);
+}
+
+async function requireClerkSession(req, res, next) {
+  try { req.clerkIdentity = await verifyIdentity(req); return next(); }
+  catch (error) { return sendFailure(res, error); }
+}
+
+async function resolveUser(req) {
+  const identity = await verifyIdentity(req);
+  const user = await User.findOne({ clerkUserId: identity.clerkUserId }).select('role teamId isActive username');
+  if (!user) throw clerk.failure(403, 'Link or register an application account to continue', 'CLERK_ACCOUNT_UNLINKED');
+  if (!user.isActive) throw clerk.failure(403, 'Account has been deactivated', 'ACCOUNT_INACTIVE');
+  req.clerkIdentity = identity;
+  return { _id: user._id, userId: String(user._id), username: user.username, role: user.role,
+    teamId: user.teamId ? String(user.teamId) : null, isActive: user.isActive, authProvider: 'clerk' };
+}
+async function authenticate(req, res, next) {
+  try { req.user = await resolveUser(req); return next(); }
+  catch (error) { return sendFailure(res, error); }
+}
+async function optionalAuth(req, res, next) {
+  req.user = null;
+  if (!req.headers.authorization) return next();
+  try { req.user = await resolveUser(req); return next(); }
+  catch (error) { if ([401, 403].includes(error.statusCode)) return next(); return next(error); }
+}
+module.exports = { authenticate, optionalAuth, requireClerkSession };

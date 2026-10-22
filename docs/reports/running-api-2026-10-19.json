@@ -1,0 +1,84 @@
+{
+  "capturedAt": "2026-10-19T08:46:11.736Z",
+  "target": "http://127.0.0.1:5000/api/v1",
+  "requests": [
+    "GET /health",
+    "GET /leaderboard",
+    "OPTIONS /auth/logout"
+  ],
+  "observed": {
+    "healthStatus": 200,
+    "approximateProcessStartedAt": "2026-10-19T07:46:26.208Z",
+    "leaderboardStatus": 200,
+    "leaderboardTeamCount": 42,
+    "leaderboardContainsJoinCodeField": true,
+    "leaderboardRowFields": [
+      "avatarUrl",
+      "createdAt",
+      "currentLevel",
+      "joinCode",
+      "lastSolveTimestamp",
+      "rank",
+      "solvedCount",
+      "teamId",
+      "teamName",
+      "totalScore"
+    ],
+    "logoutOptionsStatus": 204
+  },
+  "workingTreeExpected": {
+    "leaderboardContainsJoinCodeField": false,
+    "logoutOptionsStatus": 204
+  },
+  "workingTreeFiles": [
+    {
+      "file": "server/src/controllers/leaderboard.controller.js",
+      "sha256": "f97405c40a7706708c21b956f61f84c46bdca175f3e3ada8cd4bfb32649df981",
+      "modifiedAt": "2026-10-19T08:13:10.024Z",
+      "modifiedAfterProcessStart": true
+    },
+    {
+      "file": "server/src/controllers/auth.controller.js",
+      "sha256": "5e55a91f2277be5353e425b7d41ba0eb6387300a0fe2c4c54e891560f84f575d",
+      "modifiedAt": "2026-10-19T08:19:55.787Z",
+      "modifiedAfterProcessStart": true
+    },
+    {
+      "file": "server/src/controllers/team.controller.js",
+      "sha256": "e290a57ac65ddd0763c202b12e5dd6c86cd688776c550fd95d748eb1fcac2d3f",
+      "modifiedAt": "2026-10-19T08:23:08.530Z",
+      "modifiedAfterProcessStart": true
+    },
+    {
+      "file": "server/src/middleware/auth.middleware.js",
+      "sha256": "d7c3dc52f90d4e2f3dd6c7f6d56dfba1262b207f5c7f1633a50ffa91f871fbd4",
+      "modifiedAt": "2026-10-19T08:30:16.605Z",
+      "modifiedAfterProcessStart": true
+    },
+    {
+      "file": "server/src/services/scoring.service.js",
+      "sha256": "1bd42db2550e7f1096fee5c03acbd6139fd18428333bb3a05c2fdd1a4f6f94b4",
+      "modifiedAt": "2026-10-19T08:15:12.363Z",
+      "modifiedAfterProcessStart": true
+    },
+    {
+      "file": "server/src/services/team.service.js",
+      "sha256": "f4035fc8a452935c703e03d4d4eeaac65f2d36783b33c92f0105add772b7e0f9",
+      "modifiedAt": "2026-10-19T08:23:08.529Z",
+      "modifiedAfterProcessStart": true
+    },
+    {
+      "file": "server/src/services/checkpoint.service.js",
+      "sha256": "116af378851af42c97d2c72cd0a20c61bb5417d38abb1a853c2c880f80aadefe",
+      "modifiedAt": "2026-10-19T08:27:15.731Z",
+      "modifiedAfterProcessStart": true
+    },
+    {
+      "file": "server/src/utils/transaction.js",
+      "sha256": "f1548ccb8481dafffbe33f899673c3972a2fa991abd355e8aaa7ccc4f3e5afe6",
+      "modifiedAt": "2026-10-19T08:11:53.596Z",
+      "modifiedAfterProcessStart": true
+    }
+  ],
+  "limitations": "No authenticated or write requests. CORS handles OPTIONS globally, so it does not establish logout-route availability. Observations cannot identify the loaded source revision or establish other runtime behavior."
+}

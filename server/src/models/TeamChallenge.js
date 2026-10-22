@@ -11,6 +11,7 @@ const mongoose = require('mongoose');
  */
 const teamChallengeSchema = new mongoose.Schema(
   {
+    scoringSubmissionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Submission', default: null },
     teamId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Team',

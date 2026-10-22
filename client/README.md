@@ -1,6 +1,6 @@
-# Hack the Grid — Frontend Web Client
+# The Tech Mystery — Frontend Web Client
 
-Cybersecurity SOC / CTF HUD interface for **Hack the Grid**, engineered for the CodeSphere Coding Club at Tula's University, Dehradun.
+Cybersecurity SOC / CTF HUD interface for **The Tech Mystery**, engineered for the CodeSphere Coding Club at Tula's University, Dehradun.
 
 ## Tech Stack
 

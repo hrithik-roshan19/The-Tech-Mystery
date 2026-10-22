@@ -7,18 +7,6 @@ import { leaderboardService } from "../../services/leaderboard.service";
 import AdminSidebar from "../../components/navigation/AdminSidebar";
 import "../../styles/LeaderboardManagementPage.css";
 
-const initialTeams = [
-  { rank: 1, name: "Null Pointers", code: "TEAM-07", members: 4, score: 1840, solved: 8, level: 8, streak: 5, trend: "up", lastActivity: "1 min ago", status: "Active" },
-  { rank: 2, name: "Byte Bandits", code: "TEAM-12", members: 4, score: 1690, solved: 7, level: 7, streak: 4, trend: "up", lastActivity: "3 min ago", status: "Active" },
-  { rank: 3, name: "Stack Smashers", code: "TEAM-03", members: 3, score: 1510, solved: 7, level: 7, streak: 2, trend: "down", lastActivity: "4 min ago", status: "Active" },
-  { rank: 4, name: "Cyber Wolves", code: "TEAM-15", members: 4, score: 1320, solved: 6, level: 6, streak: 3, trend: "up", lastActivity: "7 min ago", status: "Active" },
-  { rank: 5, name: "Packet Pirates", code: "TEAM-02", members: 3, score: 1180, solved: 6, level: 6, streak: 1, trend: "same", lastActivity: "9 min ago", status: "Active" },
-  { rank: 6, name: "Logic Legends", code: "TEAM-09", members: 4, score: 1050, solved: 5, level: 5, streak: 2, trend: "up", lastActivity: "12 min ago", status: "Active" },
-  { rank: 7, name: "Kernel Kings", code: "TEAM-04", members: 3, score: 920, solved: 5, level: 5, streak: 1, trend: "down", lastActivity: "14 min ago", status: "Active" },
-  { rank: 8, name: "Root Access", code: "TEAM-11", members: 4, score: 840, solved: 4, level: 4, streak: 2, trend: "same", lastActivity: "18 min ago", status: "Active" },
-  { rank: 9, name: "Bit Raiders", code: "TEAM-06", members: 2, score: 710, solved: 4, level: 4, streak: 1, trend: "up", lastActivity: "21 min ago", status: "Active" },
-  { rank: 10, name: "Ghost Protocol", code: "TEAM-14", members: 3, score: 560, solved: 3, level: 3, streak: 1, trend: "same", lastActivity: "26 min ago", status: "Active" },
-];
 
 const medal = (rank) => (rank === 1 ? "gold" : rank === 2 ? "silver" : rank === 3 ? "bronze" : "");
 
@@ -59,7 +47,7 @@ function mapApiTeamToLeaderboard(team, index) {
 
 export default function LeaderboardManagementPage() {
   const { user } = useAuth();
-  const [teams, setTeams] = useState(initialTeams);
+  const [teams, setTeams] = useState([]);
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState("All Levels");
   const [sortBy, setSortBy] = useState("score");
@@ -67,7 +55,7 @@ export default function LeaderboardManagementPage() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [view, setView] = useState("table");
   const [notice, setNotice] = useState("");
-  const [selectedCode, setSelectedCode] = useState("TEAM-07");
+  const [selectedCode, setSelectedCode] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLiveDb, setIsLiveDb] = useState(false);
   const [isSavingVisibility, setIsSavingVisibility] = useState(false);
@@ -76,25 +64,25 @@ export default function LeaderboardManagementPage() {
   // Sync leaderboard and event configuration from backend
   const fetchLeaderboardData = useCallback(async (isSilent = false) => {
     try {
-      const [teamsRes, statsRes] = await Promise.allSettled([
-        adminService.getAllTeams(),
+      const [lbRes, statsRes] = await Promise.allSettled([
+        adminService.getLeaderboard(),
         adminService.getDashboardStats(),
       ]);
 
       let liveTeams = null;
       let isFrozenConfig = null;
+      let isVisibleConfig = null;
 
-      if (teamsRes.status === "fulfilled" && teamsRes.value?.data?.teams?.length > 0) {
-        liveTeams = teamsRes.value.data.teams;
+      if (lbRes.status === "fulfilled" && lbRes.value?.data?.leaderboard) {
+        liveTeams = lbRes.value.data.leaderboard;
+        isFrozenConfig = lbRes.value.data.isFrozen;
+        isVisibleConfig = lbRes.value.data.isVisible;
       } else {
-        // Fallback to public leaderboard endpoint if admin teams call is empty
+        // Fallback to public leaderboard endpoint or all teams
         try {
-          const lbRes = await leaderboardService.getLeaderboard();
-          if (lbRes?.data?.leaderboard?.length > 0) {
-            liveTeams = lbRes.data.leaderboard;
-            if (lbRes.data.isFrozen !== undefined) {
-              isFrozenConfig = lbRes.data.isFrozen;
-            }
+          const fallbackRes = await adminService.getAllTeams();
+          if (fallbackRes?.data?.teams) {
+            liveTeams = fallbackRes.data.teams;
           }
         } catch {
           // Keep null to fall back to demo records
@@ -102,10 +90,15 @@ export default function LeaderboardManagementPage() {
       }
 
       if (statsRes.status === "fulfilled" && statsRes.value?.data?.eventConfig) {
-        isFrozenConfig = statsRes.value.data.eventConfig.isLeaderboardFrozen;
+        if (isFrozenConfig === null) {
+          isFrozenConfig = statsRes.value.data.eventConfig.isLeaderboardFrozen;
+        }
+        if (isVisibleConfig === null) {
+          isVisibleConfig = statsRes.value.data.eventConfig.isLeaderboardVisible;
+        }
       }
 
-      if (liveTeams && liveTeams.length > 0) {
+      if (liveTeams) {
         const mapped = liveTeams.map((t, idx) => mapApiTeamToLeaderboard(t, idx));
         setTeams(mapped);
         setIsLiveDb(true);
@@ -113,19 +106,24 @@ export default function LeaderboardManagementPage() {
 
         // Ensure selectedCode points to a valid team
         setSelectedCode((curr) => {
+          if (!mapped.length) return "";
           const found = mapped.find((t) => t.code === curr);
-          return found ? curr : mapped[0]?.code || "TEAM-01";
+          return found ? curr : mapped[0]?.code || "";
         });
       } else {
-        setIsLiveDb(false);
+        setTeams([]);
+        setSelectedCode("");
+        setIsLiveDb(true);
       }
 
-      if (isFrozenConfig !== null && isFrozenConfig !== undefined) {
+      if (isVisibleConfig !== undefined && isVisibleConfig !== null) {
+        setVisibility(isVisibleConfig && !isFrozenConfig ? "Public" : "Hidden");
+      } else if (isFrozenConfig !== null && isFrozenConfig !== undefined) {
         setVisibility(isFrozenConfig ? "Hidden" : "Public");
       }
 
-      if (!isSilent && liveTeams && liveTeams.length > 0) {
-        setNotice(`Synchronized ${liveTeams.length} teams from live database.`);
+      if (!isSilent && liveTeams) {
+        setNotice(`Synchronized ${liveTeams.length} teams from authoritative live database.`);
       }
     } catch {
       if (!isSilent) {
@@ -197,7 +195,7 @@ export default function LeaderboardManagementPage() {
   const selected =
     ranked.find((team) => team.code === selectedCode) ||
     ranked[0] ||
-    initialTeams[0];
+    null;
 
   const totalPoints = useMemo(() => {
     return teams.reduce((sum, team) => sum + (team.score || 0), 0);
@@ -253,82 +251,40 @@ export default function LeaderboardManagementPage() {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `hack-the-grid-leaderboard-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `the-tech-mystery-leaderboard-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
     setNotice(`Filtered leaderboard exported as CSV (${filtered.length} teams).`);
   };
 
-  // Demo-only rank adjustment (disabled when connected to live database)
-  const moveTeam = (code, delta) => {
-    if (isLiveDb) {
-      setNotice(
-        "Rank manipulation is disabled in live database mode. Official rankings derive strictly from server-verified scores."
-      );
-      return;
-    }
-    setTeams((current) => {
-      const sorted = [...current].sort((a, b) => b.score - a.score);
-      const index = sorted.findIndex((t) => t.code === code);
-      const target = index + delta;
-      if (index < 0 || target < 0 || target >= sorted.length) return current;
-      const a = sorted[index];
-      const b = sorted[target];
-      const adjustedA = {
-        ...a,
-        score: Math.max(0, b.score + (delta < 0 ? 1 : -1)),
-      };
-      return current.map((t) =>
-        t.code === a.code ? adjustedA : t.code === b.code ? { ...b, score: a.score } : t
-      );
-    });
-    setNotice(
-      "Demo rank adjustment applied locally. In production, rank must derive from server-verified scores."
-    );
-  };
-
   // Reset or manual reload
   const handleResetOrReload = () => {
-    if (isLiveDb) {
-      fetchLeaderboardData(false);
-      setNotice("Refreshing leaderboard from live database...");
-    } else {
-      setTeams(initialTeams);
-      setSortBy("score");
-      setLevelFilter("All Levels");
-      setSearch("");
-      setNotice("Demo leaderboard reset to default state.");
-    }
+    fetchLeaderboardData(false);
+    setNotice("Refreshing leaderboard from live database...");
   };
 
   // Public Visibility Switch with EventConfig sync
   const handleToggleVisibility = async () => {
     const nextVal = visibility === "Public" ? "Hidden" : "Public";
-    const nextFrozen = nextVal === "Hidden";
+    const nextHidden = nextVal === "Hidden";
 
-    if (isLiveDb) {
-      setIsSavingVisibility(true);
-      try {
-        await adminService.updateEventConfig({
-          isLeaderboardFrozen: nextFrozen,
-          frozenAt: nextFrozen ? new Date() : null,
-        });
-        setVisibility(nextVal);
-        setNotice(
-          `Public leaderboard visibility updated to ${nextVal.toUpperCase()} in database (Freeze: ${nextFrozen ? "Enabled" : "Disabled"}).`
-        );
-      } catch (err) {
-        setNotice(
-          `Failed to update public visibility: ${err?.response?.data?.message || err?.message || "Server error"}`
-        );
-      } finally {
-        setIsSavingVisibility(false);
-      }
-    } else {
+    setIsSavingVisibility(true);
+    try {
+      await adminService.updateEventConfig({
+        isLeaderboardVisible: !nextHidden,
+        isLeaderboardFrozen: nextHidden,
+        frozenAt: nextHidden ? new Date() : null,
+      });
       setVisibility(nextVal);
       setNotice(
-        "Visibility changed in local demo state. Connect authenticated backend to persist event settings."
+        `Leaderboard visibility updated to ${nextVal.toUpperCase()} (Public view: ${!nextHidden ? "Visible" : "Concealed"}).`
       );
+    } catch (err) {
+      setNotice(
+        `Failed to update visibility: ${err?.response?.data?.message || err?.message || "Server error"}`
+      );
+    } finally {
+      setIsSavingVisibility(false);
     }
   };
 
@@ -382,11 +338,7 @@ export default function LeaderboardManagementPage() {
         <section className="lbm-hero">
           <div className="lbm-breadcrumb">
             Admin <span>›</span> Leaderboard
-            {isLiveDb ? (
-              <span className="lbm-data-pill live">● LIVE DATABASE</span>
-            ) : (
-              <span className="lbm-data-pill demo">● DEMO PREVIEW DATA</span>
-            )}
+            <span className="lbm-data-pill live">● LIVE DATABASE</span>
           </div>
           <div className="lbm-heading-row">
             <div>
@@ -399,7 +351,7 @@ export default function LeaderboardManagementPage() {
             </div>
             <div className="lbm-hero-actions">
               <button className="lbm-outline-button" onClick={handleResetOrReload}>
-                {isLiveDb ? "↻ Refresh Live" : "↻ Reset Demo"}
+                ↻ Refresh Live
               </button>
               <button className="lbm-primary-button" onClick={exportCsv}>
                 ⇩ Export CSV
@@ -496,11 +448,7 @@ export default function LeaderboardManagementPage() {
             </button>
           </div>
 
-          {isLiveDb ? (
-            <span className="lbm-live-db-badge">● LIVE SYNC</span>
-          ) : (
-            <span className="lbm-demo-badge">DEMO DATA</span>
-          )}
+          <span className="lbm-live-db-badge">● LIVE SYNC</span>
         </section>
 
         {/* Filter and View Toolbar */}
@@ -571,7 +519,7 @@ export default function LeaderboardManagementPage() {
                   Live Rankings{" "}
                   <span className="lbm-live-tag">
                     <i />
-                    {isLiveDb ? "LIVE SCORING" : "LIVE PREVIEW"}
+                    LIVE SCORING
                   </span>
                 </h2>
                 <p>
@@ -667,8 +615,12 @@ export default function LeaderboardManagementPage() {
                     ))}
                     {filtered.length === 0 && (
                       <tr>
-                        <td colSpan="8" className="lbm-empty">
-                          No teams match the specified filters.
+                        <td colSpan="8" className="lbm-empty" style={{ padding: "48px 16px", textAlign: "center" }}>
+                          <div style={{ fontSize: "2rem", marginBottom: "8px", opacity: 0.5 }}>🏆</div>
+                          <strong style={{ display: "block", fontSize: "1rem", color: "var(--htg-text-primary, #ffffff)" }}>No teams on the leaderboard yet</strong>
+                          <p style={{ color: "var(--htg-text-secondary, #94a3b8)", fontSize: "0.85rem", marginTop: "4px" }}>
+                            Rankings will appear dynamically once registered teams start scoring points.
+                          </p>
                         </td>
                       </tr>
                     )}
@@ -706,8 +658,12 @@ export default function LeaderboardManagementPage() {
                   </button>
                 ))}
                 {filtered.length === 0 && (
-                  <div className="lbm-empty" style={{ gridColumn: "1/-1" }}>
-                    No teams match the specified filters.
+                  <div className="lbm-empty" style={{ gridColumn: "1/-1", padding: "48px 16px", textAlign: "center" }}>
+                    <div style={{ fontSize: "2rem", marginBottom: "8px", opacity: 0.5 }}>🏆</div>
+                    <strong style={{ display: "block", fontSize: "1rem", color: "var(--htg-text-primary, #ffffff)" }}>No teams on the leaderboard yet</strong>
+                    <p style={{ color: "var(--htg-text-secondary, #94a3b8)", fontSize: "0.85rem", marginTop: "4px" }}>
+                      Rankings will appear dynamically once registered teams start scoring points.
+                    </p>
                   </div>
                 )}
               </div>
@@ -733,130 +689,140 @@ export default function LeaderboardManagementPage() {
 
           {/* Team Detail Inspection Sidebar */}
           <aside className="lbm-detail">
-            <div className="lbm-detail-head">
-              <small>TEAM PERFORMANCE</small>
-              <span className={`lbm-rank ${medal(selected.rank)}`}>
-                {selected.rank <= 3 ? "♛" : selected.rank}
-              </span>
-              <div className={`lbm-detail-avatar ${medal(selected.rank)}`}>
-                {(selected.name || "T").slice(0, 1)}
-              </div>
-              <h2>{selected.name}</h2>
-              <p>
-                {selected.code} <span>•</span> {selected.members} members
-              </p>
-            </div>
-
-            <div className="lbm-detail-score">
-              <small>TOTAL SCORE</small>
-              <strong>
-                {selected.score.toLocaleString("en-IN")} <span>PTS</span>
-              </strong>
-              <div className="lbm-score-progress">
-                <i
-                  style={{
-                    width: `${Math.min(100, Math.round((selected.score / 2000) * 100))}%`,
-                  }}
-                />
-              </div>
-              <small>
-                {Math.round((selected.score / 2000) * 100)}% of 2,000 reference score
-              </small>
-            </div>
-
-            <div className="lbm-detail-metrics">
-              <div>
-                <strong>
-                  {selected.solved}
-                  <small>/10</small>
-                </strong>
-                <span>Challenges solved</span>
-              </div>
-              <div>
-                <strong>Level {selected.level}</strong>
-                <span>Current level</span>
-              </div>
-              <div>
-                <strong>
-                  {selected.streak || 1} <small>🔥</small>
-                </strong>
-                <span>Activity streak</span>
-              </div>
-            </div>
-
-            <div className="lbm-detail-body">
-              <h3>Performance Overview</h3>
-              <div className="lbm-performance-row">
-                <span>Challenge completion</span>
-                <strong>{Math.min(100, selected.solved * 10)}%</strong>
-              </div>
-              <div className="lbm-progress">
-                <i style={{ width: `${Math.min(100, selected.solved * 10)}%` }} />
-              </div>
-
-              <div className="lbm-performance-row">
-                <span>Current level progress</span>
-                <strong>{selected.level}/10</strong>
-              </div>
-              <div className="lbm-progress">
-                <i style={{ width: `${Math.min(100, selected.level * 10)}%` }} />
-              </div>
-
-              <h3>Recent Activity</h3>
-              <div className="lbm-activity-line">
-                <i />
-                <div>
-                  <strong>{selected.lastActivity}</strong>
-                  <small>
-                    Latest team activity · {selected.code} ({selected.status})
-                  </small>
-                </div>
-              </div>
-
-              <div className="lbm-security-note">
-                <span>ⓘ</span>
-                <p>
-                  <strong>Ranking integrity</strong>
-                  <br />
-                  Official ranks strictly compute from server-verified submission scores using deterministic tie-breaking (earliest completion wins). Manual client-side rank edits are disabled in live mode.
+            {!selected ? (
+              <div className="lbm-detail-empty" style={{ padding: "48px 24px", textAlign: "center" }}>
+                <small style={{ letterSpacing: "1px", textTransform: "uppercase", color: "var(--htg-text-muted, #64748b)" }}>TEAM PERFORMANCE</small>
+                <div style={{ fontSize: "2.5rem", margin: "24px 0 12px", opacity: 0.3 }}>📊</div>
+                <h3 style={{ fontSize: "1.1rem", marginBottom: "8px", color: "var(--htg-text-primary, #ffffff)" }}>No Team Selected</h3>
+                <p style={{ color: "var(--htg-text-secondary, #94a3b8)", fontSize: "0.85rem", lineHeight: "1.4" }}>
+                  {teams.length === 0
+                    ? "No teams have registered or scored points yet."
+                    : "Select a team from the leaderboard to inspect real-time performance metrics."}
                 </p>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="lbm-detail-head">
+                  <small>TEAM PERFORMANCE</small>
+                  <span className={`lbm-rank ${medal(selected.rank)}`}>
+                    {selected.rank <= 3 ? "♛" : selected.rank}
+                  </span>
+                  <div className={`lbm-detail-avatar ${medal(selected.rank)}`}>
+                    {(selected.name || "T").slice(0, 1)}
+                  </div>
+                  <h2>{selected.name}</h2>
+                  <p>
+                    {selected.code} <span>•</span> {selected.members} members
+                  </p>
+                </div>
 
-            <div className="lbm-detail-actions">
-              <Link
-                to={`${ROUTES.ADMIN_TEAMS}?search=${encodeURIComponent(selected.name)}`}
-                className="lbm-outline-button"
-                style={{
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                View Team Profile ↗
-              </Link>
-              <button
-                type="button"
-                className="lbm-primary-button"
-                onClick={() => moveTeam(selected.code, -1)}
-                disabled={selected.rank === 1 || isLiveDb}
-                title={
-                  isLiveDb
-                    ? "Rank manipulation disabled in live database mode"
-                    : "Demo-only local rank adjustment"
-                }
-              >
-                {isLiveDb ? "✓ Server Verified" : "↑ Demo Move Up"}
-              </button>
-            </div>
+                <div className="lbm-detail-score">
+                  <small>TOTAL SCORE</small>
+                  <strong>
+                    {selected.score.toLocaleString("en-IN")} <span>PTS</span>
+                  </strong>
+                  <div className="lbm-score-progress">
+                    <i
+                      style={{
+                        width: `${Math.min(100, Math.round((selected.score / 2000) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                  <small>
+                    {Math.round((selected.score / 2000) * 100)}% of 2,000 reference score
+                  </small>
+                </div>
+
+                <div className="lbm-detail-metrics">
+                  <div>
+                    <strong>
+                      {selected.solved}
+                      <small>/10</small>
+                    </strong>
+                    <span>Challenges solved</span>
+                  </div>
+                  <div>
+                    <strong>Level {selected.level}</strong>
+                    <span>Current level</span>
+                  </div>
+                  <div>
+                    <strong>
+                      {selected.streak || 1} <small>🔥</small>
+                    </strong>
+                    <span>Activity streak</span>
+                  </div>
+                </div>
+
+                <div className="lbm-detail-body">
+                  <h3>Performance Overview</h3>
+                  <div className="lbm-performance-row">
+                    <span>Challenge completion</span>
+                    <strong>{Math.min(100, selected.solved * 10)}%</strong>
+                  </div>
+                  <div className="lbm-progress">
+                    <i style={{ width: `${Math.min(100, selected.solved * 10)}%` }} />
+                  </div>
+
+                  <div className="lbm-performance-row">
+                    <span>Current level progress</span>
+                    <strong>{selected.level}/10</strong>
+                  </div>
+                  <div className="lbm-progress">
+                    <i style={{ width: `${Math.min(100, selected.level * 10)}%` }} />
+                  </div>
+
+                  <h3>Recent Activity</h3>
+                  <div className="lbm-activity-line">
+                    <i />
+                    <div>
+                      <strong>{selected.lastActivity}</strong>
+                      <small>
+                        Latest team activity · {selected.code} ({selected.status})
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="lbm-security-note">
+                    <span>ⓘ</span>
+                    <p>
+                      <strong>Ranking integrity</strong>
+                      <br />
+                      Official ranks strictly compute from server-verified submission scores using deterministic tie-breaking (earliest completion wins). Manual client-side rank edits are disabled in live mode.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="lbm-detail-actions">
+                  <Link
+                    to={`${ROUTES.ADMIN_TEAMS}?search=${encodeURIComponent(selected.name)}`}
+                    className="lbm-outline-button"
+                    style={{
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    View Team Profile ↗
+                  </Link>
+                  <button
+                    type="button"
+                    className="lbm-primary-button"
+                    disabled
+                    title="Official ranks strictly derive from server-verified scores and deterministic tie-breaking"
+                  >
+                    ✓ Official Rank #{selected.rank}
+                  </button>
+                </div>
+              </>
+            )}
           </aside>
         </section>
 
         {/* Footer */}
         <footer className="lbm-footer">
           Build with <span>♥</span> by Hrithik Roshan{" "}
-          <small>HACK THE GRID · MISSION CONTROL</small>
+          <small>THE TECH MYSTERY · MISSION CONTROL</small>
         </footer>
       </main>
     </div>

@@ -11,8 +11,12 @@ class AuthService {
    * Generates Access Token and Refresh Token for authenticated user
    */
   generateTokens(user) {
+    if (config.authProvider !== 'jwt') return {};
+
     const payload = {
       userId: user._id.toString(),
+      tokenVersion: user.tokenVersion || 0,
+      tokenUse: 'access',
       username: user.username,
       role: user.role,
       teamId: user.teamId ? user.teamId.toString() : null
@@ -22,13 +26,7 @@ class AuthService {
       expiresIn: config.jwt.expiresIn
     });
 
-    const refreshToken = jwt.sign(
-      { userId: user._id.toString() },
-      config.jwt.refreshSecret,
-      { expiresIn: config.jwt.refreshExpiresIn }
-    );
-
-    return { accessToken, refreshToken };
+    return { accessToken };
   }
 
   /**
@@ -40,7 +38,7 @@ class AuthService {
         { email: emailOrUsername.toLowerCase() },
         { username: emailOrUsername }
       ]
-    }).select('+passwordHash');
+    }).select('+passwordHash +tokenVersion');
 
     if (!user) {
       return null;

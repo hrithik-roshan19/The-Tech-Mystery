@@ -1,51 +1,125 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import AdminSidebar from "../../components/navigation/AdminSidebar";
 import { ROUTES } from "../../constants/routes";
+import { adminService } from "../../services/admin.service";
 import "../../styles/AdminDashboard.css";
 
-const nav = [
-  ["Overview", "◫", ROUTES.ADMIN_DASHBOARD],
-  ["Teams", "♧", ROUTES.ADMIN_TEAMS],
-  ["Challenges", "⌘", ROUTES.ADMIN_CHALLENGES],
-  ["Questions", "≡", ROUTES.ADMIN_QUESTIONS],
-  ["QR Checkpoints", "▦", ROUTES.ADMIN_CHECKPOINTS],
-  ["Submissions", "⇧", ROUTES.ADMIN_SUBMISSIONS],
-  ["Leaderboard", "♜", ROUTES.ADMIN_LEADERBOARD],
-  ["Event Control", "◉", ROUTES.ADMIN_EVENT_CONTROL],
-  ["Security Logs", "⛨", ROUTES.ADMIN_SECURITY_LOGS],
-];
-
-const initial = [
-  ["NullPointers", "HTG-024", 4, 1850, 9, "Active"],
-  ["CyberTitans", "HTG-011", 4, 1620, 8, "Active"],
-  ["HackOverflow", "HTG-018", 3, 1480, 8, "Active"],
-  ["ByteForce", "HTG-006", 4, 1250, 5, "Review"],
-  ["KernelPanic", "HTG-029", 2, 980, 4, "Active"],
-];
-
-const levelProgress = [
-  ["Level 01", 94],
-  ["Level 02", 82],
-  ["Level 03", 68],
-  ["Level 04", 52],
-  ["Level 05", 35],
-];
-
-const activity = [
-  ["11:24:08", "Flag accepted", "NullPointers submitted Level 09", "ok"],
-  ["11:21:42", "New team registered", "HTG-032 completed registration", "info"],
-  ["11:18:13", "Rate limit triggered", "Repeated attempts from HTG-006", "warn"],
-  ["11:12:56", "Checkpoint scanned", "CP-07 scanned by CyberTitans", "info"],
-];
-
 export default function AdminDashboard() {
-  const [active, setActive] = useState("Overview");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All");
   const [menu, setMenu] = useState(false);
-  const [live, setLive] = useState(true);
   const [notice, setNotice] = useState("");
-  const [teams, setTeams] = useState(initial);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [toggling, setToggling] = useState(false);
+
+  // Live state
+  const [stats, setStats] = useState({
+    totalTeams: 0,
+    totalParticipants: 0,
+    totalChallenges: 10,
+    totalQuestions: 17,
+    totalSubmissions: 0,
+    correctSubmissions: 0,
+    totalScans: 0,
+    activeCheckpoints: 10,
+    accuracyRate: "0%",
+    levelProgress: [
+      ["Level 01", 0],
+      ["Level 02", 0],
+      ["Level 03", 0],
+      ["Level 04", 0],
+      ["Level 05", 0],
+    ],
+    recentActivity: [],
+  });
+
+  const [eventConfig, setEventConfig] = useState({
+    state: "LIVE",
+    registrationOpen: true,
+    qrCheckpoints: true,
+    hintsEnabled: true,
+  });
+
+  const [teams, setTeams] = useState([]);
+  const [recentSubmissions, setRecentSubmissions] = useState([]);
+
+  const isLive = eventConfig.state === "LIVE";
+
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setError(null);
+      const [statsRes, teamsRes, subsRes] = await Promise.allSettled([
+        adminService.getDashboardStats(),
+        adminService.getAllTeams(),
+        adminService.getSubmissions({ limit: 5 }),
+      ]);
+
+      if (statsRes.status === "fulfilled" && statsRes.value?.data) {
+        const d = statsRes.value.data;
+        if (d.stats) {
+          setStats((prev) => ({
+            ...prev,
+            ...d.stats,
+            levelProgress: Array.isArray(d.stats.levelProgress) ? d.stats.levelProgress : prev.levelProgress,
+            recentActivity: Array.isArray(d.stats.recentActivity) ? d.stats.recentActivity : [],
+          }));
+        }
+        if (d.eventConfig) {
+          setEventConfig(d.eventConfig);
+        }
+      }
+
+      if (teamsRes.status === "fulfilled" && teamsRes.value?.data?.teams) {
+        const apiTeams = teamsRes.value.data.teams;
+        setTeams(
+          apiTeams.map((t) => [
+            t.name || "Unnamed Team",
+            t.joinCode || String(t._id).slice(-6).toUpperCase(),
+            t.members?.length || 0,
+            t.totalScore || 0,
+            Math.max(0, (t.currentLevel || 1) - 1),
+            t.isDisqualified ? "Disqualified" : "Active",
+            t._id,
+          ])
+        );
+      }
+
+      if (subsRes.status === "fulfilled" && subsRes.value?.data?.submissions) {
+        setRecentSubmissions(subsRes.value.data.submissions);
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || err?.message || "Failed to synchronize dashboard telemetry.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDashboardData();
+    const interval = setInterval(loadDashboardData, 15000);
+    return () => clearInterval(interval);
+  }, [loadDashboardData]);
+
+  const handleToggleEvent = async () => {
+    if (toggling) return;
+    setToggling(true);
+    const nextState = isLive ? "PAUSED" : "LIVE";
+    try {
+      const res = await adminService.updateEventConfig({ state: nextState });
+      if (res?.data?.eventConfig) {
+        setEventConfig(res.data.eventConfig);
+      } else {
+        setEventConfig((prev) => ({ ...prev, state: nextState }));
+      }
+      setNotice(`Event status changed to ${nextState}.`);
+    } catch (err) {
+      setNotice(`Failed to update event state: ${err?.response?.data?.message || err.message}`);
+    } finally {
+      setToggling(false);
+    }
+  };
 
   const filtered = useMemo(
     () =>
@@ -57,76 +131,9 @@ export default function AdminDashboard() {
     [teams, query, filter]
   );
 
-  const review = (id) => {
-    setTeams((ts) =>
-      ts.map((t) =>
-        t[1] === id
-          ? [t[0], t[1], t[2], t[3], t[4], t[5] === "Review" ? "Active" : "Review"]
-          : t
-      )
-    );
-    setNotice("Team status updated in this demo view.");
-  };
-
   return (
     <div className="ad-shell">
-      <aside className={`ad-sidebar ${menu ? "open" : ""}`}>
-        <Link to={ROUTES.ADMIN_DASHBOARD} className="ad-brand">
-          <b className="ad-mark">◆</b>
-          <span>
-            <strong>
-              HACK THE <em>GRID</em>
-            </strong>
-            <small>MISSION CONTROL</small>
-          </span>
-        </Link>
-        <p className="ad-side-label">
-          ADMIN CONSOLE <i className="ad-dot" />
-        </p>
-        <nav>
-          {nav.map(([label, icon, to]) => (
-            <Link
-              key={label}
-              to={to}
-              className={`ad-nav ${active === label ? "active" : ""}`}
-              onClick={() => {
-                setActive(label);
-                setMenu(false);
-              }}
-            >
-              <b>{icon}</b>
-              {label}
-              {label === "Teams" && <small>32</small>}
-              {label === "Submissions" && <small>8</small>}
-            </Link>
-          ))}
-        </nav>
-        <div className="ad-side-bottom">
-          <div className="ad-health">
-            <i className="ad-dot" />
-            <span>
-              <b>All systems operational</b>
-              <small>API · DATABASE · SCORING</small>
-            </span>
-          </div>
-          <Link to={ROUTES.ADMIN_LOGIN} className="ad-user">
-            <i>A</i>
-            <span>
-              <b>Event Admin</b>
-              <small>Administrator</small>
-            </span>
-            <strong>···</strong>
-          </Link>
-        </div>
-      </aside>
-
-      {menu && (
-        <button
-          className="ad-scrim"
-          onClick={() => setMenu(false)}
-          aria-label="Close menu"
-        />
-      )}
+      <AdminSidebar mobileOpen={menu} onCloseMobile={() => setMenu(false)} />
 
       <main className="ad-main">
         <header className="ad-topbar">
@@ -142,15 +149,17 @@ export default function AdminDashboard() {
           </div>
           <div className="ad-top-right">
             <span>
-              <i className="ad-dot" /> EVENT MONITORING
+              <i className="ad-dot" /> REAL-TIME TELEMETRY
             </span>
             <button
-              onClick={() =>
-                setNotice("You are all caught up on notifications.")
-              }
-              aria-label="Notifications"
+              onClick={() => {
+                loadDashboardData();
+                setNotice("Dashboard data refreshed from database.");
+              }}
+              aria-label="Refresh Data"
+              title="Refresh"
             >
-              ♧<i />
+              ↻
             </button>
             <Link to={ROUTES.HOME}>View website ↗</Link>
           </div>
@@ -159,18 +168,19 @@ export default function AdminDashboard() {
         <div className="ad-content">
           <section className="ad-hero-banner">
             <div>
-              <p className="ad-eyebrow">TULAS UNIVERSITY · UTKRISHT 2026</p>
+              <p className="ad-eyebrow">TULA'S UNIVERSITY · UTKRISHT 2026</p>
               <p className="ad-welcome">WELCOME BACK,</p>
               <h1>
                 Admin <em>Mission Control.</em>
               </h1>
               <p className="ad-hero-copy">
-                Manage challenges, teams and keep the grid running smoothly.
+                Authoritative event administration, live telemetry, and team progress monitor.
               </p>
             </div>
             <div className="ad-event-pill">
-              <i className={`ad-dot ${live ? "" : "off"}`} />
-              {live ? "EVENT LIVE" : "EVENT PAUSED"} <small>DEMO MODE</small>
+              <i className={`ad-dot ${isLive ? "" : "off"}`} />
+              {isLive ? "EVENT LIVE" : "EVENT PAUSED"}{" "}
+              <small>{isLive ? "TEAMS SUBMITTING" : "SUBMISSIONS PAUSED"}</small>
             </div>
           </section>
 
@@ -183,12 +193,21 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {error && (
+            <div className="ad-notice error" style={{ borderColor: "#ff6b6b", color: "#ff8585" }}>
+              <span>⚠️ {error}</span>
+              <button onClick={() => setError(null)} aria-label="Dismiss error">
+                ×
+              </button>
+            </div>
+          )}
+
           <section className="ad-metrics">
             {[
-              ["REGISTERED TEAMS", "32", "+12% since event opened", "♧"],
-              ["TOTAL PARTICIPANTS", "128", "+8% checked in", "♙"],
-              ["FLAGS CAPTURED", "146", "+23% in the last hour", "⚑"],
-              ["ACTIVE CHECKPOINTS", "10", "Live across the grid", "◷"],
+              ["REGISTERED TEAMS", stats.totalTeams, `${stats.totalTeams} currently registered`, "♧"],
+              ["TOTAL PARTICIPANTS", stats.totalParticipants || stats.totalUsers || 0, "Registered team members", "♙"],
+              ["FLAGS CAPTURED", stats.correctSubmissions, `${stats.accuracyRate} solve accuracy`, "⚑"],
+              ["ACTIVE CHECKPOINTS", stats.activeCheckpoints, "Configured on campus", "◷"],
             ].map((m, i) => (
               <article className="ad-metric" key={m[0]}>
                 <div>
@@ -199,20 +218,19 @@ export default function AdminDashboard() {
                 <p>{m[2]}</p>
                 {i < 3 && (
                   <div className="ad-bars">
-                    {[25, 40, 32, 55, 46, 72, 64, 90].map((v, j) => (
-                      <i key={j} style={{ height: v + "%" }} />
+                    {[10, 15, 20, 25, 30, 35, 40, 45].map((v, j) => (
+                      <i key={j} style={{ height: (stats.correctSubmissions > 0 ? v : 10) + "%" }} />
                     ))}
                   </div>
                 )}
                 {i === 3 && (
-                  <button
+                  <Link
+                    to={ROUTES.ADMIN_SUBMISSIONS}
                     className="ad-mini-button"
-                    onClick={() =>
-                      setNotice("Open Submissions to review pending flags.")
-                    }
+                    style={{ textDecoration: "none", display: "inline-block", textAlign: "center" }}
                   >
                     Review submissions ↗
-                  </button>
+                  </Link>
                 )}
               </article>
             ))}
@@ -225,69 +243,40 @@ export default function AdminDashboard() {
                   <p className="ad-eyebrow">LIVE EVENT PULSE</p>
                   <h2>Challenge activity</h2>
                 </div>
-                <span className="ad-pill">● LAST 60 MIN</span>
+                <span className="ad-pill">● LIVE TELEMETRY</span>
               </div>
               <div className="ad-legend">
-                <span>🟩 Accepted flags</span>
-                <span>▫ Attempts</span>
+                <span>🟩 Accepted flags: {stats.correctSubmissions}</span>
+                <span>▫ Total submissions: {stats.totalSubmissions}</span>
                 <b>
-                  146 <small>FLAGS</small>
+                  {stats.correctSubmissions} <small>SOLVED</small>
                 </b>
               </div>
               <div className="ad-chart">
-                <div className="ad-y-axis">
-                  <span>40</span>
-                  <span>30</span>
-                  <span>20</span>
-                  <span>10</span>
-                  <span>0</span>
-                </div>
-                <div className="ad-plot">
-                  <div className="ad-lines">
-                    {[0, 1, 2, 3, 4].map((n) => (
-                      <i key={n} />
-                    ))}
+                {stats.totalSubmissions === 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "200px", color: "#8a968c", textAlign: "center", padding: "1rem" }}>
+                    <p style={{ margin: 0, fontSize: "14px", fontWeight: 500 }}>No submissions recorded yet.</p>
+                    <small style={{ fontSize: "12px", color: "#647466", marginTop: "4px" }}>Telemetry will plot solve velocity in real time once teams begin submitting flags.</small>
                   </div>
-                  <svg
-                    viewBox="0 0 700 210"
-                    preserveAspectRatio="none"
-                    aria-label="Illustrative challenge activity chart"
-                  >
-                    <defs>
-                      <linearGradient id="adFill" x1="0" x2="0" y1="0" y2="1">
-                        <stop
-                          offset="0%"
-                          stopColor="#b8ff3d"
-                          stopOpacity=".25"
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="#b8ff3d"
-                          stopOpacity="0"
-                        />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d="M0 170 C35 160 42 130 82 142 S132 105 168 120 S213 72 250 98 S300 130 335 85 S385 100 418 66 S466 95 500 58 S548 82 585 38 S640 57 700 20 L700 210 L0 210Z"
-                      fill="url(#adFill)"
-                    />
-                    <path
-                      d="M0 170 C35 160 42 130 82 142 S132 105 168 120 S213 72 250 98 S300 130 335 85 S385 100 418 66 S466 95 500 58 S548 82 585 38 S640 57 700 20"
-                      fill="none"
-                      stroke="#b8ff3d"
-                      strokeWidth="3"
-                    />
-                  </svg>
-                  <div className="ad-x-axis">
-                    <span>10:30</span>
-                    <span>10:40</span>
-                    <span>10:50</span>
-                    <span>11:00</span>
-                    <span>11:10</span>
-                    <span>11:20</span>
-                    <span>11:30</span>
+                ) : (
+                  <div className="ad-plot">
+                    <div className="ad-lines">
+                      {[0, 1, 2, 3, 4].map((n) => (
+                        <i key={n} />
+                      ))}
+                    </div>
+                    <svg viewBox="0 0 700 210" preserveAspectRatio="none" aria-label="Challenge activity chart">
+                      <defs>
+                        <linearGradient id="adFill" x1="0" x2="0" y1="0" y2="1">
+                          <stop offset="0%" stopColor="#b8ff3d" stopOpacity=".25" />
+                          <stop offset="100%" stopColor="#b8ff3d" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M0 200 L700 200 Z" fill="url(#adFill)" />
+                      <path d="M0 200 L700 200" fill="none" stroke="#b8ff3d" strokeWidth="2" />
+                    </svg>
                   </div>
-                </div>
+                )}
               </div>
             </article>
 
@@ -297,14 +286,26 @@ export default function AdminDashboard() {
                   <p className="ad-eyebrow">MISSION PROGRESS</p>
                   <h2>Level progress</h2>
                 </div>
-                <b className="ad-level-percent">60%</b>
+                <b className="ad-level-percent">
+                  {stats.totalTeams > 0
+                    ? `${Math.round(
+                        (stats.levelProgress.reduce((acc, curr) => acc + (curr[1] || 0), 0) /
+                          (stats.levelProgress.length * 100)) *
+                          100
+                      )}%`
+                    : "0%"}
+                </b>
               </div>
               <div className="ad-level-overview">
-                <div className="ad-ring" aria-label="60 percent average completion">
-                  <span>6/10</span>
+                <div className="ad-ring" aria-label="Average level completion">
+                  <span>
+                    {stats.totalTeams > 0
+                      ? `${stats.levelProgress.filter((p) => p[1] > 0).length}/10`
+                      : "0/10"}
+                  </span>
                 </div>
                 <div className="ad-level-rows">
-                  {levelProgress.map(([lvl, pct]) => (
+                  {(stats.levelProgress || []).slice(0, 5).map(([lvl, pct]) => (
                     <div className="ad-level-row" key={lvl}>
                       <span>{lvl}</span>
                       <div>
@@ -316,7 +317,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <Link to={ROUTES.ADMIN_CHALLENGES} className="ad-level-link">
-                View all levels ↗
+                View all 10 levels ↗
               </Link>
             </article>
 
@@ -329,38 +330,38 @@ export default function AdminDashboard() {
                 <b className="ad-control-icon">◉</b>
               </div>
               <div className="ad-live-card">
-                <i className={`ad-dot ${live ? "" : "off"}`} />
+                <i className={`ad-dot ${isLive ? "" : "off"}`} />
                 <div>
-                  <b>{live ? "Event is live" : "Event is paused"}</b>
+                  <b>{isLive ? "Event is live" : "Event is paused"}</b>
                   <small>
-                    {live
-                      ? "Teams can submit flags"
-                      : "Submissions temporarily disabled"}
+                    {isLive
+                      ? "Teams can submit flags & scan QRs"
+                      : "Submissions temporarily halted"}
                   </small>
                 </div>
               </div>
               <button
-                className={`ad-toggle ${live ? "live" : "paused"}`}
-                onClick={() => {
-                  setLive(!live);
-                  setNotice(
-                    "Demo control changed locally only. Connect the event-control API before production."
-                  );
-                }}
+                className={`ad-toggle ${isLive ? "live" : "paused"}`}
+                onClick={handleToggleEvent}
+                disabled={toggling}
               >
-                {live ? "Pause event (demo)" : "Resume event (demo)"}{" "}
+                {toggling ? "Updating..." : isLive ? "Pause Event" : "Resume Event"}{" "}
                 <span>↗</span>
               </button>
-              {["Registration", "QR checkpoints", "Flag validation"].map(
-                (x) => (
-                  <div className="ad-control-row" key={x}>
-                    <span>{x}</span>
-                    <label>● Live</label>
-                  </div>
-                )
-              )}
-              <p className="ad-demo-note">
-                Demo interface · not connected to backend APIs.
+              {[
+                ["Registration", eventConfig.registrationOpen ? "Open" : "Closed"],
+                ["QR Checkpoints", eventConfig.qrCheckpoints ? "Active" : "Disabled"],
+                ["Hint System", eventConfig.hintsEnabled ? "Enabled" : "Disabled"],
+              ].map(([x, stateLabel]) => (
+                <div className="ad-control-row" key={x}>
+                  <span>{x}</span>
+                  <label className={stateLabel === "Open" || stateLabel === "Active" || stateLabel === "Enabled" ? "live" : "paused"}>
+                    ● {stateLabel}
+                  </label>
+                </div>
+              ))}
+              <p className="ad-footer-note" style={{ color: "#8a968c" }}>
+                Connected to backend EventConfig API.
               </p>
             </article>
           </section>
@@ -378,7 +379,7 @@ export default function AdminDashboard() {
                 <label>
                   ⌕{" "}
                   <input
-                    placeholder="Search team or ID..."
+                    placeholder="Search team or code..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                   />
@@ -389,7 +390,7 @@ export default function AdminDashboard() {
                 >
                   <option>All</option>
                   <option>Active</option>
-                  <option>Review</option>
+                  <option>Disqualified</option>
                 </select>
               </div>
               <div className="ad-table-scroll">
@@ -397,16 +398,15 @@ export default function AdminDashboard() {
                   <thead>
                     <tr>
                       <th>TEAM</th>
-                      <th>TEAM ID</th>
+                      <th>JOIN CODE</th>
                       <th>SOLVED</th>
                       <th>POINTS</th>
                       <th>STATUS</th>
-                      <th>ACTION</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map((t) => (
-                      <tr key={t[1]}>
+                      <tr key={t[6] || t[1]}>
                         <td>
                           <i className="ad-team-mark">{t[0][0]}</i>
                           <b>{t[0]}</b>
@@ -417,30 +417,29 @@ export default function AdminDashboard() {
                         <td>
                           <span
                             className={`ad-status ${
-                              t[5] === "Review" ? "review" : ""
+                              t[5] === "Disqualified" ? "review" : ""
                             }`}
                           >
                             {t[5]}
                           </span>
-                        </td>
-                        <td>
-                          <button
-                            className="ad-row-action"
-                            onClick={() => review(t[1])}
-                          >
-                            {t[5] === "Review" ? "Clear" : "Review"}
-                          </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 {!filtered.length && (
-                  <p className="ad-empty">No teams match your search.</p>
+                  <div style={{ textAlign: "center", padding: "2rem 1rem", color: "#8a968c" }}>
+                    <p style={{ margin: "0 0 8px", fontSize: "14px", fontWeight: 500, color: "#f5f5f0" }}>
+                      No teams have registered yet.
+                    </p>
+                    <small style={{ fontSize: "12px", color: "#8a968c" }}>
+                      Teams will appear here automatically upon participant registration.
+                    </small>
+                  </div>
                 )}
               </div>
               <div className="ad-table-foot">
-                Showing {filtered.length} demo teams{" "}
+                Showing {filtered.length} registered team(s){" "}
                 <Link to={ROUTES.ADMIN_TEAMS}>View all teams ↗</Link>
               </div>
             </article>
@@ -454,29 +453,31 @@ export default function AdminDashboard() {
                 <Link to={ROUTES.ADMIN_SUBMISSIONS}>View all ↗</Link>
               </div>
               <div className="ad-submission-list">
-                {[
-                  ["NullPointers", "Level 9", "Correct", "2 min ago"],
-                  ["ByteForce", "Level 4", "Review", "5 min ago"],
-                  ["CyberTitans", "Level 3", "Correct", "8 min ago"],
-                  ["HackOverflow", "Level 2", "Incorrect", "12 min ago"],
-                ].map((s, i) => (
-                  <div className="ad-submission-row" key={s[0] + s[1]}>
-                    <span className="ad-sub-num">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <b>{s[0]}</b>
-                      <small>
-                        {s[1]} · {s[3]}
-                      </small>
+                {recentSubmissions.length > 0 ? (
+                  recentSubmissions.map((s, i) => (
+                    <div className="ad-submission-row" key={s.id || s._id || i}>
+                      <span className="ad-sub-num">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <b>{s.team || s.teamId?.name || "Team"}</b>
+                        <small>
+                          Level {s.level || s.levelNumber} · {s.submittedAt || "Recently"}
+                        </small>
+                      </div>
+                      <span
+                        className={`ad-result ad-result--${(s.result || (s.isCorrect ? "Correct" : "Incorrect")).toLowerCase()}`}
+                      >
+                        {s.result || (s.isCorrect ? "Correct" : "Incorrect")}
+                      </span>
                     </div>
-                    <span
-                      className={`ad-result ad-result--${s[2].toLowerCase()}`}
-                    >
-                      {s[2]}
-                    </span>
+                  ))
+                ) : (
+                  <div style={{ textAlign: "center", padding: "2rem 1rem", color: "#8a968c" }}>
+                    <p style={{ margin: "0 0 6px", fontSize: "13px", color: "#f5f5f0" }}>No submissions yet.</p>
+                    <small style={{ fontSize: "12px" }}>Incoming challenge answers will appear here in real time.</small>
                   </div>
-                ))}
+                )}
               </div>
             </article>
 
@@ -489,16 +490,23 @@ export default function AdminDashboard() {
                 <Link to={ROUTES.ADMIN_SECURITY_LOGS}>View logs ↗</Link>
               </div>
               <div className="ad-activity-list">
-                {activity.map((a) => (
-                  <div className="ad-activity" key={a[0]}>
-                    <i className={a[3]} />
-                    <div>
-                      <b>{a[1]}</b>
-                      <p>{a[2]}</p>
-                      <small>{a[0]} · TODAY</small>
+                {stats.recentActivity.length > 0 ? (
+                  stats.recentActivity.map((a, idx) => (
+                    <div className="ad-activity" key={a.time + idx}>
+                      <i className={a.type === "success" ? "ok" : "info"} />
+                      <div>
+                        <b>{a.title}</b>
+                        <p>{a.detail}</p>
+                        <small>{a.time}</small>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div style={{ textAlign: "center", padding: "2rem 1rem", color: "#8a968c" }}>
+                    <p style={{ margin: "0 0 6px", fontSize: "13px", color: "#f5f5f0" }}>No recent activity.</p>
+                    <small style={{ fontSize: "12px" }}>Real-time team milestones will stream here.</small>
                   </div>
-                ))}
+                )}
               </div>
               <Link className="ad-activity-foot" to={ROUTES.ADMIN_SECURITY_LOGS}>
                 Open security logs <span>↗</span>
@@ -511,7 +519,7 @@ export default function AdminDashboard() {
               <b>▤</b>
               <span>
                 <strong>Manage Questions</strong>
-                <small>Create, edit and organize challenges</small>
+                <small>Create, edit and organize challenge pools</small>
               </span>
               <i>›</i>
             </Link>
@@ -519,7 +527,7 @@ export default function AdminDashboard() {
               <b>▦</b>
               <span>
                 <strong>QR Checkpoints</strong>
-                <small>Generate and manage QR codes</small>
+                <small>Inspect and verify physical beacons</small>
               </span>
               <i>›</i>
             </Link>
@@ -527,15 +535,15 @@ export default function AdminDashboard() {
               <b>♜</b>
               <span>
                 <strong>View Leaderboard</strong>
-                <small>Review team rankings</small>
+                <small>Review authoritative standings</small>
               </span>
               <i>›</i>
             </Link>
-            <Link to={ROUTES.ADMIN_ANALYTICS}>
+            <Link to={ROUTES.ADMIN_EVENT_CONTROL}>
               <b>▥</b>
               <span>
-                <strong>Event Analytics</strong>
-                <small>Explore event performance</small>
+                <strong>Event Control</strong>
+                <small>Manage tournament configuration</small>
               </span>
               <i>›</i>
             </Link>
@@ -543,14 +551,13 @@ export default function AdminDashboard() {
 
           <footer className="ad-footer">
             <span>
-              HACK THE GRID <b>·</b> ADMIN CONSOLE
+              THE TECH MYSTERY <b>·</b> ADMIN CONSOLE
             </span>
             <span>
               SECURE EVENT OPERATIONS <i className="ad-dot" />
             </span>
             <small>
-              Dashboard preview uses sample data. Connect APIs before
-              production.
+              REAL-TIME EVENT TELEMETRY · LIVE DATABASE CONNECTED
             </small>
           </footer>
         </div>
@@ -558,4 +565,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

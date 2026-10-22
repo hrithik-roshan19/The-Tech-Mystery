@@ -1,26 +1,37 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../constants/routes';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 
+/**
+ * ProtectedRoute
+ * Guards routes against unauthenticated and unauthorized access.
+ * - Shows loading state during server-side credential verification.
+ * - Redirects unauthenticated visitors to login (preserving deep links).
+ * - Restricts administrative routes to server-verified ADMIN role.
+ * - Redirects unauthorized participants back to their dashboard.
+ */
 export const ProtectedRoute = ({ children, requiredRole }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading, user, identityAuthenticated } = useAuth();
+  const location = useLocation();
 
   if (loading) {
-    return <LoadingSpinner text="AUTHENTICATING OPERATIVE CREDENTIALS..." />;
+    return <LoadingSpinner text="VERIFYING SECURITY CREDENTIALS..." />;
   }
 
+  if (!isAuthenticated && identityAuthenticated) return <Navigate to="/auth/complete" state={{ from: location }} replace />;
+
   if (!isAuthenticated) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
+    const redirectPath = requiredRole === 'ADMIN' ? ROUTES.ADMIN_LOGIN : ROUTES.LOGIN;
+    return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
   if (requiredRole && user?.role !== requiredRole && user?.role !== 'ADMIN') {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 
-  return children;
+  return children ? children : <Outlet />;
 };
 
 export default ProtectedRoute;
-

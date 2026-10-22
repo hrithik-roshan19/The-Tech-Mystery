@@ -6,256 +6,6 @@ import adminService from "../../services/admin.service";
 import AdminSidebar from "../../components/navigation/AdminSidebar";
 import "../../styles/ChallengeManagementPage.css";
 
-const initialChallenges = [
-  {
-    id: 1,
-    level: 1,
-    title: "The Starting Point",
-    subtitle: "Begin your journey",
-    category: "Recon",
-    difficulty: "Easy",
-    points: 50,
-    status: "Published",
-    questions: 3,
-    description:
-      "Start your journey by collecting the first clue and learning how checkpoints work.",
-    objectives: [
-      "Understand the challenge flow",
-      "Read the supplied clue carefully",
-      "Submit the correct flag",
-    ],
-    image: "🌌",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [
-      {
-        checkpointCode: "CP-L01-ALPHA",
-        name: "Main Gate Terminal",
-        locationDescription: "Campus Entrance Plaza (Demo Preview)",
-        scanCount: 28,
-      },
-    ],
-  },
-  {
-    id: 2,
-    level: 2,
-    title: "Hidden in Plain Sight",
-    subtitle: "Look closer",
-    category: "OSINT",
-    difficulty: "Easy",
-    points: 75,
-    status: "Published",
-    questions: 4,
-    description:
-      "Investigate the provided event materials to uncover information hidden in plain sight.",
-    objectives: [
-      "Inspect the supplied materials",
-      "Separate useful clues from noise",
-      "Document your findings",
-    ],
-    image: "🛰️",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [
-      {
-        checkpointCode: "CP-L02-BRAVO",
-        name: "Central Library Atrium",
-        locationDescription: "Ground Floor Reference Wing (Demo Preview)",
-        scanCount: 24,
-      },
-    ],
-  },
-  {
-    id: 3,
-    level: 3,
-    title: "Lost Transmission",
-    subtitle: "Decode the message",
-    category: "Crypto",
-    difficulty: "Medium",
-    points: 100,
-    status: "Published",
-    questions: 5,
-    description:
-      "Decode a simulated transmission using the hints provided in the challenge.",
-    objectives: [
-      "Identify the encoding method",
-      "Decode the sample message",
-      "Submit the validated answer",
-    ],
-    image: "📡",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [
-      {
-        checkpointCode: "CP-L03-CHARLIE",
-        name: "Comms Relay Corridor",
-        locationDescription: "Block B 2nd Floor (Demo Preview)",
-        scanCount: 19,
-      },
-    ],
-  },
-  {
-    id: 4,
-    level: 4,
-    title: "System Breach",
-    subtitle: "Find the vulnerability",
-    category: "Web",
-    difficulty: "Medium",
-    points: 125,
-    status: "Published",
-    questions: 4,
-    description:
-      "A simulated web application has been deployed for the event. Analyze the provided environment and find the intended weakness to retrieve the flag.",
-    objectives: [
-      "Understand basic web application security",
-      "Identify common vulnerabilities in a safe lab",
-      "Explain the mitigation for the issue",
-    ],
-    image: "🖥️",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [
-      {
-        checkpointCode: "CP-L04-DELTA",
-        name: "Server Lab Node 04",
-        locationDescription: "CSE Department Lab 3 (Demo Preview)",
-        scanCount: 16,
-      },
-    ],
-  },
-  {
-    id: 5,
-    level: 5,
-    title: "Digital Forensics",
-    subtitle: "Trace the evidence",
-    category: "Forensics",
-    difficulty: "Medium",
-    points: 150,
-    status: "Published",
-    questions: 5,
-    description:
-      "Inspect a provided forensic artifact and reconstruct the sequence of events.",
-    objectives: [
-      "Inspect the supplied artifact",
-      "Identify relevant evidence",
-      "Build a concise incident timeline",
-    ],
-    image: "🔎",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [],
-  },
-  {
-    id: 6,
-    level: 6,
-    title: "Privilege Escalation",
-    subtitle: "Get higher access",
-    category: "Pwn",
-    difficulty: "Hard",
-    points: 175,
-    status: "Draft",
-    questions: 3,
-    description:
-      "Explore a deliberately vulnerable sandbox and identify the configured privilege boundary issue.",
-    objectives: [
-      "Review the sandbox configuration",
-      "Identify the weak permission boundary",
-      "Recommend a fix",
-    ],
-    image: "🔐",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [],
-  },
-  {
-    id: 7,
-    level: 7,
-    title: "Encrypted Shadows",
-    subtitle: "Break the encryption",
-    category: "Crypto",
-    difficulty: "Hard",
-    points: 200,
-    status: "Published",
-    questions: 4,
-    description:
-      "Use the supplied ciphertext and clues to solve a cryptography puzzle.",
-    objectives: [
-      "Analyze the ciphertext",
-      "Test a supported hypothesis",
-      "Explain the decoding approach",
-    ],
-    image: "🧩",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [],
-  },
-  {
-    id: 8,
-    level: 8,
-    title: "The Insider",
-    subtitle: "Find what's hidden",
-    category: "Stego",
-    difficulty: "Hard",
-    points: 250,
-    status: "Published",
-    questions: 5,
-    description:
-      "Examine the provided media sample for a hidden message using approved offline tools.",
-    objectives: [
-      "Inspect file metadata",
-      "Locate the hidden message",
-      "Verify the recovered clue",
-    ],
-    image: "🗂️",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [],
-  },
-  {
-    id: 9,
-    level: 9,
-    title: "Lateral Movement",
-    subtitle: "Explore the network",
-    category: "Network",
-    difficulty: "Expert",
-    points: 300,
-    status: "Draft",
-    questions: 4,
-    description:
-      "Analyze a fictional network map and trace a permitted path through the simulated environment.",
-    objectives: [
-      "Interpret the network diagram",
-      "Trace the intended route",
-      "Describe a defensive control",
-    ],
-    image: "🌐",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [],
-  },
-  {
-    id: 10,
-    level: 10,
-    title: "The Final Grid",
-    subtitle: "Prove your skills",
-    category: "Mixed",
-    difficulty: "Expert",
-    points: 500,
-    status: "Published",
-    questions: 6,
-    description:
-      "Combine the clues earned across the event to solve the final puzzle and submit the Master Flag.",
-    objectives: [
-      "Combine earlier clues",
-      "Validate the final solution",
-      "Submit the Master Flag",
-    ],
-    image: "🏁",
-    isDemo: true,
-    linkedQuestions: [],
-    linkedCheckpoints: [],
-  },
-];
 
 const statusClass = (value) =>
   String(value || "")
@@ -338,6 +88,7 @@ function mapApiChallengeToUi(ch, idx) {
           ],
     image: ch.image || LEVEL_ICONS[level % LEVEL_ICONS.length],
     requiresCheckpointScan: ch.requiresCheckpointScan !== false,
+    checkpointId: ch.checkpointId?._id || ch.checkpointId || "",
     isDemo: false,
     linkedQuestions,
     linkedCheckpoints,
@@ -349,7 +100,8 @@ export function ChallengeManagementPage() {
   const navigate = useNavigate();
   const globalSearchRef = useRef(null);
 
-  const [challenges, setChallenges] = useState(initialChallenges);
+  const [challenges, setChallenges] = useState([]);
+  const [checkpoints, setCheckpoints] = useState([]);
   const [selectedId, setSelectedId] = useState(4);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -361,7 +113,7 @@ export function ChallengeManagementPage() {
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [dataSource, setDataSource] = useState("demo"); // "live" | "demo"
+  const [dataSource, setDataSource] = useState("live"); // "live" | "demo"
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -375,47 +127,48 @@ export function ChallengeManagementPage() {
     status: "Draft",
     description: "",
     questions: 0,
+    checkpointId: "",
+    requiresCheckpointScan: true,
   });
 
   const fetchLiveChallenges = useCallback(async (showSuccessNotice = false) => {
     setLoading(true);
     setApiError("");
     try {
-      const res = await adminService.getChallenges();
-      const apiList = res?.data?.challenges;
-      if (Array.isArray(apiList)) {
-        const mapped = apiList.map(mapApiChallengeToUi);
-        setChallenges(mapped);
-        setDataSource("live");
-        if (mapped.length > 0) {
-          setSelectedId((prev) =>
-            mapped.some((item) => item.id === prev) ? prev : mapped[0].id
-          );
+      const [chRes, cpRes] = await Promise.allSettled([
+        adminService.getChallenges(),
+        adminService.getCheckpoints(),
+      ]);
+
+      if (cpRes.status === "fulfilled" && cpRes.value?.data?.checkpoints) {
+        setCheckpoints(cpRes.value.data.checkpoints);
+      }
+
+      if (chRes.status === "fulfilled") {
+        const apiList = chRes.value?.data?.challenges;
+        if (Array.isArray(apiList)) {
+          const mapped = apiList.map(mapApiChallengeToUi);
+          setChallenges(mapped);
+          setDataSource("live");
+          if (mapped.length > 0) {
+            setSelectedId((prev) =>
+              mapped.some((item) => item.id === prev) ? prev : mapped[0].id
+            );
+          }
+          if (showSuccessNotice) {
+            setNotice(
+              `Synchronized ${mapped.length} challenge level(s) from the live Admin API.`
+            );
+          }
         }
-        if (showSuccessNotice) {
-          setNotice(
-            `Synchronized ${mapped.length} challenge level(s) from the live Admin API.`
-          );
-        }
+      } else {
+        throw chRes.reason;
       }
     } catch (err) {
-      const status = err.response?.status;
-      const serverMsg = err.response?.data?.message;
-      setDataSource("demo");
-      setChallenges((prev) =>
-        prev.length > 0 && prev[0]?.isDemo ? prev : initialChallenges
-      );
-      if (status === 401 || status === 403) {
-        setApiError(
-          serverMsg ||
-            "Admin authorization required for live database records. Showing clearly labeled DEMO PREVIEW data."
-        );
-      } else {
-        setApiError(
-          serverMsg ||
-            "Live Admin API (/api/v1/admin/challenges) is currently unreachable. Showing clearly labeled DEMO PREVIEW data."
-        );
-      }
+      const serverMsg = err?.response?.data?.message;
+      setDataSource("live");
+      setChallenges([]);
+      setApiError(serverMsg || "Failed to synchronize challenge levels with live database.");
     } finally {
       setLoading(false);
     }
@@ -496,6 +249,8 @@ export function ChallengeManagementPage() {
       status: "Draft",
       description: "",
       questions: 0,
+      checkpointId: "",
+      requiresCheckpointScan: true,
     });
     setShowEditor(true);
   };
@@ -512,6 +267,8 @@ export function ChallengeManagementPage() {
       status: challenge.status,
       description: challenge.description,
       questions: challenge.questions,
+      checkpointId: challenge.checkpointId || "",
+      requiresCheckpointScan: challenge.requiresCheckpointScan !== false,
     });
     setShowEditor(true);
   };
@@ -537,6 +294,8 @@ export function ChallengeManagementPage() {
             points: Number(draft.points),
             status: draft.status,
             description: draft.description.trim(),
+            checkpointId: draft.checkpointId || null,
+            requiresCheckpointScan: Boolean(draft.requiresCheckpointScan),
           });
           const updated = res?.data?.challenge;
           if (updated) {
@@ -559,6 +318,8 @@ export function ChallengeManagementPage() {
             description:
               draft.description.trim() ||
               `${draft.title.trim()} — Level ${draft.level} challenge.`,
+            checkpointId: draft.checkpointId || null,
+            requiresCheckpointScan: Boolean(draft.requiresCheckpointScan),
           });
           const created = res?.data?.challenge;
           if (created) {
@@ -604,7 +365,7 @@ export function ChallengeManagementPage() {
         subtitle: draft.subtitle || "New challenge",
         objectives: ["Add learning objectives in the full editor"],
         image: "🧩",
-        isDemo: true,
+        isDemo: false,
         linkedQuestions: [],
         linkedCheckpoints: [],
       };
@@ -617,10 +378,45 @@ export function ChallengeManagementPage() {
     setShowEditor(false);
   };
 
+  const handleDeleteChallenge = async (challenge) => {
+    if (!challenge) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to permanently delete challenge "${challenge.title}" (Level ${challenge.level})? This will also remove any linked questions from the pool.`
+      )
+    ) {
+      return;
+    }
+
+    if (challenge?.id) {
+      try {
+        await adminService.deleteChallenge(challenge.id);
+        const remaining = challenges.filter((c) => c.id !== challenge.id);
+        setChallenges(remaining);
+        if (selectedId === challenge.id && remaining.length > 0) {
+          setSelectedId(remaining[0].id);
+        }
+        setNotice(`Challenge "${challenge.title}" deleted.`);
+      } catch (err) {
+        setApiError(
+          err.response?.data?.message || "Failed to delete challenge from server."
+        );
+      }
+      return;
+    }
+
+    const remaining = challenges.filter((c) => c.id !== challenge.id);
+    setChallenges(remaining);
+    if (selectedId === challenge.id && remaining.length > 0) {
+      setSelectedId(remaining[0].id);
+    }
+    setNotice(`Challenge "${challenge.title}" removed from demo state.`);
+  };
+
   const toggleStatus = async (challenge) => {
     const nextStatus = challenge.status === "Published" ? "Paused" : "Published";
 
-    if (dataSource === "live" && !challenge.isDemo) {
+    if (challenge?.id) {
       try {
         const res = await adminService.updateChallenge(challenge.id, {
           status: nextStatus,
@@ -669,7 +465,7 @@ export function ChallengeManagementPage() {
         item.points,
         item.status,
         item.questions,
-        dataSource === "live" ? "Live Database" : "Demo Preview",
+        "Live Database",
       ]),
     ];
     const csv = rows
@@ -682,19 +478,19 @@ export function ChallengeManagementPage() {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = "hack-the-grid-challenges.csv";
+    link.download = "the-tech-mystery-challenges.csv";
     link.click();
     URL.revokeObjectURL(url);
     setNotice(
       `Filtered challenge list (${
-        dataSource === "live" ? "live database records" : "demo preview records"
+        "live database records"
       }) exported as CSV.`
     );
   };
 
   const adminDisplayName = user?.fullName || user?.username || "Admin";
   const adminAvatar = (adminDisplayName || "A").slice(0, 1).toUpperCase();
-  const linkedCheckpointCount = selected?.linkedCheckpoints?.length || (selected?.isDemo ? 2 : 0);
+  const linkedCheckpointCount = selected?.linkedCheckpoints?.length || 0;
 
   return (
     <div className="htg-challenge-page">
@@ -751,13 +547,7 @@ export function ChallengeManagementPage() {
         <section className="htg-challenge-hero">
           <div className="htg-breadcrumb">
             Admin <span>›</span> Challenges
-            <em className={`htg-data-pill ${dataSource === "live" ? "live" : "demo"}`}>
-              {loading
-                ? "SYNCING API..."
-                : dataSource === "live"
-                ? "● LIVE DATABASE"
-                : "● DEMO PREVIEW DATA"}
-            </em>
+            <em className="htg-data-pill live">{loading ? "SYNCING API..." : "● LIVE DATABASE"}</em>
           </div>
           <div className="htg-heading-row">
             <div>
@@ -765,7 +555,7 @@ export function ChallengeManagementPage() {
                 Challenges <em>Management</em>
               </h1>
               <p>
-                Create, manage and organize all challenge levels for Hack the Grid.
+                Create, manage and organize all challenge levels for The Tech Mystery.
               </p>
             </div>
             <div className="htg-hero-actions">
@@ -1299,9 +1089,7 @@ export function ChallengeManagementPage() {
                     </div>
                   ) : (
                     <p style={{ marginTop: "10px" }}>
-                      {dataSource === "live"
-                        ? "No question variations created for this level yet. Open Questions Management (/admin/questions) to add pool variations."
-                        : `Demo preview count: ${selected.questions} variations configured for ${selected.title}.`}
+                      "No question variations created for this level yet. Open Questions Management (/admin/questions) to add pool variations."
                     </p>
                   )}
                 </section>
@@ -1371,6 +1159,13 @@ export function ChallengeManagementPage() {
                 </button>
                 <button
                   type="button"
+                  className="htg-delete-button"
+                  onClick={() => handleDeleteChallenge(selected)}
+                >
+                  ✕ Delete
+                </button>
+                <button
+                  type="button"
                   className="htg-primary-button"
                   onClick={() => {
                     setDetailTab("Questions");
@@ -1388,7 +1183,7 @@ export function ChallengeManagementPage() {
 
         <footer className="htg-challenge-footer">
           Build with <span>♥</span> by Hrithik Roshan{" "}
-          <small>HACK THE GRID · MISSION CONTROL</small>
+          <small>THE TECH MYSTERY · MISSION CONTROL</small>
         </footer>
       </main>
 
@@ -1486,7 +1281,37 @@ export function ChallengeManagementPage() {
                   <option>Draft</option>
                   <option>Published</option>
                   <option>Paused</option>
+                  <option>Archived</option>
                 </select>
+              </label>
+            </div>
+            <div className="htg-modal-row">
+              <label>
+                Linked QR Checkpoint (Campus Beacon)
+                <select
+                  value={draft.checkpointId || ""}
+                  onChange={(event) =>
+                    setDraft({ ...draft, checkpointId: event.target.value })
+                  }
+                >
+                  <option value="">None / Independent (No Checkpoint)</option>
+                  {checkpoints.map((cp) => (
+                    <option key={cp._id} value={cp._id}>
+                      {cp.checkpointCode} — {cp.name} (Level {cp.levelNumber})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "8px", marginTop: "18px" }}>
+                <input
+                  type="checkbox"
+                  style={{ width: "auto" }}
+                  checked={draft.requiresCheckpointScan}
+                  onChange={(event) =>
+                    setDraft({ ...draft, requiresCheckpointScan: event.target.checked })
+                  }
+                />
+                Require Checkpoint Scan
               </label>
             </div>
             <label>
@@ -1521,9 +1346,7 @@ export function ChallengeManagementPage() {
               </button>
             </div>
             <p className="htg-modal-note">
-              {dataSource === "live"
-                ? "Live database mode: changes are validated and persisted via /api/v1/admin/challenges."
-                : "Demo mode: changes stay in local UI state until connected to an authenticated backend."}
+              "Live database mode: changes are validated and persisted via /api/v1/admin/challenges."
             </p>
           </form>
         </div>

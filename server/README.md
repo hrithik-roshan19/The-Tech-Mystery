@@ -1,6 +1,6 @@
-# Hack the Grid — Backend Server API
+# The Tech Mystery — Backend Server API
 
-Production-grade Express.js & MongoDB REST API engine for the **Hack the Grid** Cybersecurity Capture-The-Flag platform.
+Production-grade Express.js & MongoDB REST API engine for the **The Tech Mystery** Cybersecurity Capture-The-Flag platform.
 
 ## Architecture Highlights
 

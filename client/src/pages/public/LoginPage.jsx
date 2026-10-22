@@ -167,7 +167,7 @@ export default function LoginPage() {
       <main className="htg-login-main">
         <section className="htg-login-intro">
           <p className="login-eyebrow">CODESPHERE CODING CLUB <span>×</span> UTKRISHT 2026</p>
-          <h1>HACK<br />THE <span>GRID</span></h1>
+          <h1>THE TECH<br /><span>MYSTERY</span></h1>
           <h2>THE ULTIMATE CAMPUS<br />CAPTURE-THE-FLAG EXPERIENCE.</h2>
           <div className="login-accent" />
           <p className="login-description">
@@ -193,10 +193,10 @@ export default function LoginPage() {
           </div>
         </section>
 
-        <section className="htg-login-card" aria-label="Hack the Grid login">
+        <section className="htg-login-card" aria-label="The Tech Mystery login">
           <div className="login-card-heading">
             <h2>Welcome <span>Back</span></h2>
-            <p>Login to continue your journey in Hack the Grid.</p>
+            <p>Login to continue your journey in The Tech Mystery.</p>
           </div>
 
           <div className="login-tabs">
@@ -309,7 +309,7 @@ export default function LoginPage() {
           </form>
 
           <p className="register-prompt">
-            New to Hack the Grid? <Link to={ROUTES.REGISTER}>Register your team →</Link>
+            New to The Tech Mystery? <Link to={ROUTES.REGISTER}>Register your team →</Link>
           </p>
         </section>
 

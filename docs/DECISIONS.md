@@ -1,4 +1,16 @@
-# ARCHITECTURAL DECISION RECORDS (ADR): HACK THE GRID
+# ARCHITECTURAL DECISION RECORDS (ADR): THE TECH MYSTERY
+
+## Clerk authentication preparation ? 19 October 2026
+
+Clerk integration is implemented as an explicit opt-in provider; existing JWT mode remains the
+default and its implementation is retained. No live connection, data migration, deployment,
+account linking or registration opening occurred. MongoDB still owns roles, membership and
+active status. Linking requires verified matching email plus existing password; ADMIN recovery
+requires organizer approval. New Clerk participants remain unteamed and registration-gated.
+See [implementation, exact files, setup, verification and rollback](CLERK_AUTHENTICATION.md).
+Real Clerk credentials, browser acceptance, index setup, transaction-capable deployment and cutover
+remain approval-gated. Earlier phase status statements below describe those phases historically.
+
 
 This document logs significant architectural and design choices, their context, rationale, and consequences.
 
@@ -74,13 +86,13 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0011: Multi-Tier Responsive Architecture for Login Experience
 - **Status**: ACCEPTED
-- **Context**: Viewport sizes ranging from 320px ultra-compact phones to 1440px+ ultra-wide desktops require seamless accessibility. A single mobile breakpoint caused cut-off vertical scrolling (due to `overflow: hidden`), clipped `HACK THE GRID` headers, overlapping nav items, and tab overflow on narrow cards.
+- **Context**: Viewport sizes ranging from 320px ultra-compact phones to 1440px+ ultra-wide desktops require seamless accessibility. A single mobile breakpoint caused cut-off vertical scrolling (due to `overflow: hidden`), clipped `THE TECH MYSTERY` headers, overlapping nav items, and tab overflow on narrow cards.
 - **Decision**:
   - Established a 5-tier responsive design system:
     1. **Desktop (>=1200px)**: 3-column layout (Intro + Card + Highlights), fluid `clamp()` gaps and typography.
     2. **Tablet Landscape (769px–1199px)**: 2-column layout (Intro + Card), feature highlights hidden, compact navbar.
     3. **Tablet Portrait (600px–768px)**: 1-column centered layout (Nav -> Intro -> Card), 16px–24px safe padding, card `width: min(100%, 560px)`.
-    4. **Mobile (390px–599px)**: Fluid 1-column layout, hamburger menu with backdrop blur drawer, `HACK THE GRID` clamped heading, card padding `28px 20px`.
+    4. **Mobile (390px–599px)**: Fluid 1-column layout, hamburger menu with backdrop blur drawer, `THE TECH MYSTERY` clamped heading, card padding `28px 20px`.
     5. **Small Mobile (320px–389px)**: Ultra-compact layout tested specifically at 320px, 360px, 375px. 2-equal-column tabs with 11px font, touch-friendly 44px+ inputs, compact register button, and card padding `22px 14px`.
   - Replaced root `overflow: hidden` with `overflow-x: hidden; min-height: 100dvh;` allowing smooth, natural vertical scrolling on all touch devices.
   - Adjusted mobile campus hero background position to `50% 18%` to retain prominent visibility of the university architecture.
@@ -88,7 +100,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0012: Standalone Full-Bleed Multi-Step Register Page UI Integration
 - **Status**: ACCEPTED
-- **Context**: Hack the Grid requires an intuitive 4-step squad registration wizard (Team Details, Team Leader, Team Members, Review & Terms). The reference UI includes its own full-bleed header (`.htg-register-nav`), campus background overlay (`campus-hero.png`), and 3-column layout (event intro, central progress card, and right-side benefits blockquote).
+- **Context**: The Tech Mystery requires an intuitive 4-step squad registration wizard (Team Details, Team Leader, Team Members, Review & Terms). The reference UI includes its own full-bleed header (`.htg-register-nav`), campus background overlay (`campus-hero.png`), and 3-column layout (event intro, central progress card, and right-side benefits blockquote).
 - **Decision**:
   - Integrate `RegisterPage.jsx` under `client/src/pages/public/` and import `client/src/styles/RegisterPage.css`.
   - Mount `ROUTES.REGISTER` as a top-level standalone full-bleed route alongside `ROUTES.HOME` and `ROUTES.LOGIN` in `AppRoutes.jsx`, eliminating duplicate headers/footers from `PublicLayout`.
@@ -100,7 +112,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0013: Standalone Full-Bleed Rules Page UI Integration
 - **Status**: ACCEPTED
-- **Context**: Hack the Grid requires a comprehensive Participant Handbook and Fair Play Protocol page (`/rules`). The reference design features its own full-bleed header (`.rp-nav`), fixed campus hero background (`campus-hero.png`), stats counter bar, 6 interactive rule accordion categories, a golden rule sandbox sidebar, and an acknowledgment checkbox gate before registering. Nesting it inside `PublicLayout` would duplicate headers and footers.
+- **Context**: The Tech Mystery requires a comprehensive Participant Handbook and Fair Play Protocol page (`/rules`). The reference design features its own full-bleed header (`.rp-nav`), fixed campus hero background (`campus-hero.png`), stats counter bar, 6 interactive rule accordion categories, a golden rule sandbox sidebar, and an acknowledgment checkbox gate before registering. Nesting it inside `PublicLayout` would duplicate headers and footers.
 - **Decision**:
   - Integrate `RulesPage.jsx` directly under `client/src/pages/public/` and import `client/src/styles/RulesPage.css`.
   - Mount `ROUTES.RULES` as a top-level standalone full-bleed route alongside `ROUTES.HOME`, `ROUTES.LOGIN`, and `ROUTES.REGISTER` in `AppRoutes.jsx`, removing it from `PublicLayout`.
@@ -114,7 +126,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0014: Standalone Full-Bleed Mission & How It Works Page UI Integration
 - **Status**: ACCEPTED
-- **Context**: Hack the Grid requires an immersive Mission Playbook and operational walkthrough page (`/mission` and `/mission#how-it-works`). The reference UI features its own self-contained top header (`.mp-nav`), multi-layered background (`campus-hero.png`, scanlines, grid overlay), orbital visual hero animation, 4 quick metrics cards, interactive 6-stage mission selector with cycling Next Step controls, 4 core pillars of play, and an expandable 10-level challenge map.
+- **Context**: The Tech Mystery requires an immersive Mission Playbook and operational walkthrough page (`/mission` and `/mission#how-it-works`). The reference UI features its own self-contained top header (`.mp-nav`), multi-layered background (`campus-hero.png`, scanlines, grid overlay), orbital visual hero animation, 4 quick metrics cards, interactive 6-stage mission selector with cycling Next Step controls, 4 core pillars of play, and an expandable 10-level challenge map.
 - **Decision**:
   - Integrate `MissionPage.jsx` directly under `client/src/pages/public/` and import `client/src/styles/MissionPage.css`.
   - Add `MISSION: '/mission'` to `client/src/constants/routes.js`.
@@ -152,7 +164,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0016: Standalone Full-Bleed Challenge Levels & Mission Map UI Integration
 - **Status**: ACCEPTED
-- **Context**: Hack the Grid requires a dedicated Challenge Levels / Mission Map discovery page (`/challenges`). The design includes its own full-bleed header (`.htg-levels-nav`), layered campus background overlay (`/campus-hero.png`), stats counter bar, an interactive 10-level Mission Map panel with accordion click-to-expand briefings, difficulty badges, and a 4-pillar benefits showcase with event quotation.
+- **Context**: The Tech Mystery requires a dedicated Challenge Levels / Mission Map discovery page (`/challenges`). The design includes its own full-bleed header (`.htg-levels-nav`), layered campus background overlay (`/campus-hero.png`), stats counter bar, an interactive 10-level Mission Map panel with accordion click-to-expand briefings, difficulty badges, and a 4-pillar benefits showcase with event quotation.
 - **Decision**:
   - Integrate `ChallengeLevelsPage.jsx` directly under `client/src/pages/public/` and import `client/src/styles/ChallengeLevelsPage.css`.
   - Add `CHALLENGES: '/challenges'` to `client/src/constants/routes.js`.
@@ -258,7 +270,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0023: Final Flag / Victory UI Integration (`/final-flag`)
 - **Status**: ACCEPTED
-- **Context**: The climax of the Hack the Grid competition requires an authenticated Final Flag / Victory UI for Level 10 (Master Flag). The reference design (`Hack-The-Grid-Final-Flag-Victory-UI.zip`) provides a cyber endgame aesthetic featuring "SYSTEM BREACHED." typography, master flag radar targeting art, secure flag submission form with HTG input prefix, pre-submission checklist drawer, Victory Protocol sidebar, and an animated "MISSION ACCOMPLISHED" victory state.
+- **Context**: The climax of the The Tech Mystery competition requires an authenticated Final Flag / Victory UI for Level 10 (Master Flag). The reference design (`Hack-The-Grid-Final-Flag-Victory-UI.zip`) provides a cyber endgame aesthetic featuring "SYSTEM BREACHED." typography, master flag radar targeting art, secure flag submission form with HTG input prefix, pre-submission checklist drawer, Victory Protocol sidebar, and an animated "MISSION ACCOMPLISHED" victory state.
 - **Decision**:
   - Integrate `FinalFlagPage.jsx` at `client/src/pages/participant/FinalFlagPage.jsx` and `FinalFlagPage.css` at `client/src/styles/FinalFlagPage.css`.
   - Add `FINAL_FLAG: '/final-flag'` to `client/src/constants/routes.js` and mount it under Standalone Full-Bleed Pages in `AppRoutes.jsx`, with portal redirects for `/portal/master-flag` and `/portal/final-flag`.
@@ -273,7 +285,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0024: Reference-Matched Admin Team Management UI & Shared Mission Control Sidebar (`/admin/teams`)
 - **Status**: ACCEPTED
-- **Context**: The Admin Command SOC required replacing the placeholder Tailwind `TeamManagementPage.jsx` with the reference-matched Hack the Grid Team Management UI (`Hack-The-Grid-Team-Management-UI-Reference-Match.zip`), featuring the Mission Control sidebar, 5 KPI summary cards, filter/search toolbar, Table/Grid view switcher, pagination, and a right-hand selected-team inspection panel with live backend synchronization where endpoints exist.
+- **Context**: The Admin Command SOC required replacing the placeholder Tailwind `TeamManagementPage.jsx` with the reference-matched The Tech Mystery Team Management UI (`Hack-The-Grid-Team-Management-UI-Reference-Match.zip`), featuring the Mission Control sidebar, 5 KPI summary cards, filter/search toolbar, Table/Grid view switcher, pagination, and a right-hand selected-team inspection panel with live backend synchronization where endpoints exist.
 - **Decision**:
   - Extract the Mission Control sidebar into a reusable [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) component that uses `useLocation()` to automatically highlight the active admin route (`Overview`, `Teams`, `Challenges`, `Questions`, `QR Checkpoints`, `Submissions`, `Leaderboard`, `Event Control`, `Security Logs`), displays dynamic badge counts, and provides a mobile slide-over drawer.
   - Mount `ROUTES.ADMIN_TEAMS` (`/admin/teams`) as a standalone full-bleed route in `AppRoutes.jsx` alongside `/admin/dashboard` so `TeamManagementPage` renders its own `.htg-team-page` shell without duplicate sidebars or headers from `AdminLayout.jsx`.
@@ -285,7 +297,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0025: Reference-Matched Admin Challenge Management UI & Backend Integration (`/admin/challenges`)
 - **Status**: ACCEPTED
-- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Challenge Management UI (`Hack-The-Grid-Challenge-Management-UI.zip`) at `/admin/challenges`, supporting challenge statistics, search/status/difficulty/category filtering, List/Grid view switching, Add/Edit Challenge modal configuration, publish/pause toggling, and inspection of linked questions and QR checkpoints without exposing flags or unpublished challenges to participants.
+- **Context**: The Admin Command SOC required integrating the reference-matched The Tech Mystery Challenge Management UI (`Hack-The-Grid-Challenge-Management-UI.zip`) at `/admin/challenges`, supporting challenge statistics, search/status/difficulty/category filtering, List/Grid view switching, Add/Edit Challenge modal configuration, publish/pause toggling, and inspection of linked questions and QR checkpoints without exposing flags or unpublished challenges to participants.
 - **Decision**:
   - Create [`ChallengeManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/ChallengeManagementPage.jsx) and [`ChallengeManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/ChallengeManagementPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) so `Challenges` is highlighted automatically on `/admin/challenges`.
   - Mount `ROUTES.ADMIN_CHALLENGES` (`/admin/challenges`) as a standalone full-bleed route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) (avoiding duplicate sidebars/headers from `AdminLayout.jsx`), while keeping `/admin/questions` routed to `ChallengePoolPage.jsx` for question pool authoring.
@@ -298,7 +310,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0026: Reference-Matched Admin Question Management UI & Backend Integration (`/admin/questions`)
 - **Status**: ACCEPTED
-- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Question Management UI (`Hack-The-Grid-Question-Management-UI.zip`) at `/admin/questions`, supporting question statistics (total, published, drafts, paused, available points), search across titles/IDs/challenges/prompts, status/type/level filtering, Table/Grid view toggling, Add/Edit Question modal, hint & max attempts configuration, pause/publish controls, CSV export, and an admin-only secret answer preview with an explicit "Reveal" toggle while ensuring secret flags are never exposed to participants.
+- **Context**: The Admin Command SOC required integrating the reference-matched The Tech Mystery Question Management UI (`Hack-The-Grid-Question-Management-UI.zip`) at `/admin/questions`, supporting question statistics (total, published, drafts, paused, available points), search across titles/IDs/challenges/prompts, status/type/level filtering, Table/Grid view toggling, Add/Edit Question modal, hint & max attempts configuration, pause/publish controls, CSV export, and an admin-only secret answer preview with an explicit "Reveal" toggle while ensuring secret flags are never exposed to participants.
 - **Decision**:
   - Implement [`QuestionManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/QuestionManagementPage.jsx) and [`QuestionManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/QuestionManagementPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Questions` (`☰`) highlighted as active on `/admin/questions`.
   - Mount `ROUTES.ADMIN_QUESTIONS` (`/admin/questions`) as a standalone full-bleed route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx) (preventing duplicate sidebars/headers from `AdminLayout.jsx`).
@@ -311,7 +323,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0027: Reference-Matched Admin QR Checkpoint Management UI & Real QR Placard Generation (`/admin/checkpoints`)
 - **Status**: ACCEPTED
-- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid QR Checkpoint Management UI (`Hack-The-Grid-QR-Checkpoint-Management-UI.zip`) at `/admin/checkpoints`, supporting checkpoint statistics (total checkpoints, active, drafts, paused, total scans), search across checkpoints/codes/challenges/locations, status/mode filtering, Table/Grid view toggling, Add/Edit Checkpoint modal, physical location and volunteer notes configuration, pause/activate toggles, CSV export, and an inspection panel. A critical requirement was replacing decorative SVG placeholders with genuine scannable QR code generation using `qrcode`, encoding server-validated checkpoint URLs (`/checkpoint/scan?code=...&token=...`), supporting high-resolution printable placard downloads, and enforcing strict server-side authorization so physical QR scans only initiate eligibility checks rather than client-side awards.
+- **Context**: The Admin Command SOC required integrating the reference-matched The Tech Mystery QR Checkpoint Management UI (`Hack-The-Grid-QR-Checkpoint-Management-UI.zip`) at `/admin/checkpoints`, supporting checkpoint statistics (total checkpoints, active, drafts, paused, total scans), search across checkpoints/codes/challenges/locations, status/mode filtering, Table/Grid view toggling, Add/Edit Checkpoint modal, physical location and volunteer notes configuration, pause/activate toggles, CSV export, and an inspection panel. A critical requirement was replacing decorative SVG placeholders with genuine scannable QR code generation using `qrcode`, encoding server-validated checkpoint URLs (`/checkpoint/scan?code=...&token=...`), supporting high-resolution printable placard downloads, and enforcing strict server-side authorization so physical QR scans only initiate eligibility checks rather than client-side awards.
 - **Decision**:
   - Implement [`QRCheckpointManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/QRCheckpointManagementPage.jsx) and [`QRCheckpointManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/QRCheckpointManagementPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `QR Checkpoints` (`▦`) highlighted as active on `/admin/checkpoints`.
   - Install `qrcode` in the `client` workspace to generate authentic, scannable PNG data URLs rendered in both thumbnail and full inspector views via `ScannableQrImage`.
@@ -326,7 +338,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0028: Reference-Matched Admin Submission Management UI & Secure Review Actions (`/admin/submissions`)
 - **Status**: ACCEPTED
-- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Submission Management UI (`SubmissionManagementPage.jsx` and `SubmissionManagementPage.css`) at `/admin/submissions`, supporting submission statistics (total submissions, correct, incorrect, pending review, points awarded), multi-criteria filtering (result, level, team), text search, Table/Grid view toggling, CSV export, a pending review queue shortcut, and a detailed inspector panel with answer mask/reveal and manual review controls (awarded points and review note). A critical requirement was implementing secure review actions on the server (`PATCH /api/v1/admin/submissions/:submissionId/review`) that enforce administrator authorization, prevent duplicate scoring, validate points against the question's maximum allowed points, atomically update team scores and score snapshot history, and maintain complete audit traceability.
+- **Context**: The Admin Command SOC required integrating the reference-matched The Tech Mystery Submission Management UI (`SubmissionManagementPage.jsx` and `SubmissionManagementPage.css`) at `/admin/submissions`, supporting submission statistics (total submissions, correct, incorrect, pending review, points awarded), multi-criteria filtering (result, level, team), text search, Table/Grid view toggling, CSV export, a pending review queue shortcut, and a detailed inspector panel with answer mask/reveal and manual review controls (awarded points and review note). A critical requirement was implementing secure review actions on the server (`PATCH /api/v1/admin/submissions/:submissionId/review`) that enforce administrator authorization, prevent duplicate scoring, validate points against the question's maximum allowed points, atomically update team scores and score snapshot history, and maintain complete audit traceability.
 - **Decision**:
   - Implement [`SubmissionManagementPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/SubmissionManagementPage.jsx) and [`SubmissionManagementPage.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/SubmissionManagementPage.css), reusing the shared [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with `Submissions` (`⇧`) highlighted as active on `/admin/submissions` and showing the real-time pending submissions badge count.
   - Mount `ROUTES.ADMIN_SUBMISSIONS` (`/admin/submissions`) as a standalone full-bleed route in [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx), avoiding duplicate sidebars or headers from `AdminLayout.jsx`.
@@ -339,7 +351,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0029: Reference-Matched Admin Leaderboard Management UI, Deterministic Server-Side Ranking & Public Freeze Controls (`/admin/leaderboard`)
 - **Status**: ACCEPTED
-- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Leaderboard Management UI (`LeaderboardManagementPage.jsx` and `LeaderboardManagementPage.css`) at `/admin/leaderboard`, providing ranking statistics (total points, challenges solved, recently active teams), live vs demo mode awareness, public visibility toggle synchronized with `EventConfig.isLeaderboardFrozen`, configurable auto-refresh polling (15s interval), search across teams and codes, level filtering (All Levels, 1..10), sort ordering (Highest score, Challenges solved, Highest level), Table/Grid view toggling, CSV export, and a team performance detail panel with medals (gold, silver, bronze crowns), level progress, and security notes on ranking integrity. Critical requirements were:
+- **Context**: The Admin Command SOC required integrating the reference-matched The Tech Mystery Leaderboard Management UI (`LeaderboardManagementPage.jsx` and `LeaderboardManagementPage.css`) at `/admin/leaderboard`, providing ranking statistics (total points, challenges solved, recently active teams), live vs demo mode awareness, public visibility toggle synchronized with `EventConfig.isLeaderboardFrozen`, configurable auto-refresh polling (15s interval), search across teams and codes, level filtering (All Levels, 1..10), sort ordering (Highest score, Challenges solved, Highest level), Table/Grid view toggling, CSV export, and a team performance detail panel with medals (gold, silver, bronze crowns), level progress, and security notes on ranking integrity. Critical requirements were:
   1. Enforcing ranking integrity: official rankings must derive strictly from server-verified data using deterministic tie-breaking (`totalScore DESC, lastSolveTimestamp ASC`), with client-side demo score manipulation strictly disabled in live database mode.
   2. Synchronizing the public visibility toggle with backend event settings (`PATCH /api/v1/admin/event-config`).
   3. Reusing the shared `AdminSidebar` with `Leaderboard` (`♜`) highlighted as active without duplicate headers or sidebars.
@@ -359,7 +371,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0030: Reference-Matched Admin Event Control Console, Operational Switches & Announcement Broadcasting (`/admin/event-control`)
 - **Status**: ACCEPTED
-- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Event Control UI (`EventControlPage.jsx` and `EventControlPage.css`) at `/admin/event-control` (and legacy alias `/admin/controls`), supporting event state oversight (radar HUD, live status badge, metrics), operational control switches (registration, QR checkpoint validation, public leaderboard freeze, hints system, maintenance mode), event configuration parameters (event name, subtitle, start/end dates, duration, maximum teams, team size constraints), system health checks, live activity feed, and participant announcement broadcasting with preview. Critical requirements were:
+- **Context**: The Admin Command SOC required integrating the reference-matched The Tech Mystery Event Control UI (`EventControlPage.jsx` and `EventControlPage.css`) at `/admin/event-control` (and legacy alias `/admin/controls`), supporting event state oversight (radar HUD, live status badge, metrics), operational control switches (registration, QR checkpoint validation, public leaderboard freeze, hints system, maintenance mode), event configuration parameters (event name, subtitle, start/end dates, duration, maximum teams, team size constraints), system health checks, live activity feed, and participant announcement broadcasting with preview. Critical requirements were:
   1. Reusing the shared `AdminSidebar` with `EventControl` (`◉`) highlighted as active without duplicate headers or sidebars.
   2. Connecting all operational switches and configuration fields to authenticated backend endpoints (`PATCH /api/v1/admin/event-config`), validating inputs server-side, and logging sensitive transitions in audit logs.
   3. Guaranteeing maintenance mode halts participant actions without restricting authorized administrators from accessing the admin panel.
@@ -381,7 +393,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0031: Reference-Matched Admin Security Logs Console, Audit Stream & Review Actions (`/admin/security-logs`)
 - **Status**: ACCEPTED
-- **Context**: The Admin Command SOC required integrating the reference-matched Hack the Grid Security Logs UI (`SecurityLogsPage.jsx` and `SecurityLogsPage.css`) at `/admin/security-logs` (and legacy alias `/admin/logs`), providing security operations oversight, event stream inspection, multi-criteria filtering (severity, category, status, time window), text search with `Ctrl+K` keyboard shortcut, critical event review shortcut, telemetry metric cards (critical events, warnings, informational, flagged records), live database vs demo preview awareness, 15-second background auto-refresh polling, RFC 4180 CSV export, detail inspector panel with key-value metadata and copy JSON action, and server-authorized review actions ("Mark as reviewed ✓"). Critical requirements were:
+- **Context**: The Admin Command SOC required integrating the reference-matched The Tech Mystery Security Logs UI (`SecurityLogsPage.jsx` and `SecurityLogsPage.css`) at `/admin/security-logs` (and legacy alias `/admin/logs`), providing security operations oversight, event stream inspection, multi-criteria filtering (severity, category, status, time window), text search with `Ctrl+K` keyboard shortcut, critical event review shortcut, telemetry metric cards (critical events, warnings, informational, flagged records), live database vs demo preview awareness, 15-second background auto-refresh polling, RFC 4180 CSV export, detail inspector panel with key-value metadata and copy JSON action, and server-authorized review actions ("Mark as reviewed ✓"). Critical requirements were:
   1. Reusing the shared `AdminSidebar` with `Security Logs` (`⛨`) highlighted as active without duplicate headers or sidebars.
   2. Introducing an append-only `SecurityLog` schema on the server (`server/src/models/SecurityLog.js`) and admin REST endpoints (`GET /api/v1/admin/security-logs`, `PATCH /api/v1/admin/security-logs/:logId/review`).
   3. Guaranteeing complete audit integrity: audit records track actor, IP source, target route, category, severity, and event details.
@@ -399,7 +411,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0032: Participant User Profile Console, Identity Management & Account Security (`/profile` & `/portal/profile`)
 - **Status**: ACCEPTED
-- **Context**: The participant experience required integrating the reference Hack the Grid User Profile page (`UserProfilePage.jsx` and `UserProfilePage.css`) at `/profile` (and `/portal/profile`), providing individual player identity inspection, player card hero presentation with radial radar grid, live/preview data status badge (`● LIVE DATABASE` vs `● DEMO PREVIEW`), stat grid (Total XP, Challenges solved, Checkpoints explored, Team contribution), tabbed workspace (`Overview`, `Achievements`, `Settings`), player identity card, badges preview, and account security controls. Critical constraints were:
+- **Context**: The participant experience required integrating the reference The Tech Mystery User Profile page (`UserProfilePage.jsx` and `UserProfilePage.css`) at `/profile` (and `/portal/profile`), providing individual player identity inspection, player card hero presentation with radial radar grid, live/preview data status badge (`● LIVE DATABASE` vs `● DEMO PREVIEW`), stat grid (Total XP, Challenges solved, Checkpoints explored, Team contribution), tabbed workspace (`Overview`, `Achievements`, `Settings`), player identity card, badges preview, and account security controls. Critical constraints were:
   1. Reusing the dedicated participant cyber navbar (`.htg-up-navbar`) with React Router navigation (`Link` to `/`, `/challenges`, `/leaderboard`, `/rules`, `/portal/team`, `/profile`), mobile drawer toggle, and user avatar dropdown with sign-out.
   2. Resolving the previous route redirect where `/profile` previously redirected to `/portal/team`.
   3. Extending the backend `User` schema (`server/src/models/User.js`) with identity and preference fields (`college`, `course`, `year`, `bio`, `github`, `linkedin`, `publicProfile`, `emailUpdates`, `avatar`).
@@ -419,7 +431,7 @@ This document logs significant architectural and design choices, their context, 
 
 ## ADR-0033: Reference-Matched Admin Profile Console & Security Operations Identity Management (`/admin/profile`)
 - **Status**: ACCEPTED
-- **Context**: The Admin Command SOC required integrating the reference Hack the Grid Admin Profile page (`AdminProfilePage.jsx` and `AdminProfilePage.css`) at `/admin/profile`, providing administrator identity overview, privileged account status inspection (`ACCESS LEVEL 04`), telemetry cards (`Admin actions`, `Security reviews`, `Managed teams`, `Session status`), tabbed workspace (`Overview`, `Settings`, `Security`), side inspector panels (`Access & permissions`, `Current session`, `Need access help?`), and account security controls. Critical constraints were:
+- **Context**: The Admin Command SOC required integrating the reference The Tech Mystery Admin Profile page (`AdminProfilePage.jsx` and `AdminProfilePage.css`) at `/admin/profile`, providing administrator identity overview, privileged account status inspection (`ACCESS LEVEL 04`), telemetry cards (`Admin actions`, `Security reviews`, `Managed teams`, `Session status`), tabbed workspace (`Overview`, `Settings`, `Security`), side inspector panels (`Access & permissions`, `Current session`, `Need access help?`), and account security controls. Critical constraints were:
   1. Reusing the shared `AdminSidebar` without duplicate sidebars or headers, ensuring seamless navigation across all 9 mission control items (`Overview`, `Teams`, `Challenges`, `Questions`, `QR Checkpoints`, `Submissions`, `Leaderboard`, `Event Control`, `Security Logs`) and linking the user footer card directly to `/admin/profile`.
   2. Extending the backend `User` schema (`server/src/models/User.js`) with admin identity and security fields (`department`, `twoFactor`, `securityAlerts`, `emailAlerts`, `sessionAlerts`).
   3. Implementing authenticated admin endpoints (`GET /api/v1/admin/profile`, `PATCH /api/v1/admin/profile`, `POST /api/v1/admin/sessions/revoke`) guarded by `authenticate` and `requireAdmin`.
@@ -443,7 +455,7 @@ This document logs significant architectural and design choices, their context, 
   2. Unscoped CSS in `TeamManagementPage.css` defined global rules (`.htg-nav { display: grid; gap: 5px; padding-top: 20px; }` and `.htg-nav { padding-top: 0; gap: 4px; }`), which leaked into the global stylesheet bundle and overrode `.htg-nav` with a single-column CSS Grid layout, causing links to stack vertically and overflow down into the hero image.
 - **Decision**:
   - Refactor [`Navbar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/Navbar.jsx) and [`Navbar.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/Navbar.css) into a robust, standardized site header with three horizontally aligned sections:
-    - **Left — Branding (`.nav-brand`)**: `HACK THE GRID` with “GRID” in electric lime (`#B8FF3D`) and `CODESPHERE × UTKRISHT 2026` monospace subtitle.
+    - **Left — Branding (`.nav-brand`)**: `THE TECH MYSTERY` with “GRID” in electric lime (`#B8FF3D`) and `CODESPHERE × UTKRISHT 2026` monospace subtitle.
     - **Center — Navigation Links (`.nav-links`)**: Exactly seven links in a single horizontal row (`HOME`, `LEADERBOARD`, `MISSION`, `CHALLENGES`, `QR CHECKPOINT`, `FINAL FLAG`, `RULES`) using React Router `Link`, active indicator bar (`.site-navbar__active-bar`), and responsive gap scaling.
     - **Right — Authentication Actions (`.nav-actions`)**: `LOGIN` (dark transparent with subtle border) and `REGISTER ↗` (electric lime `#B8FF3D` background with dark text) for guests, or `DASHBOARD` / `DISCONNECT` for authenticated users.
   - Mount `<Navbar />` directly into [`HomePage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/public/HomePage.jsx), eliminating duplicated navbar markup.
@@ -452,6 +464,198 @@ This document logs significant architectural and design choices, their context, 
   - Provide full responsive support: horizontal row for desktop and tablet landscape (`>= 980px`), and a keyboard-accessible drawer with Escape key handling, route transition closing, and hamburger toggle for mobile devices.
 - **Consequences**: Resolves the vertical stacking bug at the root cause, guarantees cross-page navigation consistency across all public routes, prevents future CSS cascade pollution, and aligns with the near-black and electric-lime design system without layout shifts.
 
+---
+
+## ADR-0035: Phase 3 Complete Backend Integration & Monorepo Live Data Synchronization
+- **Status**: ACCEPTED
+- **Context**: The web application required full end-to-end integration between the React 19 frontend, Node.js/Express REST backend, and local/Atlas MongoDB database. Key requirements included:
+  1. Bootstrapping a live MongoDB database with 10 structured challenges, multiple question variations per level, scannable QR checkpoints with HMAC signatures, administrative operator accounts, and active participating squads.
+  2. Stateless JWT authentication with dynamic team synchronization in middleware so that newly created teams immediately reflect on active participant tokens without requiring manual re-login.
+  3. Strict zero-trust server validation ensuring challenge flags, secret answers, and password hashes remain strictly server-side (`flag: { select: false }`, `passwordHash: { select: false }`).
+  4. Wiring participant pages (`RegisterPage`, `LeaderboardPage`, `ParticipantDashboard`, `ChallengeLevelsPage`, `FinalFlagPage`, `QRCheckpointPage`) to live backend APIs with graceful demo fallbacks and live state pills (`● LIVE DATABASE`).
+- **Decision**:
+  - Implement comprehensive database seed script [`server/src/utils/seed.js`](file:///c:/projects/Hack-The-Grid/server/src/utils/seed.js) initializing `EventConfig` (LIVE), admin account, 10 challenge stages, 17 questions across pools, 10 physical checkpoints (`HTG-CP01` to `HTG-CP10`), 5 active teams, scores, and security audit logs.
+  - Enhance [`auth.middleware.js`](file:///c:/projects/Hack-The-Grid/server/src/middleware/auth.middleware.js) to look up fresh user teamId from MongoDB if absent in token payload, and update [`team.controller.js`](file:///c:/projects/Hack-The-Grid/server/src/controllers/team.controller.js) to issue refreshed JWT tokens upon team creation and join.
+  - Wire [`RegisterPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/public/RegisterPage.jsx) to live `authService.register` and `teamService.createTeam` with generated join code display and clipboard copy action.
+  - Wire [`LeaderboardPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/public/LeaderboardPage.jsx) to live `leaderboardService.getLeaderboard` with 15s auto-refresh polling and dynamic user team detection.
+  - Wire [`ParticipantDashboard.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/participant/ParticipantDashboard.jsx) and [`ChallengeLevelsPage.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/public/ChallengeLevelsPage.jsx) to live team, mission map, and challenge APIs.
+  - Validate with a comprehensive 16-point automated integration test suite ([`test_phase3_integration.js`](file:///c:/projects/Hack-The-Grid/test_phase3_integration.js)) confirming 100% pass rate.
+- **Consequences**: Successfully completes Phase 3 of the master roadmap, delivers a fully integrated, live-backed CTF platform while preserving the cyber SOC design identity and strict security guarantees.
+
+---
+
+## ADR-0036: Separate Role-Aware Navigation Systems and Hardened Route Authorization
+- **Status**: ACCEPTED
+- **Context**:
+  - Administrative consoles and participant interfaces require strict boundary isolation: admin consoles must never render the public navbar or footer, and public/participant interfaces must never expose administrative sidebar navigation.
+  - The admin sidebar must contain exactly 9 links in an immutable sequence, backed by real live API telemetry for notification count badges (strictly forbidding hardcoded mock counts such as "32" or "8").
+  - The public/participant navbar must contain exactly 7 links in an immutable single-row horizontal layout on desktop.
+  - Zero-trust security: client storage must never be trusted for access control. The backend must authoritatively verify user roles against the database on every authenticated request, and participant registration must never allow privilege escalation to administrator.
+- **Decision**:
+  - Authored self-contained [`AdminSidebar.css`](file:///c:/projects/Hack-The-Grid/client/src/styles/AdminSidebar.css) and updated canonical [`AdminSidebar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/AdminSidebar.jsx) with the exact 9 links in canonical sequence:
+    1. Overview (`/admin/dashboard`)
+    2. Teams (`/admin/teams`)
+    3. Challenges (`/admin/challenges`)
+    4. Questions (`/admin/questions`)
+    5. QR Checkpoints (`/admin/checkpoints`)
+    6. Submissions (`/admin/submissions`)
+    7. Leaderboard (`/admin/leaderboard`)
+    8. Event Control (`/admin/event-control`)
+    9. Security Logs (`/admin/security-logs`)
+  - Connected real telemetry via `adminService.getDashboardStats()` for dynamic team and submission count badges, hiding badges gracefully when data is unavailable.
+  - Refactored [`AdminDashboard.jsx`](file:///c:/projects/Hack-The-Grid/client/src/pages/admin/AdminDashboard.jsx) to eliminate 50 lines of duplicate inlined `<aside>` markup in favor of `<AdminSidebar />`.
+  - Refactored [`AdminLayout.jsx`](file:///c:/projects/Hack-The-Grid/client/src/layouts/AdminLayout.jsx) to isolate admin consoles in a Cyber SOC shell that renders only the admin sidebar and page content.
+  - Upgraded [`ProtectedRoute.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/ProtectedRoute.jsx) to display a cyber HUD loading state, redirect unauthenticated users to `/admin/login` (preserving deep links via `state.from`), and redirect unauthorized participants to `/dashboard`.
+  - Hardened server authentication in [`auth.middleware.js`](file:///c:/projects/Hack-The-Grid/server/src/middleware/auth.middleware.js): performs a database lookup on `User.findById` and authoritatively enforces `req.user.role = freshUser.role`, neutralizing forged JWT role claims.
+  - Hardened client authentication in [`AuthContext.jsx`](file:///c:/projects/Hack-The-Grid/client/src/context/AuthContext.jsx): wipes storage if tokens are missing or invalid, verifying sessions against `/api/v1/auth/me`.
+  - Reorganized [`AppRoutes.jsx`](file:///c:/projects/Hack-The-Grid/client/src/routes/AppRoutes.jsx): grouped all 10 admin consoles under `<Route element={<ProtectedRoute requiredRole="ADMIN"><AdminLayout /></ProtectedRoute>}>`.
+  - Updated [`Navbar.jsx`](file:///c:/projects/Hack-The-Grid/client/src/components/navigation/Navbar.jsx) to render role-aware right action buttons (Guest: `LOGIN` + `REGISTER ↗`, Participant: `DASHBOARD` + `DISCONNECT`, Admin: `ADMIN SOC` + `DISCONNECT`).
+- **Consequences**:
+  - Full architectural separation between admin and participant experiences.
+  - Zero privilege escalation vulnerabilities; verified with 100% automated test suite covering backend authorization, route bounces, link sequences, badge telemetry, and headless browser rendering across desktop, tablet, and mobile.
+
+---
+
+## ADR-0037: Comprehensive Team, Challenge, and Question Lifecycle Integration
+- **Status**: ACCEPTED
+- **Context**:
+  - Transition the platform from static demo preview states into a fully integrated live database operations platform across Team Management, Challenge Management, Question Management, and Participant Dashboard.
+  - Required team membership limits (min 2, max 4) and duplicate enrollment guards on both server and client.
+  - Challenges require full lifecycle statuses ('Draft', 'Published', 'Paused', 'Archived') and checkpoint associations, gating unpublished/archived challenges from participant endpoints.
+  - Question bank items require flexible campus QR checkpoint links, attempt limits, hints with point penalties, and zero-leakage flag protection (`select: false`).
+- **Decision**:
+  - **Schema Updates**:
+    - `Team`: Added `college` field (String, trim, default "Tula's University").
+    - `Challenge`: Added `'Archived'` to status enum (`['Published', 'Draft', 'Paused', 'Archived']`) and retained indexed `checkpointId`.
+    - `Question`: Added `checkpointId` (`ObjectId`, ref: `'Checkpoint'`, indexed) and added `'Archived'` to status enum.
+  - **Backend Services & Controllers**:
+    - `team.service.js`: Expanded with `createAdminTeam`, `updateTeam` (name, college, totalScore, isDisqualified with Score collection sync), `addMemberToTeam` (capacity & duplicate enrollment check), `removeMemberFromTeam` (protects team leader), and `deleteTeam` (cascading cleanup).
+    - `admin.controller.js`: Implemented endpoints for team CRUD, challenge CRUD (`checkpointId`, `requiresCheckpointScan`, status), and question CRUD (`checkpointId`, `+flag` authorized inclusion). Added cascading resource cleanup on deletion.
+    - `challenge.controller.js` & `questionAssignment.service.js`: Strictly enforced `{ status: 'Published', isActive: true }` so drafts, paused, and archived challenges are inaccessible to participants.
+  - **Frontend Client Integration**:
+    - `admin.service.js`: Added client methods for all team, challenge, and question CRUD endpoints.
+    - `TeamManagementPage.jsx`: Added interactive modals for Add Team, Edit Team, Add Member, Remove Member, and Delete Team with loading/error states.
+    - `ChallengeManagementPage.jsx`: Added Checkpoint association selector, `requiresCheckpointScan` toggle, `'Archived'` status support, and Delete Challenge confirmation action.
+    - `QuestionManagementPage.jsx`: Added Checkpoint selector, interactive detail tabs (Preview, Answer Settings, QR Mapping), `'Archived'` status, and Delete Question action.
+    - `ParticipantDashboard.jsx`: Connected live `getCurrentChallenge()` and dynamic team member avatars from `team.members`.
+- **Consequences**:
+  - Complete end-to-end CRUD persistence across MongoDB, Express, and React.
+  - Zero-leakage flag security preserved with 100% test coverage (20/20 tests passed in `test_team_challenge_question_integration.js`).
+
+---
+
+## ADR-0038: Physical QR Checkpoint Verification and Atomic Submission Engine
+- **Status**: ACCEPTED
+- **Context**:
+  - Phase 4 of the The Tech Mystery CTF roadmap requires physical QR checkpoint scanning, token verification, challenge unlocking, and an atomic submission scoring engine.
+  - Security requirements:
+    1. QR codes must encode opaque checkpoint URLs with cryptographic HMAC-SHA256 signatures (`verifyCheckpointToken`), preventing tampering, guessing, or enumeration.
+    2. Checkpoints must be gated by level prerequisites: teams cannot scan higher-level checkpoints ahead of their progression.
+    3. Checkpoint scanning must NEVER award points merely for physical arrival; points are only awarded upon valid flag submission.
+    4. Secret challenge flags and expected answers must NEVER be returned in checkpoint payloads or participant challenge responses (`flag: { select: false }`).
+    5. Flag submissions must be validated server-side using constant-time string comparisons (`crypto.timingSafeEqual`) with optional case-sensitivity handling.
+    6. Submissions must enforce attempt limits (lockout after max attempts) and rate limits to prevent brute-forcing.
+    7. Concurrent submission race conditions and duplicate rewards must be blocked with atomic database operations (`findOneAndUpdate({ _id, status: { $ne: 'SOLVED' } })`).
+- **Decision**:
+  - **Backend Implementation**:
+    - `crypto.js`: Enhanced `safeFlagCompare` with constant-time equality and configurable `caseSensitive` support. Fortified `verifyCheckpointToken` with type guards.
+    - `checkpoint.service.js`: Validates checkpoint existence, active state, HMAC token signature, and team level eligibility. Unlocks `TeamChallenge` and tracks `alreadyScanned` state and metrics (`scanCount`, `lastScanAt`) without awarding points.
+    - `submission.controller.js`: Enforces level progression matching, physical checkpoint scan prerequisite (`challenge.requiresCheckpointScan && !teamChallenge.checkpointScanned`), attempt limits lockout with remaining attempts reported, and immutable audit logs (`Submission`).
+    - `scoring.service.js`: Implemented atomic `findOneAndUpdate` with `{ status: { $ne: 'SOLVED' } }` check to guarantee idempotent exactly-once scoring, updating team total score and level progression atomically.
+    - `apiResponse.js` & `team.routes.js`: Ensured error responses return metadata in both `errors` and `data` fields; added `/my-team` alias to `/teams/me`.
+  - **Frontend Implementation**:
+    - `QRCheckpointPage.jsx`: Added dual-mode scanning supporting both live camera (`Html5Qrcode`) / image upload and fallback manual code entry. Added URL query parameter detection (`/checkpoint/scan?code=...&token=...`) enabling native smartphone camera scans. Displayed rich unlocked station cards with question prompt preview (without flag) and direct navigation to `/portal/challenge`.
+    - `QRCheckpointManagementPage.jsx`: Connected live MongoDB checkpoint synchronization via `adminService.getCheckpoints()`, `createCheckpoint()`, and `updateCheckpoint()`, preserving printable placard generation with real HMAC QR codes.
+    - `submission.service.js`: Created dedicated client service for `/submissions/submit`.
+    - `AppRoutes.jsx`: Added route `/checkpoint/scan` mapping to `QRCheckpointPage`.
+  - **Verification & Testing**:
+    - Created comprehensive test suite `test_phase4_qr_submission.js` covering 51 assertions across admin QR generation, participant scanner security (invalid codes, forged tokens, locked levels, attempt limits), atomic solve, anti-replay, and leaderboard sync (51/51 PASSED).
+    - Executed regression suites `test_phase3_integration.js` (16/16 PASSED) and `test_team_challenge_question_integration.js` (20/20 PASSED).
+    - Verified clean client production build with `npm run build:client` (exit code 0 in 7.51s).
+- **Consequences**:
+  - Delivers a secure, anti-cheat physical-digital CTF competition platform.
+  - Prevents all replay, double-scoring, and timing side-channel vulnerabilities.
+
+---
+
+## ADR-0039: Authoritative Public & Admin Leaderboard, Event State Gating, and Final Flag Engine (Phase 5)
+- **Status**: ACCEPTED
+- **Context**:
+  Phase 5 requires full end-to-end operational readiness for The Tech Mystery:
+  1. The public leaderboard must connect to the authoritative backend API with deterministic tie-breaking (`totalScore DESC, lastSolveTimestamp ASC, createdAt ASC, _id ASC`), loading/empty/error states, and respect the backend's visibility setting (`isLeaderboardVisible === false` conceals standings).
+  2. The admin leaderboard must use live database data consistent with public scores, while allowing administrators to view full standings (including concealed states and disqualified teams).
+  3. Administrative actions (configuration updates, freeze toggles, team disqualifications) must be recorded in `SecurityLog` audit records.
+  4. Event lifecycle state restrictions must be enforced on the backend: submissions and checkpoint scans blocked when `PAUSED`, `CONCLUDED`, or in `maintenanceMode`; team creation blocked when `registrationOpen === false` or `maxTeams` reached.
+  5. The Final Flag (Level 10) must validate prerequisite completion, verify secret flags in constant time, block duplicate rewards, advance teams to Level 11 upon victory, and transition `FinalFlagPage` to the celebration victory HUD.
+  6. End-to-end verification must prove complete gameplay from registration through Level 10 capture with 0 security leaks and clean test teardown.
+- **Decision**:
+  - **Backend Implementation**:
+    - `EventConfig.js`: Added `isLeaderboardVisible: { type: Boolean, default: true }`.
+    - `leaderboard.controller.js`: Implemented deterministic sorting across all rank queries using official competition tie-breakers: `totalScore DESC`, earlier `lastSolveTimestamp ASC`, earlier `createdAt ASC`, and stable `_id ASC`. Implemented `getLiveLeaderboard` (conceals when `!isVisible`) and `getAdminLeaderboard` (returns full standings with team details, member counts, and disqualification states).
+    - `admin.routes.js`: Added `GET /admin/leaderboard` protected by `authenticate` and `requireAdmin`.
+    - `admin.controller.js`: Added audit trail generation in `updateEventConfig` (`category: 'CONFIGURATION'`) and `disqualifyTeam` (`category: 'ADMIN ACTION'`) in `SecurityLog`.
+    - `submission.controller.js`: Enforced event state gating (rejects with 403 when `maintenanceMode: true`, `state === 'PAUSED'`, or `state === 'CONCLUDED'`); supports fallback assignment for Level 10 final flag; enforces attempts lockout and exactly-once atomic solve.
+    - `checkpoint.service.js`: Enforced event state gating (rejects with 400 when `maintenanceMode: true`, `state === 'PAUSED'`, `state === 'CONCLUDED'`, or `qrCheckpoints === false`).
+    - `team.service.js`: Enforced registration limits (`registrationOpen === false`, `maxTeams`, `state === 'CONCLUDED'`, `maintenanceMode`).
+    - `team.routes.js`: Added support for both `POST /teams` and `POST /teams/create`.
+  - **Frontend Implementation**:
+    - `LeaderboardPage.jsx`: Connected directly to `leaderboardService.getLeaderboard()`. Added loading spinner, error banner with retry button, empty arena state ("THE ARENA IS OPEN"), concealed standings alert banner ("LEADERBOARD CONCEALED BY SOC"), frozen state badge, and manual instant refresh button alongside 15s auto-polling. Removed demo mock data fallbacks when live database data is loaded.
+    - `LeaderboardManagementPage.jsx`: Connected to `adminService.getLeaderboard()`. Removed demo client-side rank adjustment controls (`moveTeam`) to uphold competition integrity. Connected visibility switch to persist `isLeaderboardVisible` and `isLeaderboardFrozen` directly to backend `EventConfig`.
+    - `EventControlPage.jsx`: Updated `handleSave` and `handleBroadcastAnnouncement` to always persist to live backend database and set `isLiveDb: true`.
+    - `FinalFlagPage.jsx`: Connected to `challengeService.submitFlag(10, normalizedFlag)`, verifying attempts remaining, level gating, constant-time verification, and victory HUD celebration transition.
+  - **Verification & Testing**:
+    - Created `test_phase5_e2e_gameplay.js` verifying 48 distinct assertions across admin inspection, public leaderboard tie-breaking, concealment gating, event state enforcement (PAUSED, MAINTENANCE, REGISTRATION_CLOSED), Level 1 to Level 10 gameplay, Master Flag solve, anti-replay, and RBAC security (48/48 PASSED).
+    - Ran all regression suites: `test_phase4_qr_submission.js` (51/51 PASSED), `test_team_challenge_question_integration.js` (20/20 PASSED), `test_phase3_integration.js` (16/16 PASSED) — 135/135 total passed.
+    - Production client build verified with `npm run build:client` (exit code 0).
+- **Consequences**:
+  - The The Tech Mystery platform is fully integrated, resilient, and competition-ready with zero client score modifications, zero flag leaks, and complete administrative lifecycle control.
+
+---
+
+## ADR-0040: Hardened JWT Authentication, Real-Time MongoDB State Synchronization, and Admin Authorization
+- **Status**: ACCEPTED
+- **Context**:
+  - Authentication tokens are issued with user claims (`userId`, `role`, `teamId`), but static claim trust creates severe security vulnerabilities if user privileges, account status, or team membership change during a live competition.
+  - Specifically:
+    1. If an account is deactivated (`isActive: false`) or deleted after token issuance, stale JWTs must not grant continued access.
+    2. If an administrative user is downgraded or a participant's role is updated, the change must take effect on the very next request without waiting for token expiry.
+    3. If a participant is removed from a team, stale `teamId` claims inside the JWT must be cleared immediately so they cannot submit flags or access team-only challenges.
+    4. Optional authentication (`optionalAuth`) on public routes must synchronize user state when valid tokens are provided, must not authenticate inactive or deleted users, must preserve public access for unauthenticated requests, and must not silently swallow database errors into unverified authenticated sessions.
+- **Decision**:
+  - **Hardened `authenticate` middleware (`server/src/middleware/auth.middleware.js`)**:
+    - Continues validating JWT signature and expiry, returning standardized 401 responses for missing, malformed, invalid, or expired tokens.
+    - Validates `decoded.userId` against MongoDB using `User.findById(decoded.userId).select('role teamId isActive')`.
+    - Explicitly rejects deleted users with HTTP 401 (`User account no longer exists`).
+    - Explicitly rejects deactivated accounts with HTTP 401 (`Account has been deactivated. Please contact an administrator.`).
+    - Overwrites `req.user.role` with `freshUser.role` authoritatively from MongoDB.
+    - Synchronizes `req.user.teamId` with `freshUser.teamId ? freshUser.teamId.toString() : null`, explicitly clearing stale token claims when teamId is null in the database.
+    - Sets `_id`, `userId`, and `isActive` consistently on `req.user`.
+  - **Hardened `optionalAuth` middleware (`server/src/middleware/auth.middleware.js`)**:
+    - Initializes `req.user = null` and preserves public access if no Authorization header or token is supplied.
+    - Ignores malformed, invalid, or expired tokens to allow public viewing.
+    - If a valid token contains `userId`, performs authoritative MongoDB lookup and verifies `freshUser.isActive`.
+    - If user is missing or inactive, leaves `req.user = null` and does not retain stale token role/team data.
+    - Catches database connection/query errors, sets `req.user = null`, and forwards the error via `next(error)` so database outages are not silently converted into unverified authenticated sessions.
+  - **Verified Admin Route RBAC (`server/src/routes/admin.routes.js`)**:
+    - Preserved `router.use(authenticate)` followed immediately by `router.use(requireAdmin)` across all 21 administrative API endpoints.
+    - Verified non-admin roles (`TEAM_MEMBER`, `TEAM_LEADER`) receive HTTP 403 Forbidden on all administrative consoles.
+  - **Automated Verification Suite (`test_jwt_admin_auth.js`)**:
+    - Implemented and executed 18 assertions covering all required test vectors:
+      1. Missing token -> 401.
+      2. Malformed tokens (non-Bearer, empty Bearer, corrupted string) -> 401.
+      3. Invalid/forged signature -> 401.
+      4. Expired token -> 401.
+      5. Deleted user -> 401.
+      6. Inactive user -> 401.
+      7. Active admin -> 200 OK.
+      8. Active non-admin -> 403 Forbidden.
+      9. Role changed in MongoDB (upgrade to ADMIN and downgrade to TEAM_MEMBER) reflected immediately with same token.
+      10. Team membership removed in MongoDB reflected immediately (403 on team-required routes, 404 on `/teams/my-team`).
+      11. Optional auth with no token remains public (200 OK).
+      12. Optional auth with inactive or deleted user does not authenticate (graceful public view).
+- **Consequences**:
+  - Eliminates stale claim attacks, privilege persistence after role changes, and deactivated account access.
+  - 18/18 tests in `test_jwt_admin_auth.js` passed (100% success rate). All platform regression suites (`test_phase3_integration.js`, `test_team_challenge_question_integration.js`, `test_phase4_qr_submission.js`, `test_phase5_e2e_gameplay.js`) continue passing with 100% success (153/153 total tests).
 
 
 
@@ -470,3 +674,65 @@ This document logs significant architectural and design choices, their context, 
 
 
 
+
+
+
+
+
+
+## ADR-0041: Transactional gameplay, explicit participant DTOs, scoped QR and revocable JWTs
+
+- **Status:** IMPLEMENTED in the working tree, 19 October 2026. Deployment/data migration
+  remains pending; this supersedes unconditional security/completion statements in earlier ADRs.
+- **Revalidated findings:** literal answers in legacy participant prompts, public/member
+  invitation disclosure, optional QR signature checking, nontransactional solve/review writes,
+  attempt/member races, lifecycle gaps, ineffective revocation and unsafe production defaults.
+  Existing inactive-account checks and authoritative role/team refresh were already implemented
+  and preserved. No Clerk integration was present or added.
+- **Decision:** use allowlisted participant DTOs with known-answer containment, preserve private
+  admin answer access, require expiry/scope-bound HMAC payloads, and require MongoDB transactions
+  for coordinated writes. Mongoose's transaction AsyncLocalStorage propagates the session.
+  Revision writes prevent conflicting lifecycle/membership/content edits from being ignored.
+  No unsafe standalone fallback is permitted. Scores and progression share one canonical
+  scoring submission per assignment; correction history and security audit writes commit with
+  the change. New teams start at zero/level one; direct score/level overrides are rejected.
+- **Sessions:** retain the existing JWT architecture with HS256 purpose/version checks against
+  MongoDB. Revoke previous versions on logout, password change and admin session revocation.
+  Admin revocation issues a new current-client credential. Stop issuing unused refresh tokens;
+  keep MFA as explicitly unimplemented rather than equating a preference to verification.
+- **Compatibility:** old JWTs require re-login; old QR signatures require regeneration. Bound
+  checkpoints need an explicit boundTeamId; shared signed checkpoints use Public QR mode.
+  Existing solved assignments without scoringSubmissionId need reviewed data reconciliation
+  before review/correction. Unsafe legacy prompt content is withheld without modifying it.
+  Leader/admin invitation rotation is explicit and audited; existing codes are not auto-rotated.
+- **Consequences:** replica-set deployment is required. Event-level serialization favors
+  correctness over throughput and needs load testing. Runtime answer matching is conservative;
+  human review is still required for artifact quality and encoded/semantic answer leakage.
+  Existing event data is unchanged. Real leaderboard freezing and browser/camera verification
+  remain outside this implemented phase.
+- **Evidence:** isolated real-HTTP test suite: 38 passed, 0 failed; lint passed; client build
+  passed with a large-chunk warning. Runtime dependency audit: zero; full development-tool
+  audit: 6 high and 2 moderate advisories. Tests never connect to the existing event database.
+
+## ADR-0042: Isolated preparation artifacts and approval-separated ingestion
+
+- **Status:** Preparation tooling implemented; operational/enrollment/QR decisions proposed.
+- **Decision:** preserve the configured event database. Reconciliation uses native-driver
+  read commands and inclusion projections, producing redacted evidence with original IDs,
+  never an executable repair. Candidate mappings require unique matching submission,
+  association/history/total/progression evidence; ambiguous amounts remain manual decisions.
+- **Staging:** authenticated single-node replica-set templates use an isolated database,
+  port, volume, credentials and explicit launcher/init guards. No automatic startup or
+  seed. Production TLS/redundancy and actual container startup remain separate work.
+- **Deployment evidence:** anonymous GETs confirm public invitation disclosure. Source
+  mtimes/hashes versus approximate process start support stale deployment diagnosis.
+  OPTIONS is globally handled by CORS and cannot establish POST route presence. No claim
+  of complete loaded-source identity or mutation-tested live behavior is made.
+- **Proposals, not implemented behavior:** individual self-registration with pending-team
+  status, organizer-approved roster assembly reusing existing admin transactions, and a
+  backend enrollment-mode gate before strict approval can be promised. Shared campus
+  checkpoints should use explicitly approved signed Public QR after dates/TTL/policy
+  approval. Static QR signatures do not prove physical presence.
+- **Evidence:** 51 combined server tests passed; 10 preparation safeguards included in the final combined run;
+  lint and Compose configuration validation passed. No live records/configuration,
+  connection, invitation, score, registration state, deployment or real QR output changed.

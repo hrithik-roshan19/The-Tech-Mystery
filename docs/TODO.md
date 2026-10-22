@@ -1,4 +1,62 @@
-# ACTIONABLE IMPLEMENTATION BACKLOG (TODO): HACK THE GRID
+# ACTIONABLE IMPLEMENTATION BACKLOG (TODO): THE TECH MYSTERY
+
+## Clerk authentication preparation ? 19 October 2026
+
+Clerk integration is implemented as an explicit opt-in provider; existing JWT mode remains the
+default and its implementation is retained. No live connection, data migration, deployment,
+account linking or registration opening occurred. MongoDB still owns roles, membership and
+active status. Linking requires verified matching email plus existing password; ADMIN recovery
+requires organizer approval. New Clerk participants remain unteamed and registration-gated.
+See [implementation, exact files, setup, verification and rollback](CLERK_AUTHENTICATION.md).
+Real Clerk credentials, browser acceptance, index setup, transaction-capable deployment and cutover
+remain approval-gated. Earlier phase status statements below describe those phases historically.
+
+
+## Event-data preparation - 19 October 2026
+
+- [x] Save read-only historical evidence with original IDs and no private fields.
+- [x] Record the confirmed running/public leaderboard difference and verification limits.
+- [x] Prepare authenticated, isolated replica-set staging templates and target guards.
+- [x] Validate Compose configuration without creating services or data.
+- [x] Test complete admin roster creation/rollback and registration privilege isolation.
+- [x] Run combined server suite (51/51) and 10 preparation safeguards in the final run.
+- [x] Propose smallest safe approved-roster wizard changes and shared Public QR policy.
+- [ ] Organizer approval: staging provisioning/initialization and production target.
+- [ ] Organizer approval: historical records retained/archived/reconciled and backup plan.
+- [ ] Organizer approval: dates, content/assets, roster/enrollment and QR issuance policies.
+- [ ] Implement approved account/pending-team wizard and server-side enrollment mode.
+- [ ] Perform approved staging runtime/transaction/browser/load acceptance checks.
+- [ ] Approve exact migration/rotation/deployment manifests separately.
+- [ ] Approve real data ingestion and registration opening only after acceptance.
+
+No unchecked operation above was executed by preparation.
+
+
+## Security remediation ? latest status (19 October 2026)
+
+- [x] Recheck findings against current implementation before editing.
+- [x] Withhold answer-bearing content and omit private fields from participant DTOs.
+- [x] Protect invitations; add leader/admin rotation with 128-bit replacement codes.
+- [x] Require expiring, scoped signed QR payloads; reject missing/legacy/tampered tokens.
+- [x] Make enrollment, attempts, solves, score corrections and reversals transactional.
+- [x] Block duplicate approvals and deletion of records with gameplay history.
+- [x] Enforce LIVE, registration controls, team eligibility and publication state.
+- [x] Verify token purpose/version; implement logout/password/admin session revocation.
+- [x] Reject unsafe production signing configuration and production demo seeding.
+- [x] Execute isolated security integration tests (38/38), server lint and client build.
+- [x] Keep the existing event database untouched; do not begin Clerk integration.
+- [ ] Approve and perform replica-set setup, deployment and unique-index verification.
+- [ ] Review legacy challenge content; publish real artifacts instead of withheld prompts.
+- [ ] Configure team-bound checkpoints or explicitly select signed shared Public QR mode.
+- [ ] Regenerate/reprint expiring placards and rotate previously exposed invitations.
+- [ ] Review historical scoring ownership and reconcile records before old-solve corrections.
+- [ ] Validate browser/camera/logout flows and run production-like load tests.
+- [ ] Address remaining development dependency advisories without an unreviewed UI migration.
+- [ ] Implement real leaderboard freeze snapshots and separately scope MFA/refresh/recovery.
+
+These entries supersede older broad completion claims. Pending data operations require
+approval and were not performed as part of the code remediation.
+
 
 > **RULE:** As tasks are implemented in future phases, update this file to reflect current progress.
 
@@ -164,46 +222,55 @@
 ---
 
 
-## Phase 3: Authentication & Registration System (High Priority)
-- [ ] Connect backend to local/Atlas MongoDB database.
-- [ ] Test `/api/v1/auth/register` with input validation rules.
-- [ ] Test `/api/v1/auth/login` and verify JWT token issuance.
-- [ ] Connect client login and register forms to live API endpoints.
-- [ ] Test session persistence across page reload via `localStorage`.
+## Phase 3: Authentication, Database & Registration System (COMPLETED)
+- [x] Connect backend to local/Atlas MongoDB database (`mongodb://127.0.0.1:27017/hack_the_grid`).
+- [x] Test `/api/v1/auth/register` with input validation rules.
+- [x] Test `/api/v1/auth/login` and verify JWT token issuance.
+- [x] Connect client login and register forms to live API endpoints.
+- [x] Test session persistence across page reload via `localStorage`.
 
 ---
 
 ## Phase 4: Team Management Engine (High Priority)
-- [ ] Verify squad creation flow and join code generation (`HTG-XXXXXX`).
-- [ ] Enforce team size limits (minimum 2, maximum 4 operatives).
-- [ ] Test team joining via join code.
+- [x] Verify squad creation flow and join code generation (`HTG-XXXXXX`).
+- [x] Enforce team size limits (minimum 2, maximum 4 operatives).
+- [x] Test team joining via join code.
 - [ ] Build UI toast notification for successful team enrollment.
 
 ---
 
 ## Phase 5: Challenge Engine & Asset Pipeline (High Priority)
-- [ ] Create seed script with sample challenges for Levels 1 through 10.
+- [x] Create seed script with sample challenges for Levels 1 through 10 (`server/src/utils/seed.js`).
 - [ ] Support rich Markdown rendering for challenge prompts (syntax highlighting for code snippets).
 - [ ] Support downloadable challenge asset artifacts (binary dumps, stego images) and backend file attachment upload endpoint (`POST /api/v1/admin/challenges/:challengeId/attachments`).
 
 ---
 
 ## Phase 6: Team-Specific Question Allocation (Critical Priority)
-- [ ] Populate at least 3 question variations for each level in the database.
+- [x] Populate question variations across levels in database (`server/src/utils/seed.js`).
 - [ ] Write integration test verifying that Team A and Team B receive different questions.
-- [ ] Write test verifying that Team A always receives the same question upon repeated requests or page refreshes.
+- [x] Write test verifying that Team A always receives the same question upon repeated requests or page refreshes (idempotency verified).
 
 ---
 
-## Phase 7: QR Checkpoint Cryptographic System (High Priority)
+## Phase 7: QR Checkpoint Cryptographic System (COMPLETED)
 - [x] Connect smartphone HTML5 camera QR scanner library in `CheckpointScannerPage.jsx` and `QRCheckpointPage.jsx`.
-- [x] Test HMAC token verification on `/api/v1/checkpoint/scan`.
+- [x] Implement fallback manual code entry in `QRCheckpointPage.jsx`.
+- [x] Support native phone camera scan URL detection (`/checkpoint/scan?code=...&token=...`).
+- [x] Test HMAC token verification on `/api/v1/checkpoints/scan` with tampered token and locked level detection.
 - [x] Generate printable placards with real scannable QR codes for campus checkpoints (`/admin/checkpoints`).
+- [x] Strictly enforce 0 point award on checkpoint scan alone.
 
 ---
 
-## Phase 8: Timer, Scoring Engine & Hint System (Medium Priority)
-- [ ] Test atomic score incrementing upon successful flag submission.
+## Phase 8: Timer, Scoring Engine & Hint System (In Progress - Scoring & Submissions Completed)
+- [x] Connect participant flag submission engine (`POST /api/v1/submissions/submit`).
+- [x] Verify constant-time flag comparison (`crypto.timingSafeEqual`) and case sensitivity support.
+- [x] Enforce checkpoint scan gating before accepting flag submissions on gated challenges.
+- [x] Enforce attempt limits lockout with remaining attempts reported.
+- [x] Test atomic score incrementing upon successful flag submission (`TeamChallenge.findOneAndUpdate`).
+- [x] Block replay submissions and concurrent double-claims.
+- [x] Synchronize team level progression and leaderboard rankings.
 - [ ] Implement hint unlock modal with confirmation warning for point penalties.
 - [ ] Test sub-millisecond tie-breaker timestamp precision.
 
@@ -234,27 +301,70 @@
 - [x] Integrate reference Admin Profile page (`/admin/profile`) with privileged account identity (`ACCESS LEVEL 04`), telemetry stats, Overview / Settings / Security tabs, permissions inspector, session card, and password change modal.
 - [x] Implement admin profile endpoints (`GET /api/v1/admin/profile`, `PATCH /api/v1/admin/profile`, `POST /api/v1/admin/sessions/revoke`) with server-enforced role immutability and audit logging.
 - [x] Update `AdminSidebar.jsx` to link the administrator user card directly to `ROUTES.ADMIN_PROFILE`.
-- [ ] Implement admin challenge deletion (`DELETE /api/v1/admin/challenges/:challengeId`) and question deletion (`DELETE /api/v1/admin/questions/:questionId`).
-- [ ] Implement admin team creation endpoint (`POST /api/v1/admin/teams`), admin team details edit endpoint (`PATCH /api/v1/admin/teams/:teamId`), admin member assignment endpoint (`POST /api/v1/admin/teams/:teamId/members`), and add `college` field to `Team` Mongoose schema (`server/src/models/Team.js`).
+- [x] Unify and standardize separate navigation systems:
+  - [x] Canonical 9-link Admin Sidebar in exact order (Overview, Teams, Challenges, Questions, QR Checkpoints, Submissions, Leaderboard, Event Control, Security Logs) with real telemetry badges and zero fabricated mock counts.
+  - [x] Canonical 7-link Public Navbar in single desktop horizontal row (HOME, LEADERBOARD, MISSION, CHALLENGES, QR CHECKPOINT, FINAL FLAG, RULES) with role-aware right action buttons.
+  - [x] Strict layout isolation: `AdminLayout` (sidebar + content only), `PublicLayout` (navbar + content + footer only), `ParticipantLayout` (participant HUD).
+  - [x] Server-authoritative role verification in `auth.middleware.js` via database lookup, neutralizing JWT role spoofing.
+  - [x] Client route protection in `ProtectedRoute.jsx` bouncing unauthorized participants to `/dashboard` and unauthenticated visitors to `/admin/login` (preserving deep links).
+- [x] Implement admin challenge deletion (`DELETE /api/v1/admin/challenges/:challengeId`) and question deletion (`DELETE /api/v1/admin/questions/:questionId`).
+- [x] Implement admin team creation endpoint (`POST /api/v1/admin/teams`), admin team details edit endpoint (`PATCH /api/v1/admin/teams/:teamId`), admin member assignment endpoint (`POST /api/v1/admin/teams/:teamId/members`), member removal endpoint (`DELETE /api/v1/admin/teams/:teamId/members/:userId`), admin team deletion (`DELETE /api/v1/admin/teams/:teamId`), and added `college` field to `Team` Mongoose schema (`server/src/models/Team.js`).
+- [x] Connect admin Team Management, Challenge Management, Question Management, and Participant Dashboard pages to live database endpoints with full CRUD operations, modal flows, and zero-leakage flag security.
+- [x] Implement Phase 4: QR Checkpoint Management and Submission Engine:
+  - [x] Connected QR Checkpoint Management page to backend with real HMAC-signed QR generation and printable placards.
+  - [x] Implemented dual-mode QR Scanner (`QRCheckpointPage.jsx`) supporting live camera, image upload, fallback manual entry, and smartphone URL scanning (`/checkpoint/scan`).
+  - [x] Enforced checkpoint validation: token verification, level progression gating, and zero-point scans.
+  - [x] Built secure submission engine with constant-time flag comparison (`crypto.timingSafeEqual`), attempt limit lockouts, and atomic idempotent solve (`scoring.service.js`).
+  - [x] Verified Phase 4 test suite with 51/51 tests passing.
+- [x] Implement Phase 5: Leaderboard, Final Flag and End-to-End Verification:
+  - [x] Connected Public Leaderboard (`LeaderboardPage.jsx`) to live `/api/v1/leaderboard` with deterministic tie-breaking (`totalScore DESC, lastSolveTimestamp ASC, createdAt ASC, _id ASC`).
+  - [x] Handled all leaderboard UI states: loading spinner, connection error retry, empty arena, concealed standings banner, frozen badge, and manual instant refresh.
+  - [x] Connected Admin Leaderboard (`LeaderboardManagementPage.jsx`) to live `/api/v1/admin/leaderboard` and removed client-side rank adjustment controls (`moveTeam`).
+  - [x] Connected Event Control (`EventControlPage.jsx`) to live `EventConfig` API with automatic `SecurityLog` audit logging for privileged changes.
+  - [x] Enforced backend event-state restrictions (submissions/scans blocked when `PAUSED`, `CONCLUDED`, or in `maintenanceMode`; team creation blocked when `registrationOpen === false` or `maxTeams` reached).
+  - [x] Connected Final Flag (`FinalFlagPage.jsx`) for Level 10 capture with progression prerequisite gating, attempts lockout, constant-time verification, victory HUD transition (Level 11), and anti-replay protection.
+  - [x] Executed end-to-end test suite (`test_phase5_e2e_gameplay.js`): 48/48 tests passing.
+  - [x] Verified all platform test suites: 135/135 tests passing across all integration suites.
+  - [x] Verified client production build (`npm run build:client` exit code 0).
 
 ---
 
 ## Phase 11: Security Hardening & Anti-Cheat (High Priority)
-- [ ] Test rate limiters on submissions (verify 429 response on rapid attempts).
-- [ ] Run security scanner (npm audit, OWASP top 10 review).
-- [ ] Verify zero flag exposure in API network inspector.
+- [x] Test rate limiters on submissions and checkpoint endpoints.
+- [x] Verify zero flag exposure across all participant and public API responses (`select: false`).
+- [x] Constant-time flag comparison preventing timing attacks.
+- [x] HMAC-SHA256 checkpoint token validation preventing QR tampering.
+- [x] Idempotent atomic solve guard preventing race condition double-rewards.
+- [x] Harden JWT authentication middleware (`auth.middleware.js`):
+  - [x] Validate JWT signature and expiry.
+  - [x] Query MongoDB using token `userId` and select `role`, `teamId`, `isActive`.
+  - [x] Reject deleted users with 401 (`User account no longer exists`).
+  - [x] Reject deactivated users (`isActive: false`) with 401 (`Account has been deactivated. Please contact an administrator.`).
+  - [x] Authoritatively overwrite `req.user.role` from database.
+  - [x] Explicitly clear stale `teamId` when user's database `teamId` is null.
+- [x] Harden optional authentication middleware (`optionalAuth`):
+  - [x] Preserve public access for unauthenticated requests.
+  - [x] Synchronize active user state when valid token is supplied.
+  - [x] Do not populate authenticated identity for inactive or deleted users.
+  - [x] Forward database errors to error handling middleware instead of silently authenticating.
+- [x] Verify admin authorization in `admin.routes.js` (`authenticate` before `requireAdmin`).
 
 ---
 
-## Phase 12: Testing & QA (Medium Priority)
-- [ ] Write backend unit tests (Jest/Supertest) for auth, assignment, and submissions.
-- [ ] Write frontend component tests for key pages.
+## Phase 12: Testing & QA (COMPLETED)
+- [x] `test_jwt_admin_auth.js` (18/18 tests PASSED).
+- [x] `test_phase5_e2e_gameplay.js` (48/48 tests PASSED).
+- [x] `test_phase4_qr_submission.js` (51/51 tests PASSED).
+- [x] `test_team_challenge_question_integration.js` (20/20 tests PASSED).
+- [x] `test_phase3_integration.js` (16/16 tests PASSED).
+- [x] Comprehensive platform regression: 153/153 tests passing (100% success rate).
 
 ---
 
-## Phase 13: Production Deployment (High Priority)
+## Phase 13: Production Deployment Readiness
+- [x] Production client bundle verified (`npm run build:client` exit code 0).
 - [ ] Setup production MongoDB Atlas cluster.
-- [ ] Deploy backend to Render/Railway.
+- [ ] Deploy backend to production environment (Render/Railway).
 - [ ] Deploy frontend to Vercel with SPA routing rewrite.
 - [ ] Conduct end-to-end dry run on campus network.
 

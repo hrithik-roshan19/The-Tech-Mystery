@@ -1,0 +1,495 @@
+[
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fc7f",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+    "levelNumber": 1,
+    "title": "Base64 Welcome Beacon",
+    "prompt": "Welcome to The Tech Mystery! Decode the following broadcast transmission to capture your first flag:\n\n```\nSFRHe3dlbGNvbWVfdG9fdGhlX2dyaWRfMjAyNn0=\n```",
+    "category": "CRYPTOGRAPHY",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 100,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{welcome_to_the_grid_2026}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Notice the trailing = padding character. It indicates standard Base64 encoding.",
+        "penaltyPoints": 20,
+        "_id": "6ace7c2bf5fda84bd9c5fc80"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.308Z",
+    "updatedAt": "2026-10-13T18:44:59.308Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fc83",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+    "levelNumber": 1,
+    "title": "Caesar Rotation Beacon",
+    "prompt": "An encoded signal has been emitted from the arena beacon:\n\n```\nUGF7ebg13_fvtany_qrpbrq_2026}\n```\n\nDecode using ROT13 cipher.",
+    "category": "CRYPTOGRAPHY",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 100,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{rot13_signal_decoded_2026}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Shift each English letter forward by 13 positions.",
+        "penaltyPoints": 20,
+        "_id": "6ace7c2bf5fda84bd9c5fc84"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.359Z",
+    "updatedAt": "2026-10-13T18:44:59.359Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fc87",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+    "levelNumber": 1,
+    "title": "Binary Stream Transmission",
+    "prompt": "Binary stream received at the welcome gate:\n\n```\n01001000 01010100 01000111 01111011 01100010 01101001 01101110 01100001 01110010 01111001 01011111 01100010 01100101 01100001 01100011 01101111 01101110 01111101\n```",
+    "category": "CRYPTOGRAPHY",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 100,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{binary_beacon}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Convert each 8-bit byte into ASCII characters.",
+        "penaltyPoints": 20,
+        "_id": "6ace7c2bf5fda84bd9c5fc88"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.366Z",
+    "updatedAt": "2026-10-13T18:44:59.366Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fc8b",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc3c",
+    "levelNumber": 2,
+    "title": "DOM Comment Clue",
+    "prompt": "The web application portal contains an unstripped developer comment inside its authentication script template:\n\n`<!-- TODO(dev): remove debug token flag=HTG{hidden_in_dom_comment} before production deployment -->`",
+    "category": "WEB_INSPECTION",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 150,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{hidden_in_dom_comment}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Inspect elements or view source in developer tools.",
+        "penaltyPoints": 25,
+        "_id": "6ace7c2bf5fda84bd9c5fc8c"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.373Z",
+    "updatedAt": "2026-10-13T18:44:59.373Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fc8f",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc3c",
+    "levelNumber": 2,
+    "title": "Custom HTTP Header",
+    "prompt": "The campus gateway server injects custom telemetry metadata in its HTTP headers:\n\n`X-Grid-Secret: HTG{header_secret_revealed}`",
+    "category": "WEB_INSPECTION",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 150,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{header_secret_revealed}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Check the Network tab response headers on the gateway.",
+        "penaltyPoints": 25,
+        "_id": "6ace7c2bf5fda84bd9c5fc90"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.380Z",
+    "updatedAt": "2026-10-13T18:44:59.380Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fc93",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc3c",
+    "levelNumber": 2,
+    "title": "Hidden Form Attribute",
+    "prompt": "The registration form has a hidden input field:\n\n`<input type=\"hidden\" name=\"grid_secret\" value=\"HTG{hidden_form_input_val}\" />`",
+    "category": "WEB_INSPECTION",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 150,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{hidden_form_input_val}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Look for type=\"hidden\" form tags.",
+        "penaltyPoints": 25,
+        "_id": "6ace7c2bf5fda84bd9c5fc94"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.388Z",
+    "updatedAt": "2026-10-13T18:44:59.388Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fc97",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc3f",
+    "levelNumber": 3,
+    "title": "Vigenere Grid Cipher",
+    "prompt": "Decipher the intercepted message using key `GRID`:\n\n`NZX{z_zvxmfc_dvkkroy_2026}`",
+    "category": "CRYPTOGRAPHY",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 200,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{a_secret_message_2026}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Vigenere cipher decrypts using repeating key GRID.",
+        "penaltyPoints": 30,
+        "_id": "6ace7c2bf5fda84bd9c5fc98"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.395Z",
+    "updatedAt": "2026-10-13T18:44:59.395Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fc9b",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc3f",
+    "levelNumber": 3,
+    "title": "Atbash Substitution",
+    "prompt": "The operative left a message encrypted using the classical Atbash reciprocal cipher:\n\n`SGT{zgyzhs_xrkzvi_yivzxsvw}`",
+    "category": "CRYPTOGRAPHY",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 200,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{atbash_cipher_breached}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Map A to Z, B to Y, etc.",
+        "penaltyPoints": 30,
+        "_id": "6ace7c2bf5fda84bd9c5fc9c"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.403Z",
+    "updatedAt": "2026-10-13T18:44:59.403Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fc9f",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc42",
+    "levelNumber": 4,
+    "title": "Git Commit Forensics",
+    "prompt": "An operative deleted a secret token in an earlier commit on the repository:\n\n`Commit 9f41b2a: Removed secret flag HTG{git_commit_forensics}`",
+    "category": "OSINT",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 250,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{git_commit_forensics}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Check `git log -p` or commit diff history.",
+        "penaltyPoints": 35,
+        "_id": "6ace7c2bf5fda84bd9c5fca0"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.410Z",
+    "updatedAt": "2026-10-13T18:44:59.410Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fca3",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc42",
+    "levelNumber": 4,
+    "title": "DNS TXT Record Discovery",
+    "prompt": "Querying TXT records for grid.codesphere.tulas.edu.in yields:\n\n`\"v=spf1 include:relay.tulas.edu.in flag=HTG{dns_txt_record_found} ~all\"`",
+    "category": "OSINT",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 250,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{dns_txt_record_found}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Use nslookup or dig TXT queries.",
+        "penaltyPoints": 35,
+        "_id": "6ace7c2bf5fda84bd9c5fca4"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.416Z",
+    "updatedAt": "2026-10-13T18:44:59.416Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fca7",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc45",
+    "levelNumber": 5,
+    "title": "XOR Byte Manipulation",
+    "prompt": "A byte sequence in the binary subroutine is XOR-masked with constant `0x5A`:\n\n`Decoded sequence: HTG{xor_disassembly_master}`",
+    "category": "DEBUGGING",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 300,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{xor_disassembly_master}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "XOR with the same key restores original bytes.",
+        "penaltyPoints": 40,
+        "_id": "6ace7c2bf5fda84bd9c5fca8"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.423Z",
+    "updatedAt": "2026-10-13T18:44:59.423Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fcab",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc45",
+    "levelNumber": 5,
+    "title": "Instruction Patch Bypass",
+    "prompt": "By patching the jump condition at address 0x0040112A, the security gate unlocks with key:\n\n`HTG{patched_jump_bypass}`",
+    "category": "DEBUGGING",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 300,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{patched_jump_bypass}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Invert JNZ (0x75) to JZ (0x74) opcode.",
+        "penaltyPoints": 40,
+        "_id": "6ace7c2bf5fda84bd9c5fcac"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.429Z",
+    "updatedAt": "2026-10-13T18:44:59.429Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fcaf",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc48",
+    "levelNumber": 6,
+    "title": "Volatility Process Memory Dump",
+    "prompt": "Scanning memory dump of the rogue daemon process yields the authentication token:\n\n`HTG{volatility_mem_extracted}`",
+    "category": "Forensics",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 350,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{volatility_mem_extracted}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Extract strings from memory space of PID 1337.",
+        "penaltyPoints": 50,
+        "_id": "6ace7c2bf5fda84bd9c5fcb0"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.436Z",
+    "updatedAt": "2026-10-13T18:44:59.436Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fcb3",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc4b",
+    "levelNumber": 7,
+    "title": "Ret2win Stack Control",
+    "prompt": "Exploiting the unchecked gets() buffer overflow triggers execution of print_flag() at 0x4011f6:\n\n`Output: HTG{ret2win_stack_control}`",
+    "category": "Pwn",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 400,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{ret2win_stack_control}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Overwrite 64-bit saved return pointer.",
+        "penaltyPoints": 50,
+        "_id": "6ace7c2bf5fda84bd9c5fcb4"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.444Z",
+    "updatedAt": "2026-10-13T18:44:59.444Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fcb7",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc4e",
+    "levelNumber": 8,
+    "title": "Reassembled TCP Stream",
+    "prompt": "Follow TCP stream 4 in Wireshark to reconstruct the exfiltrated flag payload:\n\n`HTG{tcp_stream_reassembled}`",
+    "category": "Networking",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 450,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{tcp_stream_reassembled}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Filter tcp.port == 8080 and Follow TCP Stream.",
+        "penaltyPoints": 60,
+        "_id": "6ace7c2bf5fda84bd9c5fcb8"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.450Z",
+    "updatedAt": "2026-10-13T18:44:59.450Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fcbb",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc51",
+    "levelNumber": 9,
+    "title": "Least Significant Bit Extraction",
+    "prompt": "Extract the 0th bit of the green channel in the campus emblem PNG:\n\n`HTG{lsb_plane_extraction}`",
+    "category": "STEGANOGRAPHY",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 500,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{lsb_plane_extraction}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Inspect LSB planes using zsteg or stegsolve.",
+        "penaltyPoints": 70,
+        "_id": "6ace7c2bf5fda84bd9c5fcbc"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.457Z",
+    "updatedAt": "2026-10-13T18:44:59.457Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fcbf",
+    "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+    "levelNumber": 10,
+    "title": "Citadel Master Flag Protocol",
+    "prompt": "Final containment breach achieved! Enter the master flag to capture the grid:\n\n`HTG{MASTER_FLAG_GRID_BREACHED_2026}`",
+    "category": "MASTER_FLAG",
+    "difficulty": "MEDIUM",
+    "type": "Flag",
+    "points": 600,
+    "status": "Published",
+    "attempts": 3,
+    "required": true,
+    "flag": "HTG{MASTER_FLAG_GRID_BREACHED_2026}",
+    "isCaseSensitive": true,
+    "hints": [
+      {
+        "hintIndex": 1,
+        "content": "Combine the primary grid tokens collected from previous sectors.",
+        "penaltyPoints": 100,
+        "_id": "6ace7c2bf5fda84bd9c5fcc0"
+      }
+    ],
+    "assetUrls": [],
+    "isActive": true,
+    "createdAt": "2026-10-13T18:44:59.467Z",
+    "updatedAt": "2026-10-13T18:44:59.467Z",
+    "__v": 0
+  }
+]

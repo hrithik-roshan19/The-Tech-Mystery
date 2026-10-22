@@ -51,3 +51,6 @@ Thumbs.db
 tmp/
 scratch/
 
+# Dedicated preparation/staging secrets (templates remain tracked)
+staging/secrets/
+

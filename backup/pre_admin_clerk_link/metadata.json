@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-10-20T16:51:24.681Z",
+  "database": "hack_the_grid",
+  "collection": "users",
+  "documentCount": 97,
+  "backupFile": "users_snapshot.json"
+}

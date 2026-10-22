@@ -11,7 +11,7 @@ const seed = {
   email: "hrithik@example.com",
   role: "Super Administrator",
   department: "CodeSphere · Event Operations",
-  bio: "Managing event operations, team coordination, and platform integrity for Hack the Grid.",
+  bio: "Managing event operations, team coordination, and platform integrity for The Tech Mystery.",
   github: "ydv-hrx",
   linkedin: "hrithik-roshan",
   phone: "Not added",
@@ -22,43 +22,38 @@ const seed = {
   sessionAlerts: false
 };
 
-const fallbackStats = {
-  adminActions: "128",
-  securityReviews: "24",
-  managedTeams: "32",
+const defaultStats = {
+  adminActions: "0",
+  securityReviews: "0",
+  managedTeams: "0",
   sessionStatus: "ACTIVE",
-  accessLevel: "LEVEL 04",
+  accessLevel: "SUPER_ADMIN",
   privilege: "PRIVILEGED ACCOUNT"
 };
 
-const fallbackPermissions = [
+const defaultPermissions = [
   "Event configuration",
   "Team & submission review",
   "Leaderboard management",
   "Security log access"
 ];
 
-const fallbackSession = {
+const defaultSession = {
   device: "Desktop · Browser",
-  lastActive: "Just now · Demo value",
+  lastActive: "Active now",
   ip: "127.0.0.1"
 };
 
-const fallbackActions = [
-  ["14:02:51", "Leaderboard visibility updated", "Event Control · Public leaderboard", "settings"],
-  ["13:51:26", "Security logs reviewed", "Security Logs · Audit stream", "security"],
-  ["13:39:18", "Registration state checked", "Event Control · Registration", "event"]
-];
 
 export default function AdminProfilePage() {
-  const { user } = useAuth();
+  const { user, manageAccount } = useAuth();
 
   // State
-  const [admin, setAdmin] = useState(seed);
-  const [stats, setStats] = useState(fallbackStats);
-  const [permissions, setPermissions] = useState(fallbackPermissions);
-  const [session, setSession] = useState(fallbackSession);
-  const [actions, setActions] = useState(fallbackActions);
+  const [admin, setAdmin] = useState(defaultAdmin);
+  const [stats, setStats] = useState(defaultStats);
+  const [permissions, setPermissions] = useState(defaultPermissions);
+  const [session, setSession] = useState(defaultSession);
+  const [actions, setActions] = useState([]);
 
   const [tab, setTab] = useState("Overview");
   const [editing, setEditing] = useState(false);
@@ -127,12 +122,12 @@ export default function AdminProfilePage() {
 
         if (res.data.stats) {
           setStats({
-            adminActions: res.data.stats.adminActions || fallbackStats.adminActions,
-            securityReviews: res.data.stats.securityReviews || fallbackStats.securityReviews,
-            managedTeams: res.data.stats.managedTeams || fallbackStats.managedTeams,
-            sessionStatus: res.data.stats.sessionStatus || fallbackStats.sessionStatus,
-            accessLevel: res.data.stats.accessLevel || fallbackStats.accessLevel,
-            privilege: res.data.stats.privilege || fallbackStats.privilege
+            adminActions: String(res.data.stats.adminActions ?? 0),
+            securityReviews: String(res.data.stats.securityReviews ?? 0),
+            managedTeams: String(res.data.stats.managedTeams ?? 0),
+            sessionStatus: res.data.stats.sessionStatus || defaultStats.sessionStatus,
+            accessLevel: res.data.stats.accessLevel || defaultStats.accessLevel,
+            privilege: res.data.stats.privilege || defaultStats.privilege
           });
         }
 
@@ -142,9 +137,9 @@ export default function AdminProfilePage() {
 
         if (res.data.session) {
           setSession({
-            device: res.data.session.device || fallbackSession.device,
-            lastActive: res.data.session.lastActive || fallbackSession.lastActive,
-            ip: res.data.session.ip || fallbackSession.ip
+            device: res.data.session.device || defaultSession.device,
+            lastActive: res.data.session.lastActive || defaultSession.lastActive,
+            ip: res.data.session.ip || defaultSession.ip
           });
         }
 
@@ -361,9 +356,7 @@ export default function AdminProfilePage() {
             <div className="htg-ap-crumb">
               MISSION CONTROL <span>/</span> <b>ADMIN PROFILE</b>
             </div>
-            <span className={`htg-ap-data-pill ${isLiveDatabase ? "live" : "demo"}`}>
-              <i /> {isLiveDatabase ? "LIVE DATABASE" : "DEMO PREVIEW"}
-            </span>
+            <span className="htg-ap-data-pill live"><i /> LIVE DATABASE</span>
           </div>
 
           <div className="htg-ap-top-right">
@@ -578,18 +571,28 @@ export default function AdminProfilePage() {
                 </div>
 
                 <div className="htg-ap-activity-list">
-                  {actions.map(([time, title, detail, type], idx) => (
-                    <div className="htg-ap-activity" key={`${time}-${idx}`}>
-                      <div className={`htg-ap-activity-icon ${type}`}>
-                        {type === "security" ? "⌑" : type === "event" ? "◉" : "⌘"}
-                      </div>
-                      <div className="htg-ap-activity-copy">
-                        <strong>{title}</strong>
-                        <small>{detail}</small>
-                      </div>
-                      <time>{time}</time>
+                  {actions.length === 0 ? (
+                    <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--htg-text-secondary, #94a3b8)" }}>
+                      <div style={{ fontSize: "1.6rem", marginBottom: "8px", opacity: 0.4 }}>📋</div>
+                      <strong>No recent administrator activity</strong>
+                      <p style={{ fontSize: "0.85rem", marginTop: "4px" }}>
+                        Recent configuration and moderation events will appear here in real time.
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    actions.map(([time, title, detail, type], idx) => (
+                      <div className="htg-ap-activity" key={`${time}-${idx}`}>
+                        <div className={`htg-ap-activity-icon ${type}`}>
+                          {type === "security" ? "⌑" : type === "event" ? "◉" : "⌘"}
+                        </div>
+                        <div className="htg-ap-activity-copy">
+                          <strong>{title}</strong>
+                          <small>{detail}</small>
+                        </div>
+                        <time>{time}</time>
+                      </div>
+                    ))
+                  )}
                 </div>
               </>
             )}
@@ -603,7 +606,7 @@ export default function AdminProfilePage() {
                     <p>Update contact information and professional links</p>
                   </div>
                   <span className="htg-ap-muted-label">
-                    {isLiveDatabase ? "LIVE DATABASE" : "LOCAL PREVIEW"}
+                    "LIVE DATABASE"
                   </span>
                 </div>
 
@@ -808,7 +811,7 @@ export default function AdminProfilePage() {
                   <button
                     type="button"
                     className="htg-ap-btn secondary"
-                    onClick={() => setPasswordModalOpen(true)}
+                    onClick={() => manageAccount ? manageAccount() : setPasswordModalOpen(true)}
                   >
                     Change password ↗
                   </button>
@@ -897,7 +900,7 @@ export default function AdminProfilePage() {
 
         {/* Footer */}
         <footer className="htg-ap-footer">
-          <span>HACK THE GRID <i>•</i> MISSION CONTROL</span>
+          <span>THE TECH MYSTERY <i>•</i> MISSION CONTROL</span>
           <span>Built with <b>♥</b> by Hrithik Roshan</span>
           <span>ADMIN PROFILE / MANAGEMENT CONSOLE</span>
         </footer>

@@ -1,19 +1,159 @@
-# PROJECT CONTEXT & MASTER BLUEPRINT: HACK THE GRID
+# PROJECT CONTEXT & MASTER BLUEPRINT: THE TECH MYSTERY
+
+## Clerk UI visibility follow-up
+
+Saved frontend mode still selected legacy JWT, which earlier forced-Clerk tests bypassed.
+Local mode/API targeting now select the isolated Clerk runtime. Real Chrome verified all auth
+forms; 16 frontend tests pass, lint has 0 errors (66 warnings), build passes. The isolated preview
+is available through `npm run dev:clerk`; no live data/event state was changed. Clock drift remains
+a separate immediate-login blocker. See [UI evidence](reports/CLERK_UI_FIX_2026-10-19.md).
+
+
+## Real Clerk development verification follow-up
+
+Real Clerk browser SDK password/Device Trust, isolated mapping/authorization and application
+logout/revocation were verified using disposable identities and new replica sets. Immediate
+login still needs host-clock synchronization (~8.7 seconds drift); full prebuilt-form automation
+remains unreliable. No live data, event configuration or registration state changed.
+See [actual evidence and limitations](reports/CLERK_DEVELOPMENT_VERIFICATION_2026-10-19.md).
+
+
+## Clerk authentication preparation ? 19 October 2026
+
+Clerk integration is implemented as an explicit opt-in provider; existing JWT mode remains the
+default and its implementation is retained. No live connection, data migration, deployment,
+account linking or registration opening occurred. MongoDB still owns roles, membership and
+active status. Linking requires verified matching email plus existing password; ADMIN recovery
+requires organizer approval. New Clerk participants remain unteamed and registration-gated.
+See [implementation, exact files, setup, verification and rollback](CLERK_AUTHENTICATION.md).
+Real Clerk credentials, browser acceptance, index setup, transaction-capable deployment and cutover
+remain approval-gated. Earlier phase status statements below describe those phases historically.
+
+
+## Event-data preparation status - 19 October 2026
+
+Preparation artifacts are implemented; deployment and real ingestion remain blocked.
+See [deployment verification](DEPLOYMENT_VERIFICATION_CHECKLIST.md),
+[event ingestion proposal](EVENT_INGESTION_PREPARATION.md),
+[historical evidence](reports/HISTORICAL_RECONCILIATION_2026-10-19.md), and
+[isolated staging runbook](../staging/README.md).
+
+- New read-only evidence reconfirms 97 users, 42 teams, 10 challenges, 17 questions,
+  10 checkpoints, 52 assignments, 72 submissions and 42 score snapshots. The configured
+  database is standalone. Counts were stable across the report read interval, not an
+  atomic snapshot. Original records/IDs were not changed.
+- Six team totals lack solve/history support; 3 linked submission amounts conflict;
+  14 solved assignments are evidence candidates for an approved canonical-owner backfill;
+  20 submissions reference 5 deleted teams. Full original record IDs are preserved in
+  the redacted JSON report. No reconciliation or reset was applied.
+- Running API still includes joinCode in public leaderboard rows. Source files were
+  edited after the approximate process start. Exact old loaded source/version is not
+  recoverable from available HTTP metadata. CORS OPTIONS responses do not identify
+  whether individual POST routes exist. Do not claim other live behavior was tested.
+- Authenticated staging replica-set Compose configuration, explicit initialization and
+  target-guarded launcher are prepared with isolated ports/database/volume/secrets.
+  They were not started. Docker configuration parsing is not runtime validation.
+- Wizard/full enrollment and signed Public QR campus policy remain proposals pending
+  organizer decisions. Existing admin complete-roster assembly was tested on synthetic
+  accounts only. No real QR payload generation or placard printing occurred.
+- Verification: combined server suite 51/51 passed (41 isolated security/enrollment
+  tests plus 10 preparation tests); the final combined run covered the updated guards.
+  Lint and Compose configuration validation passed. Frontend was not changed or built
+  in this preparation phase. Browser, staging-container startup and load tests remain.
+
+No live environment files, connection, records, invitations, scores, event settings,
+registration state or deployment were changed. No Clerk integration was started.
+
+
+## Security remediation status ? 19 October 2026
+
+This section supersedes historical completion and security claims below.
+Implementation was rechecked against the working tree before remediation. The existing
+ event database was not edited, reset, or reseeded. Clerk was not integrated.
+
+- Participant question responses use an explicit allowlist; private answers, metadata
+  and hint contents are excluded. Known answers and literal flag material in returned
+  content are withheld. Question edits reject answer-bearing participant text. Demo
+  seed prompts no longer include literal answers; artifact-dependent placeholders need
+  organizer review. Admin answer access remains protected by database-authoritative RBAC.
+- Public leaderboard and ordinary-member responses omit invitations. Only the actual
+  team leader or an admin can retrieve/rotate them. New invitations have 128 bits of
+  randomness. `POST /api/v1/teams/:id/join-code/rotate` invalidates the previous code and
+  records an audit event. No existing invitations were rotated during this phase.
+- Checkpoints always require a versioned HMAC signature with expiry (default 86400 seconds,
+  configurable by `QR_TOKEN_TTL_SECONDS`) and scope. Public QR mode means a signed shared
+  checkpoint, never an unsigned checkpoint. Team-bound QR requires an admin-configured
+  `boundTeamId` and matching signed team scope. Unconfigured team-bound checkpoints fail
+  closed and do not receive usable placards. Old signatures must be regenerated.
+- Registration, enrollment, assignment, scans, attempts, scoring and reviews use MongoDB
+  transactions through Mongoose session propagation. A replica set or sharded cluster is
+  required for writes. Standalone MongoDB fails closed; the test suite verifies rollback.
+  Event/team/user/challenge/question revision writes serialize conflicting operations.
+- Scoring has a canonical `TeamChallenge.scoringSubmissionId`. Multiple approvals cannot
+  award twice. Corrections append score deltas and audit records transactionally. Reversal
+  of a solve with later progression is rejected until later solves are reversed. Direct
+  administrative score/level overrides are rejected; use submission review. Gameplay
+  history blocks deletion of participating teams and assigned questions/challenges.
+- Gameplay requires LIVE, an eligible active roster of 2?4 members, published challenge
+  and question records, and applicable checkpoint verification. Registration checks
+  lifecycle, the registration switch/deadline, and transactional capacity limits.
+- Access JWTs carry an explicit purpose and database-checked token version. Logout and
+  password changes revoke prior sessions. Admin revocation rejects old tokens and returns
+  a replacement for the current client. Roles/activity/team membership remain DB-owned.
+  Unimplemented refresh-token issuance was removed; there is no refresh endpoint or MFA.
+- Production requires explicit distinct random signing configuration. Demo seeding is
+  disabled before connecting to a production database. Validator errors do not echo values.
+  Reading security logs no longer invents incidents.
+
+Verification: `npm test --workspace=server` passed 38 tests in 5 suites against an isolated,
+ temporary MongoDB replica set and a separate temporary standalone instance; server lint
+ and the client production build passed. The build retains a large-chunk warning.
+`npm audit --omit=dev --json` reported zero runtime advisories; the full dependency audit
+ reported 6 high and 2 moderate development-tool advisories. No forced major upgrade was
+ performed. Browser/camera interaction was not exercised in this phase. The old root
+ integration scripts were not run; their hardcoded live-server defaults and obsolete
+ one-person/unsigned-QR assumptions are not the remediation acceptance suite.
+
+### Required deployment/data work (not performed)
+
+1. Provision/enable a replica set or use a transaction-capable managed cluster; verify
+   unique User/Team and TeamChallenge indexes before serving gameplay. Configure production
+   secrets securely and plan a maintenance deployment. A standalone local database must
+   also be converted/replaced with a replica set before registration/gameplay writes work.
+2. Have users log in again: old purpose-less JWTs are rejected. Legacy user tokenVersion
+   and revision fields have safe zero defaults; no destructive user migration is required.
+3. Review legacy prompts and publish real challenge artifacts. Runtime withholding is a
+   containment control, not proof that a challenge is solvable or free of encoded clues.
+4. For shared campus placards explicitly choose `Public QR`; for restricted checkpoints
+   configure `boundTeamId` through the protected checkpoint API. Fetch newly signed URLs,
+   print placards, and refresh them before expiry. Never distribute internal signing keys.
+5. Rotate historically exposed invitations through the protected rotation API. Do not
+   bulk-update the event database without approval.
+6. Historical SOLVED assignments without a canonical scoringSubmissionId require a
+   reviewed reconciliation against Submission/Score history before administrative score
+   corrections. They fail closed instead of guessing which attempt owns the award. Do not
+   reset scores or re-run the demo seed as a migration.
+
+Remaining scope: a real frozen leaderboard snapshot, MFA/OAuth/password recovery, refresh
+ sessions if needed, distributed rate-limit storage, browser/camera checks, and load testing.
+The transaction design serializes through EventConfig; throughput must be measured before
+ large events. Existing historical totals were not repaired or independently reconciled.
+
 
 > **CRITICAL CONTINUITY DIRECTIVE FOR AI AGENTS & DEVELOPERS:**  
-> This file is the primary single source of truth for **Hack the Grid**. If you are resuming work on this repository after a context window reset, session transfer, or model change, **READ THIS DOCUMENT FIRST IN ITS ENTIRETY**. Do not make architectural modifications without consulting the Architectural Decision Records in `docs/DECISIONS.md` and logging progress in `docs/DEVELOPMENT_PROGRESS.md`.
+> This file is the primary single source of truth for **The Tech Mystery**. If you are resuming work on this repository after a context window reset, session transfer, or model change, **READ THIS DOCUMENT FIRST IN ITS ENTIRETY**. Do not make architectural modifications without consulting the Architectural Decision Records in `docs/DECISIONS.md` and logging progress in `docs/DEVELOPMENT_PROGRESS.md`.
 
 ---
 
 ## 1. Project Overview
-**Hack the Grid** is a production-grade, hybrid cybersecurity Capture-the-Flag (CTF) web platform created for the flagship annual competition hosted by the **CodeSphere Coding Club** at **Tula's University, Dehradun**. 
+**The Tech Mystery** is a production-grade, hybrid cybersecurity Capture-the-Flag (CTF) web platform created for the flagship annual competition hosted by the **CodeSphere Coding Club** at **Tula's University, Dehradun**. 
 
 The platform bridges virtual cybersecurity problem-solving with the physical university campus by pairing digital challenges with physical QR code checkpoints placed at strategic campus locations. Teams navigate 10 tiered containment levels to breach the grid and capture the final Master Flag.
 
 ---
 
 ## 2. Project Goal
-The primary objective of Hack the Grid is to provide a cheat-resilient, scalable, high-adrenaline competition platform that:
+The primary objective of The Tech Mystery is to provide a cheat-resilient, scalable, high-adrenaline competition platform that:
 1. Prevents cross-team answer trading by dynamically assigning unique challenge variations to every team.
 2. Integrates physical campus geography into digital gameplay via tamper-proof QR beacons.
 3. Completely prevents client-side answer leakage through strict zero-trust server validation.
@@ -67,18 +207,30 @@ The primary objective of Hack the Grid is to provide a cheat-resilient, scalable
   - Question pools per level containing multiple unique variations.
   - Persistent, idempotent assignment: a team is assigned one variation per level which remains fixed across refreshes, re-logins, or re-scans.
   - Balanced allocation algorithm ensuring equal distribution across pool variations.
-- **Physical QR Checkpoint System**:
-  - Physical QR codes encode only HMAC-signed checkpoint URLs (e.g., `/checkpoint/scan?code=CP-XXXX&token=...`).
+- **Physical QR Checkpoint System (Phase 4 Verified)**:
+  - Physical QR codes encode only HMAC-SHA256 signed checkpoint URLs (`https://<domain>/checkpoint/scan?code=CP-XXXX&token=...`).
   - Zero flags, answers, or challenge prompts inside physical QR data.
   - Server-side scan verification requiring prerequisite level completion before unlocking.
-- **Scoring & Leaderboard Engine**:
-  - Atomic server-side score calculation and incrementing.
+  - Strictly 0 points awarded merely for scanning a QR code (points require authentic flag submission).
+  - Dual-mode participant scanning in `QRCheckpointPage.jsx`: live camera scanner (`Html5Qrcode`) with device picker and image file decode + fallback manual code entry with station code and security token inputs.
+  - Native smartphone camera QR URL support: `/checkpoint/scan` route auto-detects `code` and `token` parameters for instant 1-tap verification.
+  - Clear participant status handling: already-scanned stations, locked levels, tampered tokens, inactive stations, and invalid codes.
+- **Scoring, Submission & Leaderboard Engine (Phase 4 & 5 Verified)**:
+  - Constant-time server-side flag comparison via `crypto.timingSafeEqual` preventing side-channel timing attacks.
+  - Physical checkpoint scan gating: flags cannot be submitted for challenges requiring a scan (`requiresCheckpointScan: true`) until the station is authenticated.
+  - Attempt limits and anti-brute-force defense: tracks `attemptsCount`, locks out submissions when `attemptsCount >= maxAttempts`, and reports remaining attempts.
+  - Atomic challenge solve recording in `scoring.service.js` using `TeamChallenge.findOneAndUpdate({ _id, status: { $ne: 'SOLVED' } })`.
+  - Idempotent exactly-once point awards: completely blocks replay submissions, duplicate points, and concurrent double-claims.
   - Solved history timeline tracking with timestamp down to the millisecond.
-  - Deterministic tie-breaking: higher score first; earlier timestamp wins on point ties.
-  - Leaderboard freeze switch: cloaks live score movement in final 30 minutes to preserve suspense.
+  - Deterministic tie-breaking: `totalScore DESC, lastSolveTimestamp ASC, createdAt ASC, _id ASC`.
+  - Authoritative live public scoreboard (`/leaderboard`) with loading, error, empty, concealed (`isLeaderboardVisible: false`), and frozen (`isLeaderboardFrozen: true`) state support.
+  - Admin authoritative leaderboard (`/admin/leaderboard`) with full live rankings, member counts, and disqualification indicators.
+  - Event lifecycle state enforcement: submissions and scans blocked when `PAUSED`, `CONCLUDED`, or in `maintenanceMode`; team creation blocked when `registrationOpen === false` or `maxTeams` capacity limit reached.
+  - Final Flag (Level 10) & Victory HUD: prerequisites enforced, Master Flag verified in constant time with 0 leaks, atomic progression to Level 11, and anti-replay protection.
 - **Admin Command SOC**:
   - Standalone redesigned Admin Mission Control Dashboard (`/admin/dashboard`) with `/campus-hero.png` banner, overview metrics, challenge activity SVG chart, mission level progress ring/bars, demo event controls, searchable team overview table, recent submissions, activity feed, and quick actions (`DEMO MODE` preview layer).
-  - Shared Mission Control Sidebar (`AdminSidebar.jsx`) with rotated diamond emblem, `HACK THE GRID` / `MISSION CONTROL` lockup, `ADMIN CONSOLE` live indicator, 9 navigation items (`Overview`, `Teams` with badge, `Challenges`, `Questions`, `QR Checkpoints`, `Submissions` with badge, `Leaderboard`, `Event Control`, `Security Logs`), `All systems operational` card, and `Event Admin` footer card.
+  - Shared Mission Control Sidebar (`AdminSidebar.jsx` & `AdminSidebar.css`) with rotated diamond emblem, `THE TECH MYSTERY` / `MISSION CONTROL` lockup, `ADMIN CONSOLE` live indicator, exact 9-item canonical navigation (`Overview` -> `/admin/dashboard`, `Teams` with real API badge -> `/admin/teams`, `Challenges` -> `/admin/challenges`, `Questions` -> `/admin/questions`, `QR Checkpoints` -> `/admin/checkpoints`, `Submissions` with real API badge -> `/admin/submissions`, `Leaderboard` -> `/admin/leaderboard`, `Event Control` -> `/admin/event-control`, `Security Logs` -> `/admin/security-logs`), real database telemetry badges without fabricated mock counts, `All systems operational` card, and administrator profile card.
+  - Strict Layout Separation: `AdminLayout` completely isolates admin consoles (sidebar + content only; public navbar and footer never render on admin pages); `PublicLayout` isolates public pages (7-link navbar + content + footer only; admin sidebar never renders on public pages); `ProtectedRoute` enforces server-authoritative `ADMIN` role checks and redirects unauthenticated visitors to `/admin/login` (preserving deep links).
   - Standalone reference-matched Team Management Console (`/admin/teams` -> `TeamManagementPage.jsx` + `TeamManagementPage.css`) with 5 summary cards (`Total Teams`, `Total Participants`, `Active Teams`, `Pending Verification`, `Disqualified`), member-aware search, status/level/college filters, reset, CSV export, Table/Grid view toggle, pagination, right-hand selected team detail panel (`Overview`, `Members`, `Progress`, `Submissions` tabs), and live backend integration (`GET /api/v1/admin/teams`, `PATCH /api/v1/admin/teams/:teamId/disqualify` via `admin.service.js`) with explicit `● LIVE DATABASE` vs `● DEMO PREVIEW DATA` labeling.
   - Standalone reference-matched Challenge Management Console (`/admin/challenges` -> `ChallengeManagementPage.jsx` + `ChallengeManagementPage.css`) with 5 KPI cards (`Total Levels`, `Published`, `Draft`, `Paused`, `Total Points`), search/status/difficulty/category filters, reset, CSV export, List/Grid view toggle, Add/Edit Challenge modal, publish/pause toggle switches, right-hand selected challenge detail panel (`Overview`, `Questions (N)`, `QR Checkpoints (N)` tabs), and live backend integration (`GET /api/v1/admin/challenges`, `POST /api/v1/admin/challenges`, `PATCH /api/v1/admin/challenges/:challengeId`, `GET /api/v1/admin/questions`) keeping secret flags strictly server-side (`select: false`).
   - Standalone reference-matched Question Management Console (`/admin/questions` -> `QuestionManagementPage.jsx` + `QuestionManagementPage.css`) with 5 KPI cards (`Total Questions`, `Published`, `Drafts`, `Paused`, `Available Points`), search/status/type/level filters, Table/Grid views, Add/Edit modal, hint & attempts controls, and admin secret answer preview with explicit "Reveal" toggle while keeping participant APIs strictly flag-free (`select: false`).
@@ -120,7 +272,7 @@ The primary objective of Hack the Grid is to provide a cheat-resilient, scalable
 ---
 
 ## 7. Architecture Overview
-Hack the Grid follows a decoupled, monorepo-structured client-server architecture:
+The Tech Mystery follows a decoupled, monorepo-structured client-server architecture:
 
 ```
 [ Physical Campus QR ]  ───>  [ Participant Mobile/Laptop ]
@@ -228,8 +380,23 @@ hack-the-grid/
 
 ---
 
-## 10. Authentication Approach
-- **Stateless JWTs**: Access tokens carry `{ userId, username, role, teamId }` and expire in 7 days (or configurable window).
+## 10. Authentication & Authorization Approach
+- **Stateless JWTs with Authoritative MongoDB Synchronization**: Access tokens carry `{ userId, username, role, teamId }` and expire in 7 days (or configurable window).
+- **Authoritative Database Verification (`authenticate`)**:
+  - Middleware verifies JWT signature and expiry.
+  - Queries `User.findById(decoded.userId).select('role teamId isActive')` on every authenticated request.
+  - Rejects deleted accounts (HTTP 401: `User account no longer exists`).
+  - Rejects deactivated accounts (HTTP 401: `Account has been deactivated. Please contact an administrator.`).
+  - Authoritatively synchronizes `req.user.role` from the database, instantly reflecting administrative role promotions or revocations.
+  - Authoritatively synchronizes `req.user.teamId`, explicitly clearing stale token claims to `null` if team membership was removed in the database.
+- **Optional Authentication (`optionalAuth`)**:
+  - Preserves public access (`req.user = null`) when no token or an invalid token is provided.
+  - Synchronizes active user state from MongoDB when a valid token is provided.
+  - Inactive or deleted users are not authenticated (`req.user = null`), preventing ghost identities.
+  - Database errors are forwarded to error handling middleware rather than silently authenticating unverified tokens.
+- **Admin Authorization (`requireAdmin`)**:
+  - All administrative routes (`/api/v1/admin/*`) strictly chain `authenticate` before `requireAdmin`.
+  - Blocks all non-admin roles (`TEAM_MEMBER`, `TEAM_LEADER`) with HTTP 403 Forbidden.
 - **Password Security**: Passwords are saved only as bcrypt hashes (salt rounds = 10) and are excluded by default in Mongoose queries (`select: false`).
 - **Client Handling**: Stored in `localStorage` under `htg_access_token` and attached as `Authorization: Bearer <token>` on all Axios requests.
 
@@ -380,22 +547,22 @@ Key variables: `MONGODB_URI`, `JWT_SECRET`, `QR_SECRET_SALT`, `PORT`, `CORS_ORIG
 ---
 
 ## 25. Pending Work (By Phase)
-- **Phase 3**: Authentication & Registration end-to-end integration with live database.
-- **Phase 4**: Team Management (team creation, invite code validation, roster limits).
-- **Phase 5**: Challenge Engine (markdown rendering, asset downloads).
-- **Phase 6**: Team-Specific Question Assignment testing with sample question pools.
-- **Phase 7**: QR Checkpoint camera scanner integration and testing.
-- **Phase 8**: Timer + Scoring atomic transactions.
-- **Phase 9**: Live Leaderboard polling / WebSocket integration.
-- **Phase 10**: Admin Dashboard controls and real-time data feeds.
+- **Phase 3**: Authentication & Registration end-to-end integration with live database. (**COMPLETED**)
+- **Phase 4**: Team Management (team creation, invite code validation, roster limits). (Core endpoints completed & verified)
+- **Phase 5**: Challenge Engine (markdown rendering, asset downloads). (Seed script completed; attachment uploads pending)
+- **Phase 6**: Team-Specific Question Assignment testing with sample question pools. (Idempotency verified; cross-team differentiation tests pending)
+- **Phase 7**: QR Checkpoint camera scanner integration and testing. (Scanner UI + Placards + HMAC verification completed)
+- **Phase 8**: Timer + Scoring atomic transactions. (Atomic score incrementing verified; penalties/tie-breakers pending)
+- **Phase 9**: Live Leaderboard polling / WebSocket integration. (15s polling + freeze sync completed)
+- **Phase 10**: Admin Dashboard controls and real-time data feeds. (Completed across 9 admin consoles)
 - **Phase 11**: Security hardening & penetration testing.
-- **Phase 12**: Automated unit and end-to-end testing.
+- **Phase 12**: Automated unit and end-to-end testing. (16-point integration test suite completed)
 - **Phase 13**: Production deployment on Vercel + Render + MongoDB Atlas.
 
 ---
 
 ## 26. Known Issues / Considerations
-- Currently running in local development mode; MongoDB connection requires valid Atlas URI in `.env` to execute live auth/submission queries.
+- Running in development mode backed by local MongoDB instance (`mongodb://127.0.0.1:27017/hack_the_grid`). When deploying to production, supply a valid Atlas URI in `.env`.
 
 ---
 
@@ -415,6 +582,10 @@ Documented in detail in `docs/DECISIONS.md`:
 - **ADR-0015**: Cross-Page Mission and How It Works Navigation Routing Fix (React Router `<Link>` transitions to `/mission` and `/mission#how-it-works`, multi-tier hash scroll retries, legacy redirect fallbacks).
 - **ADR-0016**: Standalone Full-Bleed Challenge Levels & Mission Map UI Integration (10-level challenge matrix, accordion briefings, UI-only secrets preservation, /campus-hero.png asset reuse).
 - **ADR-0017**: Unified Cross-Page Challenge Levels Navigation & Dashboard Routing Integration (Navbar, ParticipantLayout HUD, TeamDashboardPage, and public page links to /challenges, plus /dashboard alias mapping).
+- **ADR-0034**: Unified Site Navbar Component & Global CSS Scoping Resolution.
+- **ADR-0035**: Phase 3 Complete Backend Integration & Monorepo Live Data Synchronization.
+- **ADR-0036**: Separate Admin and User Navigation Suite & Server-Authoritative RBAC.
+- **ADR-0037**: Comprehensive Team, Challenge, and Question Lifecycle Integration.
 
 ---
 
@@ -431,32 +602,37 @@ Documented in detail in `docs/DECISIONS.md`:
 3. **Do not deviate from the tech stack**: React 19 + Vite + Tailwind on client; Node.js + Express + Mongoose on server.
 4. **Never hardcode challenge answers or flags in the client codebase**.
 5. **Always update `docs/PROJECT_CONTEXT.md`, `docs/DEVELOPMENT_PROGRESS.md`, `docs/DECISIONS.md`, and `docs/TODO.md`** when completing a task or changing architecture.
-6. **Next Development Target**: Proceed with **Phase 3: Authentication & Registration System** (wire up MongoDB instance, test `/api/v1/auth/register` and `/api/v1/auth/login`, link client forms to API).
+6. **Next Development Target**: Proceed with remaining items in **Phase 5 (File attachments & rich markdown prompt rendering)**, **Phase 8 (Penalties & timer events)**, and **Phase 11 (Security rate limiter stress testing & OWASP audit)**.
 
 ---
 
 ```text
 ================================================================================
 CURRENT STATUS:
-- Phase: Phase 2 (Frontend UI & Design System - Homepage, Login, Register, Rules, Mission, Challenges) COMPLETE
-- Completed: Full monorepo setup, backend architecture, reference Homepage UI,
-             reference Login Page UI, reference Register Page UI (4-step wizard),
-             reference Rules Page UI (6-category accordion + ack gate),
-             reference Mission Page UI (6-stage playbook + interactive challenge map),
-             reference Challenge Levels UI (10-level interactive Mission Map matrix),
-             unified cross-page navigation routing for /mission, /challenges, /rules, /leaderboard,
-             participant HUD and dashboard navigation to /challenges,
-             alias redirection (/dashboard -> /portal/dashboard, /mission-map -> /portal/missions),
-             campus hero asset, standalone full-bleed routing for /, /login, /register, /rules, /mission, /challenges,
-             multi-tier responsive design (tested on viewports: 320px to 1440px),
-             build & dev server verification.
-- In Progress: Ready for Phase 3 (Authentication & Registration End-to-End System)
-- Pending: Phases 3 through 13
+- Phase: Team, Challenge and Question Integration Milestone COMPLETE
+- Completed: Full monorepo setup, backend architecture, reference UI across all 21 pages,
+             standardized 7-link navbar layout with global CSS isolation,
+             local MongoDB configuration & seed script (EventConfig, Admin, 10 Challenges,
+             17 Questions across pools with zero flag leakage, 10 Checkpoints, 5 Teams, Scores,
+             Security Logs),
+             dynamic JWT team synchronization in auth middleware,
+             token refresh upon team creation and join,
+             live frontend integration for RegisterPage, LeaderboardPage (15s auto-polling),
+             ParticipantDashboard (live currentChallenge + dynamic avatars), ChallengeLevelsPage,
+             TeamManagementPage (full modal CRUD + member capacity rules),
+             ChallengeManagementPage (full CRUD + checkpoint link + Archived status),
+             QuestionManagementPage (full CRUD + checkpoint link + Archived + interactive tabs),
+             20-stage automated integration test suite (100% pass rate: test_team_challenge_question_integration.js),
+             16-stage phase 3 regression test suite (100% pass rate: test_phase3_integration.js),
+             Vite client production build clean (0 errors, code 0 in 8.35s).
+- In Progress: Advancing Phase 5 (Attachments & Markdown), Phase 8, Phase 11
+- Pending: Phases 5 through 13 remaining items
 - Blockers: None
 ================================================================================
 NEXT STEP:
-- Begin Phase 3: Connect MongoDB instance, verify backend registration/login API,
-  and connect frontend auth pages to live backend tokens.
+- Continue advancing remaining backlog items: rich Markdown rendering for challenge
+  prompts, downloadable challenge attachments, submission rate-limiter stress testing,
+  and deployment staging.
 ================================================================================
 ```
 

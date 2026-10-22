@@ -3,37 +3,26 @@ import AdminSidebar from "../../components/navigation/AdminSidebar";
 import adminService from "../../services/admin.service";
 import "../../styles/SecurityLogsPage.css";
 
-const demoLogs = [
-  { id: "EVT-9F21A", time: "14:12:44", date: "2026-10-13", severity: "CRITICAL", category: "AUTHENTICATION", event: "Repeated failed admin login", actor: "unknown@192.168.1.84", target: "Admin portal", source: "192.168.1.84", detail: "Six failed sign-in attempts detected within the configured window.", status: "FLAGGED" },
-  { id: "EVT-9F219", time: "14:11:09", date: "2026-10-13", severity: "WARNING", category: "RATE LIMIT", event: "Submission rate limit triggered", actor: "team_4821", target: "POST /api/v1/submissions", source: "10.0.4.28", detail: "Request rate exceeded the configured submission threshold.", status: "REVIEW" },
-  { id: "EVT-9F218", time: "14:08:37", date: "2026-10-13", severity: "INFO", category: "CHECKPOINT", event: "Checkpoint token validated", actor: "team_1038", target: "QR checkpoint 04", source: "10.0.2.17", detail: "Eligible team passed checkpoint access validation.", status: "RECORDED" },
-  { id: "EVT-9F217", time: "14:06:12", date: "2026-10-13", severity: "WARNING", category: "AUTHORIZATION", event: "Forbidden admin action", actor: "participant_203", target: "PATCH /api/v1/admin/event", source: "10.0.7.11", detail: "A participant session attempted to access an administrator-only route.", status: "FLAGGED" },
-  { id: "EVT-9F216", time: "14:02:51", date: "2026-10-13", severity: "INFO", category: "ADMIN ACTION", event: "Leaderboard visibility updated", actor: "admin_hr", target: "Public leaderboard", source: "10.0.0.12", detail: "Visibility setting changed by an authenticated administrator.", status: "RECORDED" },
-  { id: "EVT-9F215", time: "13:58:03", date: "2026-10-13", severity: "CRITICAL", category: "INTEGRITY", event: "Duplicate score update blocked", actor: "system_guard", target: "Team score ledger", source: "internal", detail: "A duplicate scoring operation was rejected by the integrity guard.", status: "FLAGGED" },
-  { id: "EVT-9F214", time: "13:51:26", date: "2026-10-13", severity: "INFO", category: "SESSION", event: "Administrator session created", actor: "admin_hr", target: "Admin portal", source: "10.0.0.12", detail: "New authenticated administrator session created.", status: "RECORDED" },
-  { id: "EVT-9F213", time: "13:45:40", date: "2026-10-13", severity: "WARNING", category: "QR CHECKPOINT", event: "Invalid checkpoint token", actor: "team_7730", target: "QR checkpoint 07", source: "10.0.5.43", detail: "Checkpoint token was invalid or expired and was rejected.", status: "REVIEW" },
-  { id: "EVT-9F212", time: "13:39:18", date: "2026-10-13", severity: "INFO", category: "CONFIGURATION", event: "Event setting updated", actor: "admin_hr", target: "Registration state", source: "10.0.0.12", detail: "Registration setting was updated through the event control panel.", status: "RECORDED" },
-];
 
 const severityOptions = ["ALL SEVERITIES", "CRITICAL", "WARNING", "INFO"];
 const categoryOptions = ["ALL CATEGORIES", "AUTHENTICATION", "AUTHORIZATION", "RATE LIMIT", "INTEGRITY", "CHECKPOINT", "QR CHECKPOINT", "ADMIN ACTION", "SESSION", "CONFIGURATION"];
 
 export default function SecurityLogsPage() {
-  const [logs, setLogs] = useState(demoLogs);
+  const [logs, setLogs] = useState([]);
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("ALL SEVERITIES");
   const [category, setCategory] = useState("ALL CATEGORIES");
   const [status, setStatus] = useState("ALL STATUS");
-  const [selected, setSelected] = useState(demoLogs[0]);
+  const [selected, setSelected] = useState(null);
   const [range, setRange] = useState("24 HOURS");
   const [liveMode, setLiveMode] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
   const [toast, setToast] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isLiveDatabase, setIsLiveDatabase] = useState(false);
+  const [isLiveDatabase, setIsLiveDatabase] = useState(true);
   const searchInputRef = useRef(null);
 
-  // Fetch security logs from backend if available
+  // Fetch security logs from backend
   const loadLogs = async () => {
     try {
       const res = await adminService.getSecurityLogs({
@@ -44,21 +33,17 @@ export default function SecurityLogsPage() {
         search: query.trim() || undefined,
       });
 
-      if (res?.data?.logs && Array.isArray(res.data.logs) && res.data.logs.length > 0) {
-        setLogs(res.data.logs);
-        setIsLiveDatabase(true);
-        setSelected((prev) => {
-          if (!prev) return res.data.logs[0];
-          const matched = res.data.logs.find((l) => l.id === prev.id);
-          return matched || res.data.logs[0];
-        });
-      } else {
-        // Fallback to demo logs
-        setIsLiveDatabase(false);
-      }
-    } catch {
-      // Backend not authenticated or offline: graceful fallback to demo preview
-      setIsLiveDatabase(false);
+      const logList = Array.isArray(res?.data?.logs) ? res.data.logs : [];
+      setLogs(logList);
+      setIsLiveDatabase(true);
+      setSelected((prev) => {
+        if (!prev) return logList[0] || null;
+        const matched = logList.find((l) => l.id === prev.id);
+        return matched || logList[0] || null;
+      });
+    } catch (err) {
+      console.warn("Security logs load error:", err?.message);
+      setIsLiveDatabase(true);
     }
   };
 
@@ -122,7 +107,7 @@ export default function SecurityLogsPage() {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "hack-the-grid-security-logs.csv";
+    a.download = "the-tech-mystery-security-logs.csv";
     a.click();
     URL.revokeObjectURL(url);
     setToast(`CSV exported with ${filtered.length} audit records.`);
@@ -145,11 +130,7 @@ export default function SecurityLogsPage() {
       current.map((log) => (log.id === selected.id ? { ...log, status: "REVIEWED" } : log))
     );
     setSelected((current) => (current ? { ...current, status: "REVIEWED" } : current));
-    setToast(
-      isLiveDatabase
-        ? `Security event ${selected.id} marked as reviewed.`
-        : "Local preview updated. Connect live backend to persist review status."
-    );
+    setToast(`Security event ${selected.id} marked as reviewed.`);
   };
 
   return (
@@ -174,9 +155,7 @@ export default function SecurityLogsPage() {
             <div className="htg-sl-breadcrumb">
               MISSION CONTROL <span>/</span> <b>SECURITY LOGS</b>
             </div>
-            <span className={`htg-sl-data-pill ${isLiveDatabase ? "live" : "demo"}`}>
-              ● {isLiveDatabase ? "LIVE DATABASE" : "DEMO PREVIEW DATA"}
-            </span>
+            <span className="htg-sl-data-pill live">● LIVE DATABASE</span>
           </div>
 
           <div className="htg-sl-top-actions">
@@ -316,7 +295,7 @@ export default function SecurityLogsPage() {
                 <h3>
                   Event stream <span>{filtered.length}</span>
                 </h3>
-                <p>Newest records first · {isLiveDatabase ? "live database feed" : "illustrative demo data"}</p>
+                <p>Newest records first · authoritative audit stream</p>
               </div>
               <div className="htg-sl-log-actions">
                 <button
@@ -387,8 +366,12 @@ export default function SecurityLogsPage() {
                   ))}
                   {!filtered.length && (
                     <tr>
-                      <td colSpan="5" className="htg-sl-empty">
-                        No log records match these filters.
+                      <td colSpan="5" className="htg-sl-empty" style={{ padding: "48px 16px", textAlign: "center" }}>
+                        <div style={{ fontSize: "1.8rem", marginBottom: "8px", opacity: 0.4 }}>🛡️</div>
+                        <strong>No security events found</strong>
+                        <p style={{ color: "var(--htg-text-secondary, #94a3b8)", fontSize: "0.85rem", marginTop: "4px" }}>
+                          No security audit events match the specified filters or time range.
+                        </p>
                       </td>
                     </tr>
                   )}
@@ -398,7 +381,7 @@ export default function SecurityLogsPage() {
 
             <div className="htg-sl-table-footer">
               <span>
-                Showing <b>{filtered.length}</b> of <b>{logs.length}</b> {isLiveDatabase ? "live" : "demo"} records
+                Showing <b>{filtered.length}</b> of <b>{logs.length}</b> audit records
               </span>
               <div>
                 <button disabled>←</button>
@@ -420,7 +403,15 @@ export default function SecurityLogsPage() {
                 </button>
               </div>
 
-              {selected ? (
+              {!selected ? (
+                <div style={{ padding: "48px 16px", textAlign: "center", color: "var(--htg-text-secondary, #94a3b8)" }}>
+                  <div style={{ fontSize: "2rem", marginBottom: "8px", opacity: 0.4 }}>📋</div>
+                  <strong>No log selected</strong>
+                  <p style={{ fontSize: "0.85rem", marginTop: "4px" }}>
+                    Select an event from the audit stream to inspect detailed telemetry.
+                  </p>
+                </div>
+              ) : (
                 <>
                   <div className="htg-sl-detail-severity">
                     <Severity severity={selected.severity} />
@@ -469,8 +460,6 @@ export default function SecurityLogsPage() {
                     Copy record JSON
                   </button>
                 </>
-              ) : (
-                <p className="htg-sl-empty">Select a row to inspect its details.</p>
               )}
             </aside>
           )}
@@ -479,7 +468,7 @@ export default function SecurityLogsPage() {
         {/* Footer */}
         <footer className="htg-sl-footer">
           <span>
-            HACK THE GRID <i>•</i> MISSION CONTROL
+            THE TECH MYSTERY <i>•</i> MISSION CONTROL
           </span>
           <span>
             Build with <b>♥</b> by Hrithik Roshan

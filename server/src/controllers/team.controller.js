@@ -1,5 +1,7 @@
-const { Team } = require('../models');
+const { participantTeam } = require('../utils/participantData');
+const { Team, User } = require('../models');
 const teamService = require('../services/team.service');
+const authService = require('../services/auth.service');
 const { success, created, badRequest, notFound } = require('../utils/apiResponse');
 
 /**
@@ -9,11 +11,30 @@ const { success, created, badRequest, notFound } = require('../utils/apiResponse
 class TeamController {
   async createTeam(req, res, next) {
     try {
-      const { name } = req.body;
+      const { name, college } = req.body;
       const userId = req.user.userId;
 
-      const team = await teamService.createTeam(userId, name);
-      return created(res, { team }, 'Team successfully created');
+      const team = await teamService.createTeam(userId, name, college);
+      const user = await User.findById(userId).select('+tokenVersion');
+      const { accessToken, refreshToken } = authService.generateTokens(user);
+
+      return created(
+        res,
+        {
+          team: participantTeam(team, { ...req.user, role: user.role }),
+          accessToken,
+          refreshToken,
+          user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            fullName: user.fullName,
+            role: user.role,
+            teamId: user.teamId
+          }
+        },
+        'Team successfully created'
+      );
     } catch (error) {
       return badRequest(res, error.message);
     }
@@ -25,9 +46,36 @@ class TeamController {
       const userId = req.user.userId;
 
       const team = await teamService.joinTeam(userId, joinCode);
-      return success(res, { team }, 'Joined team successfully');
+      const user = await User.findById(userId).select('+tokenVersion');
+      const { accessToken, refreshToken } = authService.generateTokens(user);
+
+      return success(
+        res,
+        {
+          team: participantTeam(team, { ...req.user, role: user.role }),
+          accessToken,
+          refreshToken,
+          user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            fullName: user.fullName,
+            role: user.role,
+            teamId: user.teamId
+          }
+        },
+        'Joined team successfully'
+      );
     } catch (error) {
       return badRequest(res, error.message);
+    }
+  }
+
+  async rotateJoinCode(req, res) {
+    try {
+      return success(res, await teamService.rotateJoinCode(req.params.id, req.user.userId), 'Invitation rotated');
+    } catch (err) {
+      return res.status(err.statusCode || 400).json({ success: false, message: err.message });
     }
   }
 
@@ -45,7 +93,7 @@ class TeamController {
         return notFound(res, 'Team record not found');
       }
 
-      return success(res, { team }, 'Team details retrieved');
+      return success(res, { team: participantTeam(team, req.user) }, 'Team details retrieved');
     } catch (error) {
       return next(error);
     }
@@ -61,11 +109,7 @@ class TeamController {
         return notFound(res, 'Team not found');
       }
 
-      // Hide join code from external viewers
-      const sanitized = team.toObject();
-      if (req.user?.teamId !== team._id.toString() && req.user?.role !== 'ADMIN') {
-        delete sanitized.joinCode;
-      }
+      const sanitized = participantTeam(team, req.user);
 
       return success(res, { team: sanitized }, 'Team retrieved');
     } catch (error) {

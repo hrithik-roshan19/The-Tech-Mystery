@@ -46,6 +46,7 @@ const checkpointSchema = new mongoose.Schema(
       default: 'Active',
       index: true
     },
+    boundTeamId: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', default: null },
     mode: {
       type: String,
       enum: ['Public QR', 'Team-bound QR'],
@@ -64,6 +65,9 @@ const checkpointSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
+    qrCodeDataUrl: { type: String, default: null },
+    qrScanUrl: { type: String, default: null },
+    qrToken: { type: String, default: null },
     notes: {
       type: String,
       default: null

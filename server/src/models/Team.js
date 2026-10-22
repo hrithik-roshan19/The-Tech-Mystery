@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
  */
 const teamSchema = new mongoose.Schema(
   {
+    securityRevision: { type: Number, default: 0 },
     name: {
       type: String,
       required: [true, 'Team name is required'],
@@ -15,6 +16,12 @@ const teamSchema = new mongoose.Schema(
       maxlength: [40, 'Team name must not exceed 40 characters'],
       index: true
     },
+    college: {
+      type: String,
+      trim: true,
+      default: "Tula's University",
+      maxlength: [100, 'College name must not exceed 100 characters']
+    },
     joinCode: {
       type: String,
       required: [true, 'Team join code is required'],
@@ -22,7 +29,7 @@ const teamSchema = new mongoose.Schema(
       trim: true,
       uppercase: true,
       minlength: 6,
-      maxlength: 10,
+      maxlength: 36,
       index: true
     },
     leaderId: {

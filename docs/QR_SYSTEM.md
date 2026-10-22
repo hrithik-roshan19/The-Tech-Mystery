@@ -1,4 +1,4 @@
-# PHYSICAL QR CHECKPOINT ARCHITECTURE: HACK THE GRID
+# PHYSICAL QR CHECKPOINT ARCHITECTURE: THE TECH MYSTERY
 
 This document defines the cryptographic design, URL structure, and anti-spoofing protocols for the physical QR checkpoint beacons stationed across Tula's University campus.
 

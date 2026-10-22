@@ -1,0 +1,659 @@
+[
+  {
+    "_id": "6ace7c2b6014ea747c698d70",
+    "teamId": "6ace7c2bf5fda84bd9c5fccf",
+    "__v": 0,
+    "createdAt": "2026-10-13T18:44:59.832Z",
+    "currentScore": 1840,
+    "history": [],
+    "lastSolveTimestamp": "2026-10-13T18:39:59.993Z",
+    "solvedLevelsCount": 7,
+    "totalPenalty": 0,
+    "updatedAt": "2026-10-13T18:45:17.749Z"
+  },
+  {
+    "_id": "6ace7c2c6014ea747c698d71",
+    "teamId": "6ace7c2cf5fda84bd9c5fcdd",
+    "__v": 0,
+    "createdAt": "2026-10-13T18:45:00.086Z",
+    "currentScore": 1690,
+    "history": [],
+    "lastSolveTimestamp": "2026-10-13T18:18:44.871Z",
+    "solvedLevelsCount": 6,
+    "totalPenalty": 0,
+    "updatedAt": "2026-10-13T18:45:17.776Z"
+  },
+  {
+    "_id": "6ace7c2c6014ea747c698d72",
+    "teamId": "6ace7c2cf5fda84bd9c5fce8",
+    "__v": 0,
+    "createdAt": "2026-10-13T18:45:00.265Z",
+    "currentScore": 1510,
+    "history": [],
+    "lastSolveTimestamp": "2026-10-13T17:45:15.267Z",
+    "solvedLevelsCount": 6,
+    "totalPenalty": 0,
+    "updatedAt": "2026-10-13T18:45:17.797Z"
+  },
+  {
+    "_id": "6ace7c2c6014ea747c698d73",
+    "teamId": "6ace7c2cf5fda84bd9c5fcf3",
+    "__v": 0,
+    "createdAt": "2026-10-13T18:45:00.417Z",
+    "currentScore": 1320,
+    "history": [],
+    "lastSolveTimestamp": "2026-10-13T18:33:54.717Z",
+    "solvedLevelsCount": 5,
+    "totalPenalty": 0,
+    "updatedAt": "2026-10-13T18:45:17.815Z"
+  },
+  {
+    "_id": "6ace7c2c6014ea747c698d74",
+    "teamId": "6ace7c2cf5fda84bd9c5fd01",
+    "__v": 0,
+    "createdAt": "2026-10-13T18:45:00.631Z",
+    "currentScore": 1280,
+    "history": [],
+    "lastSolveTimestamp": "2026-10-13T18:29:53.410Z",
+    "solvedLevelsCount": 5,
+    "totalPenalty": 0,
+    "updatedAt": "2026-10-13T18:45:17.838Z"
+  },
+  {
+    "_id": "6ace7ca2ed4dc2a2ea0e8847",
+    "teamId": "6ace7ca2ed4dc2a2ea0e8844",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-13T18:46:58.922Z",
+    "updatedAt": "2026-10-13T18:46:58.922Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7ce6802adcabc4a3cec8",
+    "teamId": "6ace7ce6802adcabc4a3cec5",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-13T18:48:06.818Z",
+    "updatedAt": "2026-10-13T18:48:06.818Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7d0cfe5a4232d239b3ce",
+    "teamId": "6ace7d0cfe5a4232d239b3cb",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-13T18:48:44.739Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-13T18:48:44.739Z",
+        "submissionId": "6ace7d0cfe5a4232d239b404",
+        "_id": "6ace7d0cfe5a4232d239b408"
+      }
+    ],
+    "createdAt": "2026-10-13T18:48:44.548Z",
+    "updatedAt": "2026-10-13T18:48:44.744Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace8199fe5a4232d239b59f",
+    "teamId": "6ace8199fe5a4232d239b59c",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-13T19:08:09.664Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-13T19:08:09.664Z",
+        "submissionId": "6ace8199fe5a4232d239b5d5",
+        "_id": "6ace8199fe5a4232d239b5d9"
+      }
+    ],
+    "createdAt": "2026-10-13T19:08:09.496Z",
+    "updatedAt": "2026-10-13T19:08:09.669Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad07bddd38f05b1e19784cd",
+    "teamId": "6ad07bddd38f05b1e19784ca",
+    "currentScore": 750,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T07:08:13.401Z",
+    "history": [],
+    "createdAt": "2026-10-15T07:08:13.376Z",
+    "updatedAt": "2026-10-15T07:08:13.402Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad07c51b9813a8ca5e87806",
+    "teamId": "6ad07c51b9813a8ca5e87803",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T07:10:09.557Z",
+    "updatedAt": "2026-10-15T07:10:09.557Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad07c58b9813a8ca5e8784b",
+    "teamId": "6ad07c58b9813a8ca5e87848",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T07:10:17.127Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T07:10:17.127Z",
+        "submissionId": "6ad07c59b9813a8ca5e87884",
+        "_id": "6ad07c59b9813a8ca5e87888"
+      }
+    ],
+    "createdAt": "2026-10-15T07:10:16.973Z",
+    "updatedAt": "2026-10-15T07:10:17.130Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad080e7666d7dc7bc9b2413",
+    "teamId": "6ad080e7666d7dc7bc9b2410",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T07:29:43.196Z",
+    "updatedAt": "2026-10-15T07:29:43.196Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad080e7666d7dc7bc9b2463",
+    "teamId": "6ad080e7666d7dc7bc9b2460",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T07:29:43.616Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T07:29:43.616Z",
+        "submissionId": "6ad080e7666d7dc7bc9b247f",
+        "_id": "6ad080e7666d7dc7bc9b2483"
+      }
+    ],
+    "createdAt": "2026-10-15T07:29:43.541Z",
+    "updatedAt": "2026-10-15T07:29:43.627Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0811ef97208b3274e2e9d",
+    "teamId": "6ad0811ef97208b3274e2e9a",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T07:30:38.371Z",
+    "updatedAt": "2026-10-15T07:30:38.371Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0811ef97208b3274e2ef6",
+    "teamId": "6ad0811ef97208b3274e2ef3",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T07:30:38.843Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T07:30:38.843Z",
+        "submissionId": "6ad0811ef97208b3274e2f12",
+        "_id": "6ad0811ef97208b3274e2f16"
+      }
+    ],
+    "createdAt": "2026-10-15T07:30:38.755Z",
+    "updatedAt": "2026-10-15T07:30:38.852Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad08125f97208b3274e2f5f",
+    "teamId": "6ad08125f97208b3274e2f5c",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T07:30:46.182Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T07:30:46.182Z",
+        "submissionId": "6ad08126f97208b3274e2f98",
+        "_id": "6ad08126f97208b3274e2f9c"
+      }
+    ],
+    "createdAt": "2026-10-15T07:30:45.950Z",
+    "updatedAt": "2026-10-15T07:30:46.200Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0812cf97208b3274e302c",
+    "teamId": "6ad0812cf97208b3274e3029",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T07:30:52.167Z",
+    "updatedAt": "2026-10-15T07:30:52.167Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad096ffc1c8aa5e3b765152",
+    "teamId": "6ad096ffc1c8aa5e3b76514f",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T09:03:59.317Z",
+    "updatedAt": "2026-10-15T09:03:59.317Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09704c1c8aa5e3b765198",
+    "teamId": "6ad09704c1c8aa5e3b765195",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T09:04:04.921Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T09:04:04.921Z",
+        "submissionId": "6ad09704c1c8aa5e3b7651d7",
+        "_id": "6ad09704c1c8aa5e3b7651db"
+      }
+    ],
+    "createdAt": "2026-10-15T09:04:04.617Z",
+    "updatedAt": "2026-10-15T09:04:04.930Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09709c1c8aa5e3b765219",
+    "teamId": "6ad09709c1c8aa5e3b765216",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T09:04:09.239Z",
+    "updatedAt": "2026-10-15T09:04:09.239Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09709c1c8aa5e3b765298",
+    "teamId": "6ad09709c1c8aa5e3b765295",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T09:04:09.521Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T09:04:09.521Z",
+        "submissionId": "6ad09709c1c8aa5e3b7652ba",
+        "_id": "6ad09709c1c8aa5e3b7652be"
+      }
+    ],
+    "createdAt": "2026-10-15T09:04:09.483Z",
+    "updatedAt": "2026-10-15T09:04:09.524Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0973cc1c8aa5e3b7652f0",
+    "teamId": "6ad0973cc1c8aa5e3b7652ed",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T09:05:00.931Z",
+    "updatedAt": "2026-10-15T09:05:00.931Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09775d302b02553ccdfb9",
+    "teamId": "6ad09775d302b02553ccdfb6",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T09:05:57.814Z",
+    "updatedAt": "2026-10-15T09:05:57.814Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09776d302b02553cce031",
+    "teamId": "6ad09776d302b02553cce02e",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T09:05:58.110Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T09:05:58.110Z",
+        "submissionId": "6ad09776d302b02553cce053",
+        "_id": "6ad09776d302b02553cce057"
+      }
+    ],
+    "createdAt": "2026-10-15T09:05:58.067Z",
+    "updatedAt": "2026-10-15T09:05:58.117Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09820d302b02553cce1d2",
+    "teamId": "6ad09820d302b02553cce1cf",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T09:08:48.758Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T09:08:48.758Z",
+        "submissionId": "6ad09820d302b02553cce211",
+        "_id": "6ad09820d302b02553cce215"
+      }
+    ],
+    "createdAt": "2026-10-15T09:08:48.593Z",
+    "updatedAt": "2026-10-15T09:08:48.761Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09824d302b02553cce2a9",
+    "teamId": "6ad09824d302b02553cce2a6",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T09:08:52.746Z",
+    "updatedAt": "2026-10-15T09:08:52.746Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09828d302b02553cce2e0",
+    "teamId": "6ad09828d302b02553cce2dd",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T09:08:56.041Z",
+    "updatedAt": "2026-10-15T09:08:56.041Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09828d302b02553cce358",
+    "teamId": "6ad09828d302b02553cce355",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T09:08:56.280Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T09:08:56.280Z",
+        "submissionId": "6ad09828d302b02553cce37a",
+        "_id": "6ad09828d302b02553cce37e"
+      }
+    ],
+    "createdAt": "2026-10-15T09:08:56.244Z",
+    "updatedAt": "2026-10-15T09:08:56.283Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0982bd302b02553cce3ec",
+    "teamId": "6ad0982bd302b02553cce3e9",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T09:08:59.755Z",
+    "updatedAt": "2026-10-15T09:08:59.755Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0998e9daf0ef14b6d860d",
+    "teamId": "6ad0998e9daf0ef14b6d860a",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T09:14:54.804Z",
+    "updatedAt": "2026-10-15T09:14:54.804Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0998e9daf0ef14b6d8685",
+    "teamId": "6ad0998e9daf0ef14b6d8682",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T09:14:55.033Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T09:14:55.033Z",
+        "submissionId": "6ad0998f9daf0ef14b6d86a7",
+        "_id": "6ad0998f9daf0ef14b6d86ab"
+      }
+    ],
+    "createdAt": "2026-10-15T09:14:54.997Z",
+    "updatedAt": "2026-10-15T09:14:55.036Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad099939daf0ef14b6d8742",
+    "teamId": "6ad099939daf0ef14b6d873f",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-15T09:14:59.601Z",
+    "updatedAt": "2026-10-15T09:14:59.601Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad099979daf0ef14b6d8788",
+    "teamId": "6ad099979daf0ef14b6d8785",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-15T09:15:03.450Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-15T09:15:03.450Z",
+        "submissionId": "6ad099979daf0ef14b6d87c7",
+        "_id": "6ad099979daf0ef14b6d87cb"
+      }
+    ],
+    "createdAt": "2026-10-15T09:15:03.309Z",
+    "updatedAt": "2026-10-15T09:15:03.452Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5cce95853b87ba757b74c",
+    "teamId": "6ad5cce95853b87ba757b749",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-19T07:55:22.184Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-19T07:55:22.184Z",
+        "submissionId": "6ad5ccea5853b87ba757b78b",
+        "_id": "6ad5ccea5853b87ba757b78f"
+      }
+    ],
+    "createdAt": "2026-10-19T07:55:21.039Z",
+    "updatedAt": "2026-10-19T07:55:22.207Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5ccf25853b87ba757b823",
+    "teamId": "6ad5ccf25853b87ba757b820",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-19T07:55:30.065Z",
+    "updatedAt": "2026-10-19T07:55:30.065Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5ccfa5853b87ba757b85a",
+    "teamId": "6ad5ccfa5853b87ba757b857",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-19T07:55:38.226Z",
+    "updatedAt": "2026-10-19T07:55:38.226Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5ccfa5853b87ba757b8d2",
+    "teamId": "6ad5ccfa5853b87ba757b8cf",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-19T07:55:38.554Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-19T07:55:38.554Z",
+        "submissionId": "6ad5ccfa5853b87ba757b8f4",
+        "_id": "6ad5ccfa5853b87ba757b8f8"
+      }
+    ],
+    "createdAt": "2026-10-19T07:55:38.498Z",
+    "updatedAt": "2026-10-19T07:55:38.559Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5cdcb5853b87ba757baa6",
+    "teamId": "6ad5cdcb5853b87ba757baa3",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-19T07:59:08.143Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-19T07:59:08.143Z",
+        "submissionId": "6ad5cdcc5853b87ba757bae5",
+        "_id": "6ad5cdcc5853b87ba757bae9"
+      }
+    ],
+    "createdAt": "2026-10-19T07:59:07.900Z",
+    "updatedAt": "2026-10-19T07:59:08.146Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5cdd45853b87ba757bb7d",
+    "teamId": "6ad5cdd45853b87ba757bb7a",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-19T07:59:16.705Z",
+    "updatedAt": "2026-10-19T07:59:16.705Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5cddc5853b87ba757bbb4",
+    "teamId": "6ad5cddc5853b87ba757bbb1",
+    "currentScore": 0,
+    "solvedLevelsCount": 0,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": null,
+    "history": [],
+    "createdAt": "2026-10-19T07:59:24.270Z",
+    "updatedAt": "2026-10-19T07:59:24.270Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5cddc5853b87ba757bc2c",
+    "teamId": "6ad5cddc5853b87ba757bc29",
+    "currentScore": 100,
+    "solvedLevelsCount": 1,
+    "totalPenalty": 0,
+    "lastSolveTimestamp": "2026-10-19T07:59:24.557Z",
+    "history": [
+      {
+        "levelNumber": 1,
+        "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+        "pointsAwarded": 100,
+        "solvedAt": "2026-10-19T07:59:24.557Z",
+        "submissionId": "6ad5cddc5853b87ba757bc4e",
+        "_id": "6ad5cddc5853b87ba757bc52"
+      }
+    ],
+    "createdAt": "2026-10-19T07:59:24.508Z",
+    "updatedAt": "2026-10-19T07:59:24.560Z",
+    "__v": 0
+  }
+]

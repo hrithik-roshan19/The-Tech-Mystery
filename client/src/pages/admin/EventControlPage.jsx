@@ -7,7 +7,7 @@ import AdminSidebar from "../../components/navigation/AdminSidebar";
 import "../../styles/EventControlPage.css";
 
 const initialSettings = {
-  eventName: "HACK THE GRID",
+  eventName: "THE TECH MYSTERY",
   subtitle: "CodeSphere × UTKRISHT 2026",
   status: "Live",
   startDate: "2026-10-13T10:00",
@@ -24,23 +24,17 @@ const initialSettings = {
   announcements: true,
 };
 
-const initialActivity = [
-  { time: "11:42:08", title: "Checkpoint 04 activated", detail: "QR-04 is accepting eligible team scans.", type: "success" },
-  { time: "11:37:51", title: "Team entered the arena", detail: "PacketRiders joined the live event.", type: "info" },
-  { time: "11:31:20", title: "Submission rate elevated", detail: "18 answers received in the last 5 minutes.", type: "warning" },
-  { time: "11:24:03", title: "Checkpoint 02 completed", detail: "A team cleared the second checkpoint.", type: "success" },
-];
 
 export default function EventControlPage() {
   const { user } = useAuth();
   const [settings, setSettings] = useState(initialSettings);
   const [statsData, setStatsData] = useState({
-    registeredTeams: 32,
-    activeParticipants: 86,
-    checkpointsCleared: 147,
-    submissionsToday: 284,
+    registeredTeams: 0,
+    activeParticipants: 0,
+    checkpointsCleared: 0,
+    submissionsToday: 0,
   });
-  const [activityList, setActivityList] = useState(initialActivity);
+  const [activityList, setActivityList] = useState([]);
   const [saved, setSaved] = useState(false);
   const [notice, setNotice] = useState("");
   const [activeTab, setActiveTab] = useState("Overview");
@@ -62,15 +56,13 @@ export default function EventControlPage() {
 
         if (stats) {
           setStatsData({
-            registeredTeams: stats.totalTeams || 32,
-            activeParticipants: stats.totalUsers || 86,
-            checkpointsCleared: stats.totalScans || 147,
-            submissionsToday: stats.totalSubmissions || 284,
+            registeredTeams: Number(stats.totalTeams ?? 0),
+            activeParticipants: Number(stats.totalUsers ?? 0),
+            checkpointsCleared: Number(stats.totalScans ?? 0),
+            submissionsToday: Number(stats.totalSubmissions ?? 0),
           });
 
-          if (Array.isArray(stats.recentActivity) && stats.recentActivity.length > 0) {
-            setActivityList(stats.recentActivity);
-          }
+          setActivityList(Array.isArray(stats.recentActivity) ? stats.recentActivity : []);
         }
 
         if (eventConfig) {
@@ -146,6 +138,7 @@ export default function EventControlPage() {
         minTeamSize: Number(settings.teamSizeMin) || 2,
         maxTeamSize: Number(settings.teamSizeMax) || 4,
         registrationOpen: Boolean(settings.registrationOpen),
+        isLeaderboardVisible: Boolean(settings.publicLeaderboard),
         isLeaderboardFrozen: !settings.publicLeaderboard,
         frozenAt: !settings.publicLeaderboard ? new Date() : null,
         qrCheckpoints: Boolean(settings.qrCheckpoints),
@@ -164,14 +157,9 @@ export default function EventControlPage() {
         endTime: settings.endDate ? new Date(settings.endDate) : null,
       };
 
-      if (isLiveDb) {
-        await adminService.updateEventConfig(payload);
-        setNotice("Event configuration successfully persisted to live database.");
-      } else {
-        setNotice(
-          "Preview updated in local demo state. Connect authenticated backend to persist changes."
-        );
-      }
+      await adminService.updateEventConfig(payload);
+      setIsLiveDb(true);
+      setNotice("Event configuration successfully persisted to live database.");
       setSaved(true);
     } catch (err) {
       setNotice(
@@ -188,32 +176,19 @@ export default function EventControlPage() {
     if (!announcement.trim()) return;
     setIsPublishingAnnouncement(true);
     try {
-      if (isLiveDb) {
-        const res = await adminService.broadcastAnnouncement({
-          title: "Audience Announcement",
-          content: announcement.trim(),
-          priority: "HIGH",
-        });
-        if (res?.data?.announcements) {
-          setAnnouncementsList(res.data.announcements);
-        }
-        setNotice("Announcement successfully published to all registered teams.");
-      } else {
-        setAnnouncementsList((curr) => [
-          {
-            title: "Audience Announcement",
-            content: announcement.trim(),
-            priority: "HIGH",
-            createdAt: new Date(),
-          },
-          ...curr,
-        ]);
-        setNotice(
-          "Announcement simulated locally. Connect authenticated backend to broadcast live."
-        );
+      const res = await adminService.broadcastAnnouncement({
+        title: "Audience Announcement",
+        content: announcement.trim(),
+        priority: "HIGH",
+      });
+      if (res?.data?.announcements) {
+        setAnnouncementsList(res.data.announcements);
       }
+      setIsLiveDb(true);
+      setNotice("Announcement successfully published to all registered teams.");
       setAnnouncement("");
-      setAnnouncementSent(false);
+      setAnnouncementSent(true);
+      setTimeout(() => setAnnouncementSent(false), 4000);
     } catch (err) {
       setNotice(
         `Failed to publish announcement: ${
@@ -285,11 +260,7 @@ export default function EventControlPage() {
             </button>
             <div className="htg-ec-breadcrumb">
               MISSION CONTROL <span>/</span> <b>EVENT CONTROL</b>
-              {isLiveDb ? (
-                <span className="htg-ec-data-pill live">● LIVE DATABASE</span>
-              ) : (
-                <span className="htg-ec-data-pill demo">● DEMO PREVIEW DATA</span>
-              )}
+              <span className="htg-ec-data-pill live">● LIVE DATABASE</span>
             </div>
           </div>
           <div className="htg-ec-top-actions">
@@ -471,9 +442,7 @@ export default function EventControlPage() {
                 </div>
                 <div className="htg-ec-panel-foot">
                   <span>
-                    {isLiveDb
-                      ? "Switches auto-sync upon clicking Save Changes."
-                      : "Changes are local preview until connected to the event API."}
+                    "Settings auto-sync upon clicking Save changes."
                   </span>
                   <button
                     type="button"
@@ -539,7 +508,16 @@ export default function EventControlPage() {
                 }
               />
               <div className="htg-ec-activity-list">
-                {activityList.map((item, idx) => (
+                {activityList.length === 0 ? (
+                  <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--htg-text-secondary, #94a3b8)" }}>
+                    <div style={{ fontSize: "1.8rem", marginBottom: "8px", opacity: 0.4 }}>📡</div>
+                    <strong>No event activity recorded yet</strong>
+                    <p style={{ fontSize: "0.85rem", marginTop: "4px" }}>
+                      Real-time activity logs will populate here once teams join and start scanning checkpoints.
+                    </p>
+                  </div>
+                ) : (
+                  activityList.map((item, idx) => (
                   <div className="htg-ec-activity-row" key={`${item.time}-${idx}`}>
                     <span className={`activity-marker ${item.type || "info"}`} />
                     <span className="activity-time">{item.time}</span>
@@ -551,7 +529,8 @@ export default function EventControlPage() {
                       {(item.type || "INFO").toUpperCase()}
                     </span>
                   </div>
-                ))}
+                ))
+              )}
               </div>
             </section>
           </>
@@ -569,7 +548,7 @@ export default function EventControlPage() {
                 <input
                   value={settings.eventName}
                   onChange={(e) => update("eventName", e.target.value)}
-                  placeholder="HACK THE GRID"
+                  placeholder="THE TECH MYSTERY"
                 />
               </Field>
               <Field label="Event subtitle">
@@ -811,7 +790,7 @@ export default function EventControlPage() {
 
         <footer className="htg-ec-footer">
           <span>
-            HACK THE GRID <i>•</i> MISSION CONTROL
+            THE TECH MYSTERY <i>•</i> MISSION CONTROL
           </span>
           <span>
             Build with <b>♥</b> by Hrithik Roshan

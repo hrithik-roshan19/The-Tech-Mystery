@@ -6,200 +6,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { adminService } from "../../services/admin.service";
 import "../../styles/TeamManagementPage.css";
 
-const initialTeams = [
-  {
-    id: 1,
-    name: "CodeRaiders",
-    college: "Tula's University",
-    members: 4,
-    status: "Active",
-    level: 8,
-    score: 850,
-    registered: "Oct 10, 10:24 AM",
-    email: "coderaiders@example.com",
-    leader: "Aryan Singh",
-    isDemo: true,
-    memberList: [
-      { name: "Aryan Singh", role: "Team Leader", initials: "A", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-      { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-      { name: "Karan Verma", role: "Member", initials: "K", verified: true },
-    ],
-  },
-  {
-    id: 2,
-    name: "ByteBrigade",
-    college: "Tula's University",
-    members: 3,
-    status: "Active",
-    level: 7,
-    score: 720,
-    registered: "Oct 10, 10:18 AM",
-    email: "bytebrigade@example.com",
-    leader: "Riya Sharma",
-    isDemo: true,
-    memberList: [
-      { name: "Riya Sharma", role: "Team Leader", initials: "R", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-      { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-    ],
-  },
-  {
-    id: 3,
-    name: "Null Pointers",
-    college: "DIT University",
-    members: 4,
-    status: "Active",
-    level: 6,
-    score: 610,
-    registered: "Oct 10, 10:05 AM",
-    email: "nullpointers@example.com",
-    leader: "Kabir Joshi",
-    isDemo: true,
-    memberList: [
-      { name: "Kabir Joshi", role: "Team Leader", initials: "K", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-      { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-      { name: "Karan Verma", role: "Member", initials: "K", verified: true },
-    ],
-  },
-  {
-    id: 4,
-    name: "Debug Dynasty",
-    college: "Tula's University",
-    members: 3,
-    status: "Pending",
-    level: 4,
-    score: 340,
-    registered: "Oct 10, 09:52 AM",
-    email: "debugdynasty@example.com",
-    leader: "Ananya Verma",
-    isDemo: true,
-    memberList: [
-      { name: "Ananya Verma", role: "Team Leader", initials: "A", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-      { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-    ],
-  },
-  {
-    id: 5,
-    name: "Syntax Squad",
-    college: "Tula's University",
-    members: 4,
-    status: "Active",
-    level: 5,
-    score: 500,
-    registered: "Oct 10, 09:41 AM",
-    email: "syntaxsquad@example.com",
-    leader: "Dev Malhotra",
-    isDemo: true,
-    memberList: [
-      { name: "Dev Malhotra", role: "Team Leader", initials: "D", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-      { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-      { name: "Karan Verma", role: "Member", initials: "K", verified: true },
-    ],
-  },
-  {
-    id: 6,
-    name: "Bit Benders",
-    college: "UPES",
-    members: 3,
-    status: "Active",
-    level: 4,
-    score: 420,
-    registered: "Oct 10, 09:20 AM",
-    email: "bitbenders@example.com",
-    leader: "Ishaan Kapoor",
-    isDemo: true,
-    memberList: [
-      { name: "Ishaan Kapoor", role: "Team Leader", initials: "I", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-      { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-    ],
-  },
-  {
-    id: 7,
-    name: "Tech Titans",
-    college: "Graphic Era",
-    members: 4,
-    status: "Active",
-    level: 3,
-    score: 310,
-    registered: "Oct 10, 09:12 AM",
-    email: "techtitans@example.com",
-    leader: "Meera Negi",
-    isDemo: true,
-    memberList: [
-      { name: "Meera Negi", role: "Team Leader", initials: "M", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-      { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-      { name: "Karan Verma", role: "Member", initials: "K", verified: true },
-    ],
-  },
-  {
-    id: 8,
-    name: "Quantum Bytes",
-    college: "Tula's University",
-    members: 2,
-    status: "Disqualified",
-    level: 2,
-    score: 150,
-    registered: "Oct 10, 09:05 AM",
-    email: "quantumbytes@example.com",
-    leader: "Arjun Rawat",
-    isDemo: true,
-    memberList: [
-      { name: "Arjun Rawat", role: "Team Leader", initials: "A", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-    ],
-  },
-  {
-    id: 9,
-    name: "Loop Legends",
-    college: "DIT University",
-    members: 3,
-    status: "Active",
-    level: 3,
-    score: 290,
-    registered: "Oct 10, 08:50 AM",
-    email: "looplegends@example.com",
-    leader: "Tanya Singh",
-    isDemo: true,
-    memberList: [
-      { name: "Tanya Singh", role: "Team Leader", initials: "T", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-      { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-    ],
-  },
-  {
-    id: 10,
-    name: "Array Avengers",
-    college: "Tula's University",
-    members: 4,
-    status: "Pending",
-    level: 1,
-    score: 120,
-    registered: "Oct 10, 08:32 AM",
-    email: "arrayavengers@example.com",
-    leader: "Rahul Negi",
-    isDemo: true,
-    memberList: [
-      { name: "Rahul Negi", role: "Team Leader", initials: "R", verified: true },
-      { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-      { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-      { name: "Karan Verma", role: "Member", initials: "K", verified: true },
-    ],
-  },
-];
-
-const defaultMembers = [
-  { name: "Aryan Singh", role: "Team Leader", initials: "A", verified: true },
-  { name: "Rahul Mehta", role: "Member", initials: "R", verified: true },
-  { name: "Priya Sharma", role: "Member", initials: "P", verified: true },
-  { name: "Karan Verma", role: "Member", initials: "K", verified: true },
-];
-
 const statusClass = (status) => status.toLowerCase().replace(/\s+/g, "-");
 
 function formatRegisteredDate(dateStr) {
@@ -274,8 +80,8 @@ export const TeamManagementPage = () => {
   const { user, isAuthenticated } = useAuth();
   const globalSearchRef = useRef(null);
 
-  const [teams, setTeams] = useState(initialTeams);
-  const [selectedId, setSelectedId] = useState(1);
+  const [teams, setTeams] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [levelFilter, setLevelFilter] = useState("All Levels");
@@ -286,9 +92,33 @@ export const TeamManagementPage = () => {
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
-  const [dataSource, setDataSource] = useState("demo"); // "live" | "demo"
+  const [dataSource, setDataSource] = useState("live");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Admin Modal States
+  const [showAddTeamModal, setShowAddTeamModal] = useState(false);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [showEditTeamModal, setShowEditTeamModal] = useState(false);
+  const [modalBusy, setModalBusy] = useState(false);
+
+  const [teamDraft, setTeamDraft] = useState({
+    name: "",
+    college: "Tula's University",
+    leader: "",
+    members: "",
+    currentLevel: 1,
+    totalScore: 0,
+  });
+
+  const [memberDraft, setMemberDraft] = useState({ identifier: "" });
+
+  const [editDraft, setEditDraft] = useState({
+    name: "",
+    college: "Tula's University",
+    currentLevel: 1,
+    totalScore: 0,
+  });
 
   const fetchLiveTeams = useCallback(async (showSuccessNotice = false) => {
     setLoading(true);
@@ -301,28 +131,20 @@ export const TeamManagementPage = () => {
         setTeams(mapped);
         setDataSource("live");
         if (mapped.length > 0) {
-          setSelectedId(mapped[0].id);
+          setSelectedId((prev) => (prev && mapped.some((t) => t.id === prev) ? prev : mapped[0].id));
+        } else {
+          setSelectedId(null);
         }
         if (showSuccessNotice) {
           setNotice(`Synchronized ${mapped.length} team record(s) from the live Admin API.`);
         }
       }
     } catch (err) {
-      const status = err.response?.status;
       const serverMsg = err.response?.data?.message;
-      setDataSource("demo");
-      setTeams((prev) => (prev.length > 0 && prev[0]?.isDemo ? prev : initialTeams));
-      if (status === 401 || status === 403) {
-        setApiError(
-          serverMsg ||
-            "Admin authorization required for live database records. Showing clearly labeled DEMO PREVIEW data."
-        );
-      } else {
-        setApiError(
-          serverMsg ||
-            "Live Admin API (/api/v1/admin/teams) is currently unreachable. Showing clearly labeled DEMO PREVIEW data."
-        );
-      }
+      setDataSource("live");
+      setTeams([]);
+      setSelectedId(null);
+      setApiError(serverMsg || "Failed to load team records from the live database.");
     } finally {
       setLoading(false);
     }
@@ -395,7 +217,7 @@ export const TeamManagementPage = () => {
     if (Array.isArray(selectedTeam.memberList) && selectedTeam.memberList.length > 0) {
       return selectedTeam.memberList.slice(0, selectedTeam.members);
     }
-    return defaultMembers.slice(0, selectedTeam.members);
+    return [];
   }, [selectedTeam]);
 
   const stats = [
@@ -404,21 +226,21 @@ export const TeamManagementPage = () => {
       value: teams.length,
       icon: "♧",
       tone: "lime",
-      trend: dataSource === "demo" ? "+12%" : "Live",
+      trend: "Live",
     },
     {
       label: "Total Participants",
       value: teams.reduce((sum, team) => sum + (Number(team.members) || 0), 0),
       icon: "♙",
       tone: "lime",
-      trend: dataSource === "demo" ? "+8%" : "Live",
+      trend: "Live",
     },
     {
       label: "Active Teams",
       value: teams.filter((team) => team.status === "Active").length,
       icon: "ϟ",
       tone: "lime",
-      trend: dataSource === "demo" ? "+20%" : "",
+      trend: "",
     },
     {
       label: "Pending Verification",
@@ -457,7 +279,7 @@ export const TeamManagementPage = () => {
       team.score,
       team.leader,
       team.email,
-      dataSource === "live" ? "Live Database" : "Demo Preview",
+      "Live Database",
     ]);
     const csv = [headers, ...rows]
       .map((row) =>
@@ -468,12 +290,12 @@ export const TeamManagementPage = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "hack-the-grid-teams.csv";
+    link.download = "the-tech-mystery-teams.csv";
     link.click();
     URL.revokeObjectURL(url);
     setNotice(
       `Exported ${filteredTeams.length} filtered team(s) (${
-        dataSource === "live" ? "live database records" : "demo preview records"
+        "live database records"
       }) as CSV.`
     );
   };
@@ -490,7 +312,7 @@ export const TeamManagementPage = () => {
     if (!selectedTeam || actionBusy) return;
 
     // Live database team: call PATCH /api/v1/admin/teams/:teamId/disqualify
-    if (dataSource === "live" && !selectedTeam.isDemo) {
+    if (selectedTeam?._mongoId || selectedTeam?.id) {
       const shouldDisqualify = nextStatus === "Disqualified";
       setActionBusy(true);
       setApiError("");
@@ -535,6 +357,249 @@ export const TeamManagementPage = () => {
     setNotice(
       `${selectedTeam.name} marked as ${nextStatus}. Demo UI only — connect this action to the backend.`
     );
+  };
+
+  const handleCreateTeam = async (e) => {
+    e.preventDefault();
+    if (!teamDraft.name.trim() || !teamDraft.leader.trim()) {
+      setApiError("Team name and Team Leader (email or username) are required.");
+      return;
+    }
+    setModalBusy(true);
+    setApiError("");
+    try {
+      if (dataSource === "live") {
+        const payload = {
+          name: teamDraft.name.trim(),
+          college: teamDraft.college.trim() || "Tula's University",
+          leaderEmailOrUsername: teamDraft.leader.trim(),
+          memberIdentifiers: teamDraft.members
+            ? teamDraft.members.split(",").map((s) => s.trim()).filter(Boolean)
+            : [],
+          currentLevel: Number(teamDraft.currentLevel) || 1,
+          totalScore: Number(teamDraft.totalScore) || 0,
+        };
+        const res = await adminService.createTeam(payload);
+        const newTeamDoc = res?.data?.team;
+        if (newTeamDoc) {
+          const mapped = mapApiTeamToUi(newTeamDoc, teams.length);
+          setTeams((prev) => [mapped, ...prev]);
+          setSelectedId(mapped.id);
+        }
+        setNotice(res?.message || `Team "${teamDraft.name}" created on live database.`);
+      } else {
+        const newId = Date.now();
+        const demoTeam = {
+          id: newId,
+          emblemIndex: (teams.length % 4) + 1,
+          joinCode: "HTG-DEMO" + Math.floor(Math.random() * 900 + 100),
+          name: teamDraft.name.trim(),
+          college: teamDraft.college.trim() || "Tula's University",
+          members: 1,
+          status: "Pending",
+          level: Number(teamDraft.currentLevel) || 1,
+          score: Number(teamDraft.totalScore) || 0,
+          registered: "Just now",
+          email: teamDraft.leader.trim(),
+          leader: teamDraft.leader.trim(),
+          disqualificationReason: null,
+          isDemo: false,
+          memberList: [
+            { id: newId + "_m1", name: teamDraft.leader.trim(), role: "Team Leader", initials: teamDraft.leader.trim().slice(0, 1).toUpperCase(), verified: true },
+          ],
+        };
+        setTeams((prev) => [demoTeam, ...prev]);
+        setSelectedId(demoTeam.id);
+        setNotice(`Team "${teamDraft.name}" created in demo state.`);
+      }
+      setShowAddTeamModal(false);
+      setTeamDraft({
+        name: "",
+        college: "Tula's University",
+        leader: "",
+        members: "",
+        currentLevel: 1,
+        totalScore: 0,
+      });
+    } catch (err) {
+      setApiError(err.response?.data?.message || err.message || "Failed to create team.");
+    } finally {
+      setModalBusy(false);
+    }
+  };
+
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    if (!memberDraft.identifier.trim()) {
+      setApiError("Member email or username is required.");
+      return;
+    }
+    setModalBusy(true);
+    setApiError("");
+    try {
+      if (selectedTeam) {
+        const res = await adminService.addTeamMember(selectedTeam.id, {
+          userIdentifier: memberDraft.identifier.trim(),
+        });
+        const updatedDoc = res?.data?.team;
+        if (updatedDoc) {
+          const mapped = mapApiTeamToUi(updatedDoc, (selectedTeam.emblemIndex || 1) - 1);
+          setTeams((prev) => prev.map((t) => (t.id === selectedTeam.id ? mapped : t)));
+        }
+        setNotice(res?.message || `Member "${memberDraft.identifier}" added to ${selectedTeam.name}.`);
+      } else {
+        const identifier = memberDraft.identifier.trim();
+        const newMember = {
+          id: Date.now(),
+          name: identifier,
+          role: "Member",
+          initials: identifier.slice(0, 1).toUpperCase(),
+          verified: true,
+        };
+        setTeams((prev) =>
+          prev.map((t) => {
+            if (t.id !== selectedTeam.id) return t;
+            const updatedMembers = [...(t.memberList || []), newMember];
+            return {
+              ...t,
+              members: updatedMembers.length,
+              status: updatedMembers.length >= 2 && t.status === "Pending" ? "Active" : t.status,
+              memberList: updatedMembers,
+            };
+          })
+        );
+        setNotice(`Member "${identifier}" added to ${selectedTeam.name} (Demo).`);
+      }
+      setShowAddMemberModal(false);
+      setMemberDraft({ identifier: "" });
+    } catch (err) {
+      setApiError(err.response?.data?.message || err.message || "Failed to add team member.");
+    } finally {
+      setModalBusy(false);
+    }
+  };
+
+  const handleRemoveMember = async (member) => {
+    if (!selectedTeam) return;
+    if (member.role === "Team Leader") {
+      setApiError("Cannot remove the team leader. Transfer leadership or delete the team.");
+      return;
+    }
+    setActionBusy(true);
+    setApiError("");
+    try {
+      if (selectedTeam?._mongoId || selectedTeam?.id) {
+        const res = await adminService.removeTeamMember(selectedTeam.id, member.id);
+        const updatedDoc = res?.data?.team;
+        if (updatedDoc) {
+          const mapped = mapApiTeamToUi(updatedDoc, (selectedTeam.emblemIndex || 1) - 1);
+          setTeams((prev) => prev.map((t) => (t.id === selectedTeam.id ? mapped : t)));
+        }
+        setNotice(res?.message || `Removed ${member.name} from ${selectedTeam.name}.`);
+      } else {
+        setTeams((prev) =>
+          prev.map((t) => {
+            if (t.id !== selectedTeam.id) return t;
+            const filtered = (t.memberList || []).filter((m) => m.id !== member.id);
+            return {
+              ...t,
+              members: filtered.length,
+              status: filtered.length < 2 && t.status === "Active" ? "Pending" : t.status,
+              memberList: filtered,
+            };
+          })
+        );
+        setNotice(`Removed ${member.name} from ${selectedTeam.name} (Demo).`);
+      }
+    } catch (err) {
+      setApiError(err.response?.data?.message || err.message || "Failed to remove member.");
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const openEditTeamModal = (team) => {
+    if (!team) return;
+    setEditDraft({
+      name: team.name || "",
+      college: team.college || "Tula's University",
+      currentLevel: team.level || 1,
+      totalScore: team.score || 0,
+    });
+    setShowEditTeamModal(true);
+  };
+
+  const handleSaveEditTeam = async (e) => {
+    e.preventDefault();
+    if (!editDraft.name.trim()) {
+      setApiError("Team name cannot be empty.");
+      return;
+    }
+    setModalBusy(true);
+    setApiError("");
+    try {
+      if (selectedTeam) {
+        const res = await adminService.updateTeam(selectedTeam.id, editDraft);
+        const updatedDoc = res?.data?.team;
+        if (updatedDoc) {
+          const mapped = mapApiTeamToUi(updatedDoc, (selectedTeam.emblemIndex || 1) - 1);
+          setTeams((prev) => prev.map((t) => (t.id === selectedTeam.id ? mapped : t)));
+        }
+        setNotice(res?.message || `Team "${editDraft.name}" updated successfully.`);
+      } else {
+        setTeams((prev) =>
+          prev.map((t) =>
+            t.id === selectedTeam.id
+              ? {
+                  ...t,
+                  name: editDraft.name.trim(),
+                  college: editDraft.college.trim(),
+                  level: Number(editDraft.currentLevel) || 1,
+                  score: Number(editDraft.totalScore) || 0,
+                }
+              : t
+          )
+        );
+        setNotice(`Team "${editDraft.name}" updated (Demo).`);
+      }
+      setShowEditTeamModal(false);
+    } catch (err) {
+      setApiError(err.response?.data?.message || err.message || "Failed to update team.");
+    } finally {
+      setModalBusy(false);
+    }
+  };
+
+  const handleDeleteTeam = async (team) => {
+    if (!team) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete team "${team.name}"? This removes all squad progression and resets members.`
+    );
+    if (!confirmed) return;
+    setActionBusy(true);
+    setApiError("");
+    try {
+      if (team) {
+        await adminService.deleteTeam(team.id);
+        setNotice(`Team "${team.name}" deleted from database.`);
+        setTeams((prev) => {
+          const filtered = prev.filter((t) => t.id !== team.id);
+          if (filtered.length > 0) setSelectedId(filtered[0].id);
+          return filtered;
+        });
+      } else {
+        setTeams((prev) => {
+          const filtered = prev.filter((t) => t.id !== team.id);
+          if (filtered.length > 0) setSelectedId(filtered[0].id);
+          return filtered;
+        });
+        setNotice(`Team "${team.name}" removed (Demo).`);
+      }
+    } catch (err) {
+      setApiError(err.response?.data?.message || err.message || "Failed to delete team.");
+    } finally {
+      setActionBusy(false);
+    }
   };
 
   const adminDisplayName = user?.fullName || user?.username || "Admin";
@@ -598,13 +663,7 @@ export const TeamManagementPage = () => {
         <section className="htg-page-hero">
           <div className="htg-breadcrumb">
             Admin <span>›</span> Teams
-            <em className={`htg-data-pill ${dataSource === "live" ? "live" : "demo"}`}>
-              {loading
-                ? "SYNCING API..."
-                : dataSource === "live"
-                ? "● LIVE DATABASE"
-                : "● DEMO PREVIEW DATA"}
-            </em>
+            <em className="htg-data-pill live">{loading ? "SYNCING API..." : "● LIVE DATABASE"}</em>
           </div>
           <div className="htg-heading-row">
             <div>
@@ -612,7 +671,7 @@ export const TeamManagementPage = () => {
                 Teams <em>Management</em>
               </h1>
               <p>
-                View, manage and monitor all registered teams for Hack the Grid.
+                View, manage and monitor all registered teams for The Tech Mystery.
               </p>
             </div>
             <div className="htg-hero-actions">
@@ -627,11 +686,7 @@ export const TeamManagementPage = () => {
               <button
                 type="button"
                 className="htg-primary-button"
-                onClick={() =>
-                  setNotice(
-                    "Add Team form is a UI placeholder. Admin team creation endpoint (POST /api/v1/admin/teams) is not yet implemented on the backend; teams currently self-register via /api/v1/teams/create."
-                  )
-                }
+                onClick={() => setShowAddTeamModal(true)}
               >
                 ＋ Add Team
               </button>
@@ -873,7 +928,7 @@ export const TeamManagementPage = () => {
                         <td colSpan="9" className="htg-empty-state">
                           {loading
                             ? "Loading team records..."
-                            : "No teams match these filters."}
+                            : teams.length === 0 ? "No teams have registered yet." : "No teams match these filters."}
                         </td>
                       </tr>
                     )}
@@ -963,7 +1018,7 @@ export const TeamManagementPage = () => {
             </footer>
           </div>
 
-          {selectedTeam && (
+          {selectedTeam ? (
             <aside className="htg-team-detail">
               <div className="htg-detail-head">
                 <span
@@ -1103,11 +1158,7 @@ export const TeamManagementPage = () => {
                   <h3>Team Members ({selectedTeam.members})</h3>
                   <button
                     type="button"
-                    onClick={() =>
-                      setNotice(
-                        "Add Member form is a UI placeholder. Admin member assignment endpoint (POST /api/v1/admin/teams/:teamId/members) is not yet implemented; operatives join via join code (/api/v1/teams/join)."
-                      )
-                    }
+                    onClick={() => setShowAddMemberModal(true)}
                   >
                     ＋ Add
                   </button>
@@ -1129,23 +1180,28 @@ export const TeamManagementPage = () => {
                     <span className="htg-verified">
                       {member.verified !== false ? "Verified" : "Pending"}
                     </span>
+                    {member.role !== "Team Leader" && (
+                      <button
+                        type="button"
+                        className="htg-remove-member-btn"
+                        title={`Remove ${member.name}`}
+                        disabled={actionBusy}
+                        onClick={() => handleRemoveMember(member)}
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 ))}
               </section>
 
-              <section className="htg-detail-actions">
+              <section className="htg-detail-actions" style={{ flexWrap: "wrap" }}>
                 <button
                   type="button"
                   className="htg-outline-button"
-                  onClick={() =>
-                    setNotice(
-                      `Viewing full details for ${selectedTeam.name} (${
-                        dataSource === "live" ? "Live record" : "Demo preview"
-                      }).`
-                    )
-                  }
+                  onClick={() => openEditTeamModal(selectedTeam)}
                 >
-                  View Full Profile
+                  ✎ Edit Team
                 </button>
                 <button
                   type="button"
@@ -1167,16 +1223,240 @@ export const TeamManagementPage = () => {
                     ? "Restore Team"
                     : "Disqualify"}
                 </button>
+                <button
+                  type="button"
+                  className="htg-danger-button"
+                  style={{ background: "#2e1212", borderColor: "#7a2b2b" }}
+                  disabled={actionBusy}
+                  onClick={() => handleDeleteTeam(selectedTeam)}
+                >
+                  🗑 Delete
+                </button>
               </section>
+            </aside>
+          ) : (
+            <aside className="htg-team-detail" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "3rem 1.5rem", color: "#8a968c" }}>
+              <div style={{ fontSize: "36px", marginBottom: "16px" }}>👥</div>
+              <h3 style={{ color: "#f5f5f0", marginBottom: "8px", fontSize: "16px" }}>No Team Selected</h3>
+              <p style={{ fontSize: "13px", lineHeight: "1.5", margin: "0 0 16px", color: "#8a968c" }}>
+                {teams.length === 0
+                  ? "No teams have registered yet. Use the button below to register a team or wait for participants to complete registration."
+                  : "Select a team from the list to inspect its roster, join code, and progress."}
+              </p>
+              {teams.length === 0 && (
+                <button
+                  type="button"
+                  className="htg-primary-button"
+                  onClick={() => setShowAddTeamModal(true)}
+                >
+                  + Register First Team
+                </button>
+              )}
             </aside>
           )}
         </section>
 
         <footer className="htg-page-footer">
           Build with <span>♥</span> by Hrithik Roshan{" "}
-          <small>HACK THE GRID · ADMIN CONSOLE</small>
+          <small>THE TECH MYSTERY · ADMIN CONSOLE</small>
         </footer>
       </main>
+
+      {/* Add Team Modal */}
+      {showAddTeamModal && (
+        <div
+          className="htg-modal-backdrop"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowAddTeamModal(false);
+          }}
+        >
+          <form className="htg-team-modal" onSubmit={handleCreateTeam}>
+            <div className="htg-modal-header">
+              <div>
+                <small>ADMIN SQUAD PROVISIONING</small>
+                <h2>Register New Team</h2>
+              </div>
+              <button type="button" onClick={() => setShowAddTeamModal(false)}>×</button>
+            </div>
+            <label>
+              Team Name *
+              <input
+                required
+                value={teamDraft.name}
+                onChange={(e) => setTeamDraft({ ...teamDraft, name: e.target.value })}
+                placeholder="e.g. CyberVanguard"
+              />
+            </label>
+            <div className="htg-modal-row">
+              <label>
+                College / Institution
+                <input
+                  value={teamDraft.college}
+                  onChange={(e) => setTeamDraft({ ...teamDraft, college: e.target.value })}
+                  placeholder="Tula's University"
+                />
+              </label>
+              <label>
+                Team Leader (Username/Email) *
+                <input
+                  required
+                  value={teamDraft.leader}
+                  onChange={(e) => setTeamDraft({ ...teamDraft, leader: e.target.value })}
+                  placeholder="Leader username or email"
+                />
+              </label>
+            </div>
+            <label>
+              Additional Members (comma separated emails or usernames)
+              <input
+                value={teamDraft.members}
+                onChange={(e) => setTeamDraft({ ...teamDraft, members: e.target.value })}
+                placeholder="member1@tulas.edu.in, member2"
+              />
+            </label>
+            <div className="htg-modal-row">
+              <label>
+                Initial Level
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={teamDraft.currentLevel}
+                  onChange={(e) => setTeamDraft({ ...teamDraft, currentLevel: e.target.value })}
+                />
+              </label>
+              <label>
+                Initial Score
+                <input
+                  type="number"
+                  min="0"
+                  value={teamDraft.totalScore}
+                  onChange={(e) => setTeamDraft({ ...teamDraft, totalScore: e.target.value })}
+                />
+              </label>
+            </div>
+            <p className="htg-modal-note">
+              Each team requires 2–4 verified members for full eligibility. Auto-generates cryptographic join code (HTG-XXXXXX).
+            </p>
+            <div className="htg-modal-actions">
+              <button type="button" className="htg-outline-button" onClick={() => setShowAddTeamModal(false)}>
+                Cancel
+              </button>
+              <button type="submit" className="htg-primary-button" disabled={modalBusy}>
+                {modalBusy ? "Registering..." : "Provision Team"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Add Member Modal */}
+      {showAddMemberModal && (
+        <div
+          className="htg-modal-backdrop"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowAddMemberModal(false);
+          }}
+        >
+          <form className="htg-team-modal" onSubmit={handleAddMember}>
+            <div className="htg-modal-header">
+              <div>
+                <small>ROSTER ENROLLMENT</small>
+                <h2>Add Team Member</h2>
+              </div>
+              <button type="button" onClick={() => setShowAddMemberModal(false)}>×</button>
+            </div>
+            <p style={{ margin: "0 0 16px", color: "var(--htg-muted)", fontSize: "12px" }}>
+              Enrolling operative into <strong>{selectedTeam?.name}</strong> (Max 4 members).
+            </p>
+            <label>
+              Operative Email or Username *
+              <input
+                required
+                autoFocus
+                value={memberDraft.identifier}
+                onChange={(e) => setMemberDraft({ identifier: e.target.value })}
+                placeholder="operative@tulas.edu.in or username"
+              />
+            </label>
+            <div className="htg-modal-actions">
+              <button type="button" className="htg-outline-button" onClick={() => setShowAddMemberModal(false)}>
+                Cancel
+              </button>
+              <button type="submit" className="htg-primary-button" disabled={modalBusy}>
+                {modalBusy ? "Enrolling..." : "Enroll Member"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Edit Team Modal */}
+      {showEditTeamModal && (
+        <div
+          className="htg-modal-backdrop"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowEditTeamModal(false);
+          }}
+        >
+          <form className="htg-team-modal" onSubmit={handleSaveEditTeam}>
+            <div className="htg-modal-header">
+              <div>
+                <small>SQUAD METADATA</small>
+                <h2>Edit Team Details</h2>
+              </div>
+              <button type="button" onClick={() => setShowEditTeamModal(false)}>×</button>
+            </div>
+            <label>
+              Team Name *
+              <input
+                required
+                value={editDraft.name}
+                onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })}
+              />
+            </label>
+            <label>
+              College / Institution
+              <input
+                value={editDraft.college}
+                onChange={(e) => setEditDraft({ ...editDraft, college: e.target.value })}
+              />
+            </label>
+            <div className="htg-modal-row">
+              <label>
+                Current Level
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={editDraft.currentLevel}
+                  onChange={(e) => setEditDraft({ ...editDraft, currentLevel: e.target.value })}
+                />
+              </label>
+              <label>
+                Total Score
+                <input
+                  type="number"
+                  min="0"
+                  value={editDraft.totalScore}
+                  onChange={(e) => setEditDraft({ ...editDraft, totalScore: e.target.value })}
+                />
+              </label>
+            </div>
+            <div className="htg-modal-actions">
+              <button type="button" className="htg-outline-button" onClick={() => setShowEditTeamModal(false)}>
+                Cancel
+              </button>
+              <button type="submit" className="htg-primary-button" disabled={modalBusy}>
+                {modalBusy ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

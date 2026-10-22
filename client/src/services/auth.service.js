@@ -1,6 +1,7 @@
 import api from './api';
 
 export const authService = {
+  logout: (token) => api.post('/auth/logout', {}, { headers: { Authorization: `Bearer ${token}` } }),
   login: async (credentials) => {
     const res = await api.post('/auth/login', credentials);
     return res.data;

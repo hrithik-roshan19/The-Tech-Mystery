@@ -1,0 +1,35 @@
+name: htg-staging-prep
+services:
+  mongo:
+    image: mongo:8.2
+    ports:
+      - "127.0.0.1:27027:27027"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: htg_staging_bootstrap
+      MONGO_INITDB_ROOT_PASSWORD_FILE: /run/secrets/mongo-root-password
+    secrets:
+      - mongo-keyfile
+      - mongo-root-password
+      - mongo-app-password
+    entrypoint: ["/bin/bash", "-ec"]
+    command:
+      - |
+        install -m 400 -o mongodb -g mongodb /run/secrets/mongo-keyfile /tmp/staging-keyfile
+        exec /usr/local/bin/docker-entrypoint.sh mongod --port 27027 --replSet htg-staging --keyFile /tmp/staging-keyfile --bind_ip_all
+    volumes:
+      - mongo-data:/data/db
+      - ./init-replica.js:/opt/htg/init-replica.js:ro
+    networks: [staging]
+secrets:
+  mongo-keyfile:
+    file: ./secrets/mongo-keyfile
+  mongo-root-password:
+    file: ./secrets/mongo-root-password
+  mongo-app-password:
+    file: ./secrets/mongo-app-password
+volumes:
+  mongo-data:
+    name: htg-staging-prep-mongo-data
+networks:
+  staging:
+    name: htg-staging-prep-network

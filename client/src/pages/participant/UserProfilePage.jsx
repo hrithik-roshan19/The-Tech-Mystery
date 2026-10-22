@@ -5,56 +5,44 @@ import { authService } from "../../services/auth.service";
 import { ROUTES } from "../../constants/routes";
 import "../../styles/UserProfilePage.css";
 
-const initialProfile = {
-  fullName: "Hrithik Roshan",
-  username: "hrx_runner",
-  email: "hrithik@example.com",
+const defaultProfile = {
+  fullName: "",
+  username: "",
+  email: "",
   college: "Tula's University",
   course: "B.Tech CSE",
   year: "3rd Year",
-  teamName: "PacketRiders",
-  teamCode: "HTG-1038",
-  bio: "Curious builder. Solving clues, learning security, and chasing the final flag.",
-  github: "ydv-hrx",
-  linkedin: "hrithik-roshan",
+  teamName: "No Squad Joined",
+  teamCode: "—",
+  bio: "",
+  github: "",
+  linkedin: "",
   publicProfile: true,
   emailUpdates: true,
   avatar: ""
 };
 
-const initialStats = {
-  totalXp: "1,280",
-  challengesSolved: "08 / 10",
-  checkpoints: "04 / 10",
-  contribution: "34%",
-  rankNumber: "#08",
-  rankPercentile: "TOP 15% OF TEAMS",
-  teamScore: 3740,
-  teamRank: "#04",
-  teamProgress: 60
+const defaultStats = {
+  totalXp: "0",
+  challengesSolved: "00 / 10",
+  checkpoints: "00 / 10",
+  contribution: "0%",
+  rankNumber: "UNRANKED",
+  rankPercentile: "UNRANKED",
+  teamScore: 0,
+  teamRank: "UNRANKED",
+  teamProgress: 0
 };
 
-const fallbackAchievements = [
-  { icon: "⚑", name: "First Flag", detail: "Solved your first challenge", date: "OCT 13, 2026", tone: "lime" },
-  { icon: "⌁", name: "QR Explorer", detail: "Visited 3 checkpoints", date: "OCT 13, 2026", tone: "blue" },
-  { icon: "⌘", name: "Sharp Mind", detail: "Solved 5 challenges", date: "IN PROGRESS", tone: "purple" },
-];
-
-const fallbackRecentActivity = [
-  { time: "14:08", title: "Checkpoint 04 validated", detail: "Grid Sector · Level 04", points: "+150 XP", kind: "checkpoint" },
-  { time: "13:54", title: "Challenge cleared", detail: "Signal in the Noise · Level 03", points: "+100 XP", kind: "challenge" },
-  { time: "13:32", title: "Hint requested", detail: "Hidden Payload · Level 03", points: "−20 XP", kind: "hint" },
-];
-
 export default function UserProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, manageAccount } = useAuth();
   const navigate = useNavigate();
 
   // State
-  const [profile, setProfile] = useState(initialProfile);
-  const [stats, setStats] = useState(initialStats);
-  const [achievements, setAchievements] = useState(fallbackAchievements);
-  const [recentActivity, setRecentActivity] = useState(fallbackRecentActivity);
+  const [profile, setProfile] = useState(defaultProfile);
+  const [stats, setStats] = useState(defaultStats);
+  const [achievements, setAchievements] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -111,23 +99,23 @@ export default function UserProfilePage() {
 
           if (res.data.stats) {
             setStats({
-              totalXp: res.data.stats.totalXp || initialStats.totalXp,
-              challengesSolved: res.data.stats.challengesSolved || initialStats.challengesSolved,
-              checkpoints: res.data.stats.checkpoints || initialStats.checkpoints,
-              contribution: res.data.stats.contribution || initialStats.contribution,
-              rankNumber: res.data.stats.rankNumber || initialStats.rankNumber,
-              rankPercentile: res.data.stats.rankPercentile || initialStats.rankPercentile,
-              teamScore: res.data.stats.teamScore || initialStats.teamScore,
-              teamRank: `#${String(res.data.team?.rank || 4).padStart(2, '0')}`,
-              teamProgress: res.data.stats.teamProgress || initialStats.teamProgress
+              totalXp: String(res.data.stats.totalXp ?? "0"),
+              challengesSolved: res.data.stats.challengesSolved || "00 / 10",
+              checkpoints: res.data.stats.checkpoints || "00 / 10",
+              contribution: res.data.stats.contribution || "0%",
+              rankNumber: res.data.stats.rankNumber || "UNRANKED",
+              rankPercentile: res.data.stats.rankPercentile || "UNRANKED",
+              teamScore: Number(res.data.stats.teamScore ?? 0),
+              teamRank: res.data.team?.rank ? `#${String(res.data.team.rank).padStart(2, '0')}` : "UNRANKED",
+              teamProgress: Number(res.data.stats.teamProgress ?? 0)
             });
           }
 
-          if (res.data.achievements && Array.isArray(res.data.achievements)) {
+          if (Array.isArray(res.data.achievements)) {
             setAchievements(res.data.achievements);
           }
 
-          if (res.data.recentActivity && Array.isArray(res.data.recentActivity) && res.data.recentActivity.length > 0) {
+          if (Array.isArray(res.data.recentActivity)) {
             setRecentActivity(res.data.recentActivity);
           }
 
@@ -328,7 +316,7 @@ export default function UserProfilePage() {
         <Link className="htg-up-brand" to={ROUTES.HOME}>
           <span className="htg-up-brand-mark">H</span>
           <span>
-            HACK THE GRID<small>PARTICIPANT PORTAL</small>
+            THE TECH MYSTERY<small>PARTICIPANT PORTAL</small>
           </span>
         </Link>
 
@@ -343,9 +331,7 @@ export default function UserProfilePage() {
 
         <div className="htg-up-nav-right">
           {/* Data source indicator */}
-          <span className={`htg-up-data-pill ${isLiveDatabase ? "live" : "demo"}`}>
-            <i /> {isLiveDatabase ? "LIVE DATABASE" : "DEMO PREVIEW"}
-          </span>
+          <span className="htg-up-data-pill live"><i /> LIVE DATABASE</span>
 
           <span className="htg-up-live">
             <i /> EVENT LIVE
@@ -615,19 +601,29 @@ export default function UserProfilePage() {
                 </div>
 
                 <div className="htg-up-activity-list">
-                  {recentActivity.map((item, idx) => (
-                    <div className="htg-up-activity" key={`${item.time}-${idx}`}>
-                      <div className={`htg-up-activity-icon ${item.kind}`}>
-                        {item.kind === "checkpoint" ? "▣" : item.kind === "challenge" ? "⌘" : "?"}
-                      </div>
-                      <div className="htg-up-activity-copy">
-                        <strong>{item.title}</strong>
-                        <small>{item.detail}</small>
-                      </div>
-                      <div className={`htg-up-xp ${item.kind}`}>{item.points}</div>
-                      <time>{item.time}</time>
+                  {recentActivity.length === 0 ? (
+                    <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--htg-text-secondary, #94a3b8)" }}>
+                      <div style={{ fontSize: "1.6rem", marginBottom: "8px", opacity: 0.4 }}>📋</div>
+                      <strong>No recent activity</strong>
+                      <p style={{ fontSize: "0.85rem", marginTop: "4px" }}>
+                        Your challenge solves, hint unlocks, and checkpoint scans will appear here.
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    recentActivity.map((item, idx) => (
+                      <div className="htg-up-activity" key={`${item.time}-${idx}`}>
+                        <div className={`htg-up-activity-icon ${item.kind}`}>
+                          {item.kind === "checkpoint" ? "▣" : item.kind === "challenge" ? "⌘" : "?"}
+                        </div>
+                        <div className="htg-up-activity-copy">
+                          <strong>{item.title}</strong>
+                          <small>{item.detail}</small>
+                        </div>
+                        <div className={`htg-up-xp ${item.kind}`}>{item.points}</div>
+                        <time>{item.time}</time>
+                      </div>
+                    ))
+                  )}
                 </div>
               </>
             )}
@@ -647,17 +643,27 @@ export default function UserProfilePage() {
                 </div>
 
                 <div className="htg-up-achievements">
-                  {achievements.map((item) => (
-                    <div className={`htg-up-achievement ${item.tone}`} key={item.name}>
-                      <div className="achievement-icon">{item.icon}</div>
-                      <div>
-                        <strong>{item.name}</strong>
-                        <p>{item.detail}</p>
-                        <small>{item.date}</small>
-                      </div>
-                      {item.date !== "IN PROGRESS" && <span className="achievement-check">✓</span>}
+                  {achievements.length === 0 ? (
+                    <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--htg-text-secondary, #94a3b8)", gridColumn: "1/-1" }}>
+                      <div style={{ fontSize: "1.6rem", marginBottom: "8px", opacity: 0.4 }}>🏅</div>
+                      <strong>No achievements yet</strong>
+                      <p style={{ fontSize: "0.85rem", marginTop: "4px" }}>
+                        Solve challenges and scan physical QR checkpoints on campus to unlock honors.
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    achievements.map((item) => (
+                      <div className={`htg-up-achievement ${item.tone}`} key={item.name}>
+                        <div className="achievement-icon">{item.icon}</div>
+                        <div>
+                          <strong>{item.name}</strong>
+                          <p>{item.detail}</p>
+                          <small>{item.date}</small>
+                        </div>
+                        {item.date !== "IN PROGRESS" && <span className="achievement-check">✓</span>}
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 <div className="htg-up-achievement-note">
@@ -679,7 +685,7 @@ export default function UserProfilePage() {
                     <p>Manage your public identity and contact details</p>
                   </div>
                   <span className="htg-up-count">
-                    {isLiveDatabase ? "LIVE DATABASE" : "LOCAL PREVIEW"}
+                    "LIVE DATABASE"
                   </span>
                 </div>
 
@@ -895,7 +901,7 @@ export default function UserProfilePage() {
               <button
                 className="htg-up-text-btn"
                 type="button"
-                onClick={() => setSecurityModalOpen(true)}
+                onClick={() => manageAccount ? manageAccount() : setSecurityModalOpen(true)}
               >
                 Manage account security ↗
               </button>
@@ -905,7 +911,7 @@ export default function UserProfilePage() {
 
         {/* Footer */}
         <footer className="htg-up-footer">
-          <span>HACK THE GRID <i>•</i> PARTICIPANT PORTAL</span>
+          <span>THE TECH MYSTERY <i>•</i> PARTICIPANT PORTAL</span>
           <span>Built with <b>♥</b> by Hrithik Roshan</span>
           <span>PLAYER PROFILE / IDENTITY CONSOLE</span>
         </footer>

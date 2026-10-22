@@ -1,6 +1,6 @@
-# SECURITY ARCHITECTURE & ANTI-CHEAT SYSTEM: HACK THE GRID
+# SECURITY ARCHITECTURE & ANTI-CHEAT SYSTEM: THE TECH MYSTERY
 
-This document defines the multi-tiered defense-in-depth security model implemented in **Hack the Grid** to ensure competition integrity.
+This document defines the multi-tiered defense-in-depth security model implemented in **The Tech Mystery** to ensure competition integrity.
 
 ---
 

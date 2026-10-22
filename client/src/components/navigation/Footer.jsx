@@ -11,7 +11,7 @@ export const Footer = () => {
               <Terminal className="w-4 h-4" />
             </div>
             <div>
-              <p className="font-heading font-bold text-cyber-text text-sm">HACK THE GRID 2026</p>
+              <p className="font-heading font-bold text-cyber-text text-sm">THE TECH MYSTERY 2026</p>
               <p className="text-[11px] text-cyber-muted">CodeSphere Coding Club • Tula's University, Dehradun</p>
             </div>
           </div>
@@ -33,7 +33,7 @@ export const Footer = () => {
               Tula's University <ExternalLink className="w-3 h-3" />
             </a>
             <span>•</span>
-            <span className="text-cyber-orange">HTG CTF ENGINE v1.0.0</span>
+            <span className="text-cyber-orange">THE TECH MYSTERY CTF ENGINE v1.0.0</span>
           </div>
         </div>
       </div>

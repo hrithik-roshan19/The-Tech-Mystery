@@ -1281,3 +1281,107 @@
     gap: 4px;
   }
 }
+
+/* ==========================================================================
+   Alert Banners, Telemetry Status, & Refresh Controls
+   ========================================================================== */
+.htg-lb-alert-banner {
+  background: rgba(255, 60, 60, 0.08);
+  border: 1px solid rgba(255, 60, 60, 0.3);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: #ff9999;
+  font-size: 13px;
+}
+
+.htg-lb-alert-banner.info {
+  background: rgba(0, 229, 255, 0.08);
+  border-color: rgba(0, 229, 255, 0.3);
+  color: #a0f4ff;
+}
+
+.htg-lb-alert-banner.warning {
+  background: rgba(255, 170, 0, 0.08);
+  border-color: rgba(255, 170, 0, 0.35);
+  color: #ffd680;
+}
+
+.htg-lb-alert-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.htg-lb-alert-icon {
+  font-size: 18px;
+}
+
+.htg-lb-btn-refresh {
+  background: rgba(184, 255, 61, 0.08);
+  border: 1px solid rgba(184, 255, 61, 0.3);
+  color: var(--lb-lime);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.htg-lb-btn-refresh:hover:not(:disabled) {
+  background: rgba(184, 255, 61, 0.2);
+  border-color: var(--lb-lime);
+  box-shadow: 0 0 10px rgba(184, 255, 61, 0.2);
+}
+
+.htg-lb-btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.htg-lb-retry-btn {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.htg-lb-retry-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.htg-lb-loading-box,
+.htg-lb-empty-box {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--lb-muted);
+}
+
+.htg-lb-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(184, 255, 61, 0.2);
+  border-top-color: var(--lb-lime);
+  border-radius: 50%;
+  animation: htg-spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes htg-spin {
+  to { transform: rotate(360deg); }
+}
+

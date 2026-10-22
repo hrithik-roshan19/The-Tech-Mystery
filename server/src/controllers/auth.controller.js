@@ -1,3 +1,7 @@
+const config = require('../config/environment');
+const transaction = require('../utils/transaction');
+const { eventFor } = require('../services/eligibility.service');
+const { participantTeam, canManageJoinCode } = require('../utils/participantData');
 const { User, Team, TeamChallenge, Submission } = require('../models');
 const authService = require('../services/auth.service');
 const { success, created, badRequest, unauthorized } = require('../utils/apiResponse');
@@ -22,7 +26,9 @@ class AuthController {
         return badRequest(res, 'User with this email or username already exists');
       }
 
-      const user = await User.create({
+      const user = await transaction(async () => {
+        await eventFor('registration');
+        return User.create({
         username,
         email,
         passwordHash: password, // Pre-save hook will hash this
@@ -30,6 +36,7 @@ class AuthController {
         phone,
         collegeRollNo,
         role: ROLES.TEAM_MEMBER
+        });
       });
 
       const { accessToken, refreshToken } = authService.generateTokens(user);
@@ -97,7 +104,9 @@ class AuthController {
         return unauthorized(res, 'User profile not found');
       }
 
-      return success(res, { user }, 'User profile retrieved');
+      const publicUser = user.toObject();
+      publicUser.teamId = participantTeam(user.teamId, req.user);
+      return success(res, { user: publicUser }, 'User profile retrieved');
     } catch (error) {
       return next(error);
     }
@@ -111,7 +120,7 @@ class AuthController {
       }
 
       const team = user.teamId || null;
-      let teamRank = 8;
+      let teamRank = null;
       let teamScore = team?.totalScore || 0;
       let challengesSolved = 0;
       let checkpointsScanned = 0;
@@ -162,22 +171,22 @@ class AuthController {
       }
 
       const totalTeams = await Team.countDocuments();
-      const rankPercentile = totalTeams > 0
-        ? Math.max(1, Math.round((teamRank / totalTeams) * 100))
-        : 15;
+      const rankPercentile = totalTeams > 0 && teamRank
+        ? `TOP ${Math.max(1, Math.round((teamRank / totalTeams) * 100))}% OF TEAMS`
+        : 'UNRANKED';
 
       const profileData = {
-        fullName: user.fullName || 'Hrithik Roshan',
-        username: user.username || 'hrx_runner',
-        email: user.email || 'hrithik@example.com',
+        fullName: user.fullName || '',
+        username: user.username || '',
+        email: user.email || '',
         college: user.college || "Tula's University",
         course: user.course || 'B.Tech CSE',
         year: user.year || '3rd Year',
-        teamName: team?.name || 'PacketRiders',
-        teamCode: team?.joinCode || 'HTG-1038',
-        bio: user.bio || 'Curious builder. Solving clues, learning security, and chasing the final flag.',
-        github: user.github || 'ydv-hrx',
-        linkedin: user.linkedin || 'hrithik-roshan',
+        teamName: team?.name || null,
+        teamCode: team && canManageJoinCode(req.user, team) ? team.joinCode : '',
+        bio: user.bio || '',
+        github: user.github || '',
+        linkedin: user.linkedin || '',
         publicProfile: user.publicProfile !== undefined ? user.publicProfile : true,
         emailUpdates: user.emailUpdates !== undefined ? user.emailUpdates : true,
         avatar: user.avatar || '',
@@ -186,20 +195,38 @@ class AuthController {
       };
 
       const stats = {
-        totalXp: teamScore > 0 ? teamScore.toLocaleString() : '1,280',
-        challengesSolved: `${String(challengesSolved || 8).padStart(2, '0')} / 10`,
-        checkpoints: `${String(checkpointsScanned || 4).padStart(2, '0')} / 10`,
-        contribution: '34%',
-        rankNumber: `#${String(teamRank).padStart(2, '0')}`,
-        rankPercentile: `TOP ${rankPercentile}% OF TEAMS`,
-        teamScore: teamScore || 3740,
-        teamProgress: Math.min(100, Math.round(((team?.currentLevel || 6) / 10) * 100))
+        totalXp: teamScore.toLocaleString(),
+        challengesSolved: `${String(challengesSolved).padStart(2, '0')} / 10`,
+        checkpoints: `${String(checkpointsScanned).padStart(2, '0')} / 10`,
+        contribution: team ? (team.members?.length ? `${Math.round(100 / team.members.length)}%` : '100%') : '0%',
+        rankNumber: teamRank ? `#${String(teamRank).padStart(2, '0')}` : 'UNRANKED',
+        rankPercentile,
+        teamScore: teamScore,
+        teamProgress: team ? Math.min(100, Math.round(((Math.max(0, (team.currentLevel || 1) - 1)) / 10) * 100)) : 0
       };
 
       const achievements = [
-        { icon: '⚑', name: 'First Flag', detail: 'Solved your first challenge', date: 'OCT 13, 2026', tone: 'lime' },
-        { icon: '⌁', name: 'QR Explorer', detail: 'Visited 3 checkpoints', date: 'OCT 13, 2026', tone: 'blue' },
-        { icon: '⌘', name: 'Sharp Mind', detail: 'Solved 5 challenges', date: challengesSolved >= 5 ? 'OCT 13, 2026' : 'IN PROGRESS', tone: 'purple' }
+        {
+          icon: '⚑',
+          name: 'First Flag',
+          detail: 'Solve your first challenge',
+          status: challengesSolved >= 1 ? 'UNLOCKED' : 'LOCKED',
+          tone: challengesSolved >= 1 ? 'lime' : 'neutral'
+        },
+        {
+          icon: '⌁',
+          name: 'QR Explorer',
+          detail: 'Visit 3 checkpoints',
+          status: checkpointsScanned >= 3 ? 'UNLOCKED' : (checkpointsScanned > 0 ? 'IN PROGRESS' : 'LOCKED'),
+          tone: checkpointsScanned >= 3 ? 'blue' : 'neutral'
+        },
+        {
+          icon: '⌘',
+          name: 'Sharp Mind',
+          detail: 'Solve 5 challenges',
+          status: challengesSolved >= 5 ? 'UNLOCKED' : (challengesSolved > 0 ? 'IN PROGRESS' : 'LOCKED'),
+          tone: challengesSolved >= 5 ? 'purple' : 'neutral'
+        }
       ];
 
       return success(
@@ -211,14 +238,14 @@ class AuthController {
             ? {
                 id: team._id,
                 name: team.name,
-                joinCode: team.joinCode,
+                ...(canManageJoinCode(req.user, team) ? { joinCode: team.joinCode } : {}),
                 currentLevel: team.currentLevel,
                 totalScore: team.totalScore,
                 rank: teamRank
               }
             : null,
           achievements,
-          recentActivity: recentActivity.length > 0 ? recentActivity : undefined
+          recentActivity
         },
         'User profile retrieved'
       );
@@ -272,6 +299,9 @@ class AuthController {
         user.username = trimmedUsername;
       }
 
+      if (config.authProvider === 'clerk' && email !== undefined && email !== user.email) {
+        return badRequest(res, 'Email changes require a verified identity review; local profile edits cannot change login identity');
+      }
       // Validate email
       if (email !== undefined && email.toLowerCase() !== user.email) {
         const trimmedEmail = String(email).trim().toLowerCase();
@@ -320,7 +350,7 @@ class AuthController {
             publicProfile: populated.publicProfile,
             emailUpdates: populated.emailUpdates,
             teamName: populated.teamId?.name || '',
-            teamCode: populated.teamId?.joinCode || ''
+            teamCode: populated.teamId && canManageJoinCode(req.user, populated.teamId) ? populated.teamId.joinCode : ''
           }
         },
         'Profile updated successfully'
@@ -356,9 +386,22 @@ class AuthController {
     }
   }
 
-  async changePassword(req, res, next) {
+  async logout(req, res, next) {
     try {
-      const user = await User.findById(req.user.userId).select('+passwordHash');
+      if (config.authProvider === 'clerk') {
+        const result = await require('../services/clerk.service').getClient().sessions.revokeSession(req.clerkIdentity.sessionId);
+        if (result.status !== 'revoked') throw require('../services/clerk.service').failure(503, 'Session revocation could not be confirmed');
+        return success(res, null, 'Clerk session revoked');
+      }
+      await User.updateOne({ _id: req.user.userId }, { $inc: { tokenVersion: 1 } });
+      return success(res, null, 'All account sessions revoked');
+    } catch (err) { return next(err); }
+  }
+
+  async changePassword(req, res, next) {
+    if (config.authProvider === 'clerk') return badRequest(res, 'Manage your password and sign-in methods in your Clerk account');
+    try {
+      const user = await User.findById(req.user.userId).select('+passwordHash +tokenVersion');
       if (!user) {
         return unauthorized(res, 'User profile not found');
       }
@@ -377,8 +420,9 @@ class AuthController {
         return badRequest(res, 'Current password is incorrect');
       }
 
-      user.passwordHash = newPassword; // Pre-save hook hashes it
-      await user.save();
+      const changed = await User.findOneAndUpdate({ _id: user._id, tokenVersion: { $in: [user.tokenVersion || 0, null] } },
+        { $set: { passwordHash: await require('bcryptjs').hash(newPassword, 10) }, $inc: { tokenVersion: 1 } });
+      if (!changed) return unauthorized(res, 'Session changed. Please log in again.');
 
       logger.security(`Password changed for user ${user.username}`);
 

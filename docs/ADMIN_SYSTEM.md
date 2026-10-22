@@ -1,4 +1,4 @@
-# ADMIN COMMAND SOC & EVENT OPERATIONS: HACK THE GRID
+# ADMIN COMMAND SOC & EVENT OPERATIONS: THE TECH MYSTERY
 
 This document defines the administrative tools, God-mode controls, and event operation workflows for organizers from CodeSphere Coding Club at Tula's University.
 

@@ -10,6 +10,8 @@ router.use(authenticate);
 router.use(requireTeamMembership);
 
 router.post('/scan', qrScanLimiter, checkpointController.scanCheckpoint);
+router.post('/claim', qrScanLimiter, checkpointController.scanCheckpoint);
+router.post('/claim/:questionId', qrScanLimiter, checkpointController.scanCheckpoint);
 
 module.exports = router;
 

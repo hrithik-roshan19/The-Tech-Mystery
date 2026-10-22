@@ -1,6 +1,6 @@
-# DATABASE SCHEMA SPECIFICATION: HACK THE GRID
+# DATABASE SCHEMA SPECIFICATION: THE TECH MYSTERY
 
-This document defines the complete MongoDB database model, entity relationships, compound indexes, constraints, and security validations for **Hack the Grid**.
+This document defines the complete MongoDB database model, entity relationships, compound indexes, constraints, and security validations for **The Tech Mystery**.
 
 ---
 
@@ -228,7 +228,7 @@ Global singleton event control document.
 | Field | Type | Attributes / Constraints | Description |
 |---|---|---|---|
 | `_id` | ObjectId | Primary Key | Auto-generated document ID |
-| `eventName` | String | Default: `"Hack the Grid"` | Event name |
+| `eventName` | String | Default: `"The Tech Mystery"` | Event name |
 | `organizer` | String | Default: `"CodeSphere Coding Club, Tula's University"` | Host organization |
 | `state` | String | Enum: `EVENT_STATES`, Default: `DRAFT`, Indexed | Operational status |
 | `startTime` | Date | Default: `null` | Event start timestamp |

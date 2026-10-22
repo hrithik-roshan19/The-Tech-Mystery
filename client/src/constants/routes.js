@@ -20,13 +20,14 @@ export const ROUTES = {
   // Participant
   DASHBOARD: '/dashboard',
   PORTAL_DASHBOARD: '/portal/dashboard',
-  MISSION_MAP: '/portal/missions',
-  CHALLENGE: '/portal/challenge',
-  CHECKPOINT: '/portal/checkpoint',
+  MISSION_MAP: '/challenges',
+  CHALLENGE: '/challenges',
+  CHECKPOINT: '/qr-checkpoint',
   LEADERBOARD: '/leaderboard',
   PROFILE: '/profile',
-  PORTAL_PROFILE: '/portal/profile',
-  TEAM_PROFILE: '/portal/team',
+  PORTAL_PROFILE: '/profile',
+  TEAM_PROFILE: '/portal/dashboard',
+  TEAM: '/portal/dashboard',
   MASTER_FLAG: '/final-flag',
   FINAL_FLAG: '/final-flag',
 
@@ -47,4 +48,4 @@ export const ROUTES = {
   ADMIN_ANALYTICS: '/admin/analytics'
 };
 
-
+export default ROUTES;

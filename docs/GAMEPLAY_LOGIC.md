@@ -1,6 +1,6 @@
-# GAMEPLAY LOGIC & ENGINE MECHANICS: HACK THE GRID
+# GAMEPLAY LOGIC & ENGINE MECHANICS: THE TECH MYSTERY
 
-This document defines the computational rules, progression state machine, question allocation algorithm, and scoring math for **Hack the Grid**.
+This document defines the computational rules, progression state machine, question allocation algorithm, and scoring math for **The Tech Mystery**.
 
 ---
 

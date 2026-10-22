@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-10-20T18:36:26.416Z",
+  "database": "hack_the_grid",
+  "collections": {
+    "challenges": 10,
+    "eventconfigs": 1,
+    "teams": 42,
+    "scores": 42,
+    "submissions": 72,
+    "questions": 17,
+    "teamchallenges": 52,
+    "users": 97,
+    "checkpoints": 10,
+    "securitylogs": 64
+  }
+}

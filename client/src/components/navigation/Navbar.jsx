@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../constants/routes';
+import { mobileDrawerMotion, navbarMotion } from '../../utils/motion';
 import '../../styles/Navbar.css';
 
 /**
- * Standardized Hack the Grid Navigation Links
+ * Standardized The Tech Mystery Navigation Links
  * Exactly 7 links in the required sequence:
  * 1. HOME → /
  * 2. LEADERBOARD → /leaderboard
@@ -26,7 +28,7 @@ const NAVBAR_LINKS = [
 ];
 
 export const Navbar = ({ activeOverride }) => {
-  const { isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -48,8 +50,6 @@ export const Navbar = ({ activeOverride }) => {
 
   /**
    * Determine if a given link is active based on location path and optional override.
-   * Root route "/" matches strictly exact "/" to avoid highlighting HOME on all subroutes.
-   * /mission handles both "/mission" and "/mission#how-it-works".
    */
   const checkIsActive = (path, label) => {
     if (activeOverride) {
@@ -66,12 +66,17 @@ export const Navbar = ({ activeOverride }) => {
   };
 
   return (
-    <header className="htg-site-navbar site-navbar">
+    <motion.header
+      className="htg-site-navbar site-navbar"
+      variants={navbarMotion}
+      initial="hidden"
+      animate="visible"
+    >
       <div className="htg-nav-container nav-container">
         {/* Left — Branding */}
-        <Link to={ROUTES.HOME} className="htg-nav-brand nav-brand" aria-label="Hack the Grid home">
+        <Link to={ROUTES.HOME} className="htg-nav-brand nav-brand" aria-label="The Tech Mystery home">
           <span className="htg-nav-brand-title">
-            HACK THE <span className="htg-brand-lime">GRID</span>
+            THE TECH <span className="htg-brand-lime">MYSTERY</span>
           </span>
           <span className="htg-nav-brand-sub">CODESPHERE × UTKRISHT 2026</span>
         </Link>
@@ -97,9 +102,15 @@ export const Navbar = ({ activeOverride }) => {
         <div className="htg-nav-actions nav-actions">
           {isAuthenticated ? (
             <>
-              <Link to={ROUTES.DASHBOARD} className="htg-nav-btn htg-nav-btn-dash nav-btn-dash">
-                DASHBOARD
-              </Link>
+              {user?.role === 'ADMIN' ? (
+                <Link to={ROUTES.ADMIN_DASHBOARD} className="htg-nav-btn htg-nav-btn-dash nav-btn-dash">
+                  ADMIN SOC
+                </Link>
+              ) : (
+                <Link to={ROUTES.DASHBOARD} className="htg-nav-btn htg-nav-btn-dash nav-btn-dash">
+                  DASHBOARD
+                </Link>
+              )}
               <button
                 type="button"
                 className="htg-nav-btn htg-nav-btn-reg nav-btn-register"
@@ -134,65 +145,84 @@ export const Navbar = ({ activeOverride }) => {
         </button>
       </div>
 
-      {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="htg-nav-mobile-drawer nav-mobile-drawer">
-          {NAVBAR_LINKS.map((item) => {
-            const isActive = checkIsActive(item.path, item.label);
-            return (
-              <Link
-                key={item.label}
-                to={item.path}
-                className={`htg-mobile-link ${isActive ? 'active is-active' : ''}`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-          <div className="htg-mobile-drawer-actions">
-            {isAuthenticated ? (
-              <>
+      {/* Mobile Navigation Drawer with AnimatePresence */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            className="htg-nav-mobile-drawer nav-mobile-drawer"
+            variants={mobileDrawerMotion}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            style={{ overflow: 'hidden' }}
+          >
+            {NAVBAR_LINKS.map((item) => {
+              const isActive = checkIsActive(item.path, item.label);
+              return (
                 <Link
-                  to={ROUTES.DASHBOARD}
-                  className="htg-nav-btn htg-nav-btn-dash nav-btn-dash"
+                  key={item.label}
+                  to={item.path}
+                  className={`htg-mobile-link ${isActive ? 'active is-active' : ''}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  DASHBOARD
+                  {item.label}
                 </Link>
-                <button
-                  type="button"
-                  className="htg-nav-btn htg-nav-btn-reg nav-btn-register"
-                  onClick={() => {
-                    if (logout) logout();
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  DISCONNECT
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to={ROUTES.LOGIN}
-                  className="htg-nav-btn htg-nav-btn-login nav-btn-login"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  LOGIN
-                </Link>
-                <Link
-                  to={ROUTES.REGISTER}
-                  className="htg-nav-btn htg-nav-btn-reg nav-btn-register"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  REGISTER <span className="htg-btn-arrow" aria-hidden="true">↗</span>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-    </header>
+              );
+            })}
+            <div className="htg-mobile-drawer-actions">
+              {isAuthenticated ? (
+                <>
+                  {user?.role === 'ADMIN' ? (
+                    <Link
+                      to={ROUTES.ADMIN_DASHBOARD}
+                      className="htg-nav-btn htg-nav-btn-dash nav-btn-dash"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      ADMIN SOC
+                    </Link>
+                  ) : (
+                    <Link
+                      to={ROUTES.DASHBOARD}
+                      className="htg-nav-btn htg-nav-btn-dash nav-btn-dash"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      DASHBOARD
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    className="htg-nav-btn htg-nav-btn-reg nav-btn-register"
+                    onClick={() => {
+                      if (logout) logout();
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    DISCONNECT
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to={ROUTES.LOGIN}
+                    className="htg-nav-btn htg-nav-btn-login nav-btn-login"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    LOGIN
+                  </Link>
+                  <Link
+                    to={ROUTES.REGISTER}
+                    className="htg-nav-btn htg-nav-btn-reg nav-btn-register"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    REGISTER <span className="htg-btn-arrow" aria-hidden="true">↗</span>
+                  </Link>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
   );
 };
 

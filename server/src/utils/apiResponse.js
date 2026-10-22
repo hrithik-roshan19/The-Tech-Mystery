@@ -30,6 +30,7 @@ const error = (res, message = 'An error occurred', statusCode = 500, errors = nu
 
   if (errors) {
     responsePayload.errors = errors;
+    responsePayload.data = errors;
   }
 
   return res.status(statusCode).json(responsePayload);

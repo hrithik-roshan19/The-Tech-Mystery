@@ -1,6 +1,6 @@
-# FRONTEND DESIGN SYSTEM & HUD GUIDELINES: HACK THE GRID
+# FRONTEND DESIGN SYSTEM & HUD GUIDELINES: THE TECH MYSTERY
 
-This document defines the visual identity, UI tokens, typography standards, and HUD component patterns for **Hack the Grid**.
+This document defines the visual identity, UI tokens, typography standards, and HUD component patterns for **The Tech Mystery**.
 
 ---
 

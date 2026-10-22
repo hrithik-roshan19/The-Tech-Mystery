@@ -48,3 +48,33 @@
 .htg-qr-camera-picker{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;font-size:11px;color:#c8ceca}
 .htg-qr-select{background:#0e1613;color:#eef4ee;border:1px solid rgba(184,255,61,.4);border-radius:6px;padding:6px 10px;font-size:11px;max-width:240px;outline:none}
 .htg-qr-select:focus{border-color:var(--qr-lime)}
+
+/* Mode selector tabs */
+.htg-qr-mode-tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.12);padding-bottom:12px}
+.htg-qr-mode-tab{flex:1;padding:10px 14px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);color:#d0d7d2;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:all .18s ease}
+.htg-qr-mode-tab:hover{background:rgba(184,255,61,0.06);border-color:rgba(184,255,61,0.3)}
+.htg-qr-mode-tab.is-active{background:rgba(184,255,61,0.14);border-color:var(--qr-lime);color:var(--qr-lime)}
+
+/* Manual code entry form */
+.htg-qr-manual-form{display:flex;flex-direction:column;gap:14px;padding:20px;border:1px solid rgba(255,255,255,0.14);border-radius:12px;background:rgba(0,0,0,0.25)}
+.htg-qr-input-group{display:flex;flex-direction:column;gap:6px;text-align:left}
+.htg-qr-input-group label{font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#cbd3cd}
+.htg-qr-input-group input{width:100%;padding:12px 14px;background:#060e0a;border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;font-family:monospace;font-size:13px;outline:none;transition:border-color .15s ease}
+.htg-qr-input-group input:focus{border-color:var(--qr-lime)}
+.htg-qr-manual-submit{width:100%;min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--qr-lime);color:#0a1105;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;margin-top:6px;transition:transform .15s ease}
+.htg-qr-manual-submit:hover:not(:disabled){transform:translateY(-1px)}
+.htg-qr-manual-submit:disabled{opacity:0.5;cursor:not-allowed}
+
+/* Success Challenge Unlocked Card */
+.htg-qr-unlocked-card{margin-top:16px;padding:18px;border:1px solid var(--qr-lime);border-radius:12px;background:rgba(184,255,61,0.07);display:flex;flex-direction:column;gap:12px;text-align:left}
+.htg-qr-unlocked-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.htg-qr-unlocked-badge{background:var(--qr-lime);color:#081005;font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;letter-spacing:0.5px}
+.htg-qr-unlocked-title{margin:0;font-size:16px;font-weight:800;color:#fff}
+.htg-qr-unlocked-loc{font-size:12px;color:#c1cec4;display:flex;align-items:center;gap:5px}
+.htg-qr-question-preview{padding:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:12px;color:#e6ece7}
+.htg-qr-question-preview strong{color:var(--qr-lime);display:block;margin-bottom:4px}
+.htg-qr-points-notice{font-size:11px;color:#cbd4ce;font-style:italic}
+.htg-qr-unlocked-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.htg-qr-proceed-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;background:var(--qr-lime);color:#091206;border-radius:6px;font-weight:800;font-size:12px;text-decoration:none}
+.htg-qr-secondary-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:6px;font-weight:600;font-size:12px;text-decoration:none}
+

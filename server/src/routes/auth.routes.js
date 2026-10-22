@@ -1,3 +1,6 @@
+const config = require('../config/environment');
+const clerkController = require('../controllers/clerk.controller');
+const { requireClerkSession } = require('../middleware/clerkAuth.middleware');
 const express = require('express');
 const authController = require('../controllers/auth.controller');
 const validate = require('../middleware/validate.middleware');
@@ -7,8 +10,13 @@ const { authenticate } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
-router.post('/register', authLimiter, validate(registerValidator), authController.register);
-router.post('/login', authLimiter, validate(loginValidator), authController.login);
+const legacyOnly = (req, res, next) => config.authProvider === 'jwt' ? next() : res.status(404).json({ success: false, message: 'Use Clerk sign-in' });
+router.post('/clerk/link', authLimiter, requireClerkSession, clerkController.link);
+router.post('/clerk/register', authLimiter, requireClerkSession, clerkController.register);
+
+router.post('/register', legacyOnly, authLimiter, validate(registerValidator), authController.register);
+router.post('/login', legacyOnly, authLimiter, validate(loginValidator), authController.login);
+router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getMe);
 router.get('/profile', authenticate, authController.getProfile);
 router.patch('/profile', authenticate, authController.updateProfile);

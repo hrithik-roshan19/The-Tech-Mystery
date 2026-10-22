@@ -7,9 +7,10 @@ const { EVENT_STATES } = require('../constants/eventStates');
  */
 const eventConfigSchema = new mongoose.Schema(
   {
+    securityRevision: { type: Number, default: 0 },
     eventName: {
       type: String,
-      default: 'Hack the Grid'
+      default: 'The Tech Mystery'
     },
     organizer: {
       type: String,
@@ -41,16 +42,20 @@ const eventConfigSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    isLeaderboardVisible: {
+      type: Boolean,
+      default: true
+    },
     frozenAt: {
       type: Date,
       default: null
     },
     maxTeamSize: {
-      type: Number,
+      type: Number, min: 2, max: 4,
       default: 4
     },
     minTeamSize: {
-      type: Number,
+      type: Number, min: 2, max: 4,
       default: 2
     },
     subtitle: {
@@ -72,6 +77,13 @@ const eventConfigSchema = new mongoose.Schema(
     qrCheckpoints: {
       type: Boolean,
       default: true
+    },
+    // FCFS QR Question Claim Lease Timeout (minutes)
+    questionClaimTimeoutMinutes: {
+      type: Number,
+      default: 30,
+      min: 5,
+      max: 180
     },
     hintsEnabled: {
       type: Boolean,
@@ -105,4 +117,3 @@ const eventConfigSchema = new mongoose.Schema(
 
 const EventConfig = mongoose.model('EventConfig', eventConfigSchema);
 module.exports = EventConfig;
-

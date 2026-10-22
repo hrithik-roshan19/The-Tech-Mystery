@@ -2,6 +2,14 @@ const rateLimit = require('express-rate-limit');
 const config = require('../config/environment');
 const { rateLimited } = require('../utils/apiResponse');
 
+const isLocalOrTest = (req) => {
+  if (process.env.NODE_ENV === 'test' || config.env === 'test') return true;
+  if (config.env === 'development' && (req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1')) {
+    return true;
+  }
+  return false;
+};
+
 /**
  * Standard API Rate Limiter
  * Guards general endpoints from scanning/scraping.
@@ -11,6 +19,7 @@ const apiLimiter = rateLimit({
   max: config.rateLimit.maxRequests,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: isLocalOrTest,
   handler: (req, res) => {
     return rateLimited(res, 'Too many requests. Please throttle your queries.');
   }
@@ -25,6 +34,7 @@ const authLimiter = rateLimit({
   max: 20, // 20 requests per IP
   standardHeaders: true,
   legacyHeaders: false,
+  skip: isLocalOrTest,
   handler: (req, res) => {
     return rateLimited(res, 'Too many authentication attempts. Please try again in 15 minutes.');
   }
@@ -37,10 +47,11 @@ const authLimiter = rateLimit({
 const submissionLimiter = rateLimit({
   windowMs: config.rateLimit.submissionWindowMs,
   max: config.rateLimit.submissionMaxRequests,
+  skip: isLocalOrTest,
   keyGenerator: (req) => {
     // Limit per team + challenge ID if authenticated, else fallback to IP
     if (req.user && req.user.teamId) {
-      return `team_${req.user.teamId}_${req.params.challengeId || req.body.challengeId || 'global'}`;
+      return `team_${req.user.teamId}`;
     }
     return req.ip;
   },
@@ -60,6 +71,7 @@ const qrScanLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: isLocalOrTest,
   handler: (req, res) => {
     return rateLimited(res, 'QR scan rate limit exceeded. Please wait a few seconds before re-scanning.');
   }

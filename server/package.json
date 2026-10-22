@@ -1,14 +1,17 @@
 {
-  "name": "hack-the-grid-server",
+  "name": "the-tech-mystery-server",
   "version": "1.0.0",
-  "description": "Backend API server for Hack the Grid CTF platform",
+  "description": "Backend API server for The Tech Mystery CTF platform",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "lint": "eslint src/ --ext .js"
+    "lint": "eslint src scripts tests",
+    "test": "node --test --test-concurrency=1 tests/preparation.test.js tests/security.test.js tests/clerk.test.js tests/clerk-development.test.js tests/link-admin-clerk.test.js tests/clean-data-safeguards.test.js tests/automatic-qr-generation.test.js tests/fcfs-qr-question.test.js",
+    "test:preparation": "node --test tests/preparation.test.js"
   },
   "dependencies": {
+    "@clerk/backend": "^3.25.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -18,18 +21,22 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
+    "mongodb-memory-server": "^11.3.0",
     "nodemon": "^3.1.9"
   },
   "keywords": [
     "ctf-backend",
     "express",
     "mongodb",
-    "hack-the-grid"
+    "the-tech-mystery"
   ],
   "author": "CodeSphere Coding Club, Tula's University",
   "license": "UNLICENSED"
 }
-

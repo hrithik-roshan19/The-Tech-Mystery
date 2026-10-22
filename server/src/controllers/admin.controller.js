@@ -1,8 +1,12 @@
+const transaction = require('../utils/transaction');
+const crypto = require('crypto');
+const { checkpointToken } = require('../services/checkpointToken.service');
+const qrGenerator = require('../services/qrGenerator.service');
 const mongoose = require('mongoose');
-const { Team, User, Challenge, Question, TeamChallenge, Submission, Checkpoint, EventConfig, Score, SecurityLog } = require('../models');
-const { generateCheckpointToken } = require('../utils/crypto');
-const { success, badRequest, notFound } = require('../utils/apiResponse');
+const { Team, User, Challenge, Question, TeamChallenge, Submission, Checkpoint, EventConfig, SecurityLog } = require('../models');
+const { success, created, badRequest, notFound } = require('../utils/apiResponse');
 const { SUBMISSION_STATUS } = require('../constants/submissionStatus');
+const teamService = require('../services/team.service');
 const logger = require('../utils/logger');
 
 /**
@@ -13,15 +17,30 @@ class AdminController {
   async getDashboardStats(req, res, next) {
     try {
       const totalTeams = await Team.countDocuments();
-      const totalUsers = await User.countDocuments();
+      const totalParticipants = await User.countDocuments({
+        role: { $ne: 'ADMIN' },
+        teamId: { $ne: null }
+      });
       const totalChallenges = await Challenge.countDocuments();
       const totalQuestions = await Question.countDocuments();
       const totalSubmissions = await Submission.countDocuments();
       const correctSubmissions = await Submission.countDocuments({ isCorrect: true });
-      const checkpoints = await Checkpoint.find().select('scansCount');
-      const totalScans = checkpoints.reduce((acc, cp) => acc + (cp.scansCount || 0), 0);
+      const checkpoints = await Checkpoint.find().select('scanCount');
+      const totalScans = checkpoints.reduce((acc, cp) => acc + (cp.scanCount || 0), 0);
+      const activeCheckpoints = await Checkpoint.countDocuments({ status: 'Active', isActive: true });
 
-      // Recent activity for live feeds
+      // Real level progress calculation across registered teams
+      const levelProgress = [];
+      for (let lvl = 1; lvl <= 10; lvl++) {
+        let pct = 0;
+        if (totalTeams > 0) {
+          const solvedTeams = await Team.countDocuments({ currentLevel: { $gt: lvl } });
+          pct = Math.round((solvedTeams / totalTeams) * 100);
+        }
+        levelProgress.push([`Level ${String(lvl).padStart(2, '0')}`, pct]);
+      }
+
+      // Recent activity from real submissions
       const recentSubs = await Submission.find()
         .populate('teamId', 'name joinCode')
         .populate('challengeId', 'title levelNumber')
@@ -48,12 +67,15 @@ class AdminController {
       return success(res, {
         stats: {
           totalTeams,
-          totalUsers,
+          totalParticipants,
+          totalUsers: totalParticipants,
           totalChallenges,
           totalQuestions,
           totalSubmissions,
           correctSubmissions,
           totalScans,
+          activeCheckpoints,
+          levelProgress,
           recentActivity,
           accuracyRate: totalSubmissions > 0 ? ((correctSubmissions / totalSubmissions) * 100).toFixed(1) + '%' : '0%'
         },
@@ -108,9 +130,113 @@ class AdminController {
         ? `Team ${team.name} has been disqualified`
         : `Team ${team.name} has been restored`;
 
+      // Log privileged security audit action
+      const eventId = `EVT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      await SecurityLog.create({
+        eventId,
+        severity: shouldDisqualify ? 'WARNING' : 'INFO',
+        category: 'ADMIN ACTION',
+        event: shouldDisqualify ? 'Team disqualified' : 'Team reinstated',
+        actor: req.user?.username || 'admin',
+        target: team.name,
+        source: req.ip || '127.0.0.1',
+        detail: sanitizedReason,
+        status: 'RECORDED',
+        timestamp: new Date()
+      }).catch((err) => logger.warn(`Failed to write SecurityLog: ${err.message}`));
+
       return success(res, { team }, actionMsg);
     } catch (error) {
       return next(error);
+    }
+  }
+
+  async createTeam(req, res, next) {
+    try {
+      const { name, college, leaderEmailOrUsername, leader, leaderIdentifier: leaderIdf, memberIdentifiers, members, currentLevel, totalScore } = req.body;
+      const leaderIdentifier = leaderEmailOrUsername || leader || leaderIdf;
+      const resolvedMembers = memberIdentifiers || members || [];
+
+      const team = await teamService.createAdminTeam({
+        name,
+        college,
+        leaderEmailOrUsername: leaderIdentifier,
+        memberIdentifiers: resolvedMembers,
+        currentLevel,
+        totalScore
+      });
+
+      return created(res, { team }, `Team "${team.name}" created successfully`);
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async updateTeam(req, res, next) {
+    try {
+      const { teamId } = req.params;
+      if (!teamId || !/^[0-9a-fA-F]{24}$/.test(teamId)) {
+        return badRequest(res, 'Invalid team ID format');
+      }
+
+      const team = await teamService.updateTeam(teamId, req.body);
+      return success(res, { team }, `Team "${team.name}" updated successfully`);
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async addTeamMember(req, res, next) {
+    try {
+      const { teamId } = req.params;
+      if (!teamId || !/^[0-9a-fA-F]{24}$/.test(teamId)) {
+        return badRequest(res, 'Invalid team ID format');
+      }
+
+      const { userIdentifier, email, username } = req.body;
+      const identifier = userIdentifier || email || username;
+
+      const team = await teamService.addMemberToTeam(teamId, identifier);
+      return success(res, { team }, 'Member added to team');
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async removeTeamMember(req, res, next) {
+    try {
+      const { teamId, userId } = req.params;
+      if (!teamId || !/^[0-9a-fA-F]{24}$/.test(teamId) || !userId) {
+        return badRequest(res, 'Invalid team ID or user ID format');
+      }
+
+      let resolvedUserId = userId;
+      if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
+        const found = await User.findOne({
+          $or: [{ email: userId.trim().toLowerCase() }, { username: userId.trim() }]
+        });
+        if (!found) return notFound(res, 'Member user not found');
+        resolvedUserId = found._id;
+      }
+
+      const team = await teamService.removeMemberFromTeam(teamId, resolvedUserId);
+      return success(res, { team }, 'Member removed from team');
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async deleteTeam(req, res, next) {
+    try {
+      const { teamId } = req.params;
+      if (!teamId || !/^[0-9a-fA-F]{24}$/.test(teamId)) {
+        return badRequest(res, 'Invalid team ID format');
+      }
+
+      await teamService.deleteTeam(teamId);
+      return success(res, null, 'Team deleted successfully');
+    } catch (error) {
+      return badRequest(res, error.message);
     }
   }
 
@@ -188,7 +314,7 @@ class AdminController {
       const normalizedDifficulty = difficulty
         ? String(difficulty).trim().toUpperCase()
         : 'MEDIUM';
-      const validStatuses = ['Published', 'Draft', 'Paused'];
+      const validStatuses = ['Published', 'Draft', 'Paused', 'Archived'];
       const resolvedStatus = validStatuses.includes(status)
         ? status
         : isActive === false
@@ -309,7 +435,7 @@ class AdminController {
         existing.checkpointId = checkpointId || null;
       }
 
-      const validStatuses = ['Published', 'Draft', 'Paused'];
+      const validStatuses = ['Published', 'Draft', 'Paused', 'Archived'];
       if (status !== undefined && validStatuses.includes(status)) {
         existing.status = status;
         existing.isActive = status === 'Published';
@@ -349,6 +475,21 @@ class AdminController {
     }
   }
 
+  async deleteChallenge(req, res) {
+    try {
+      await transaction(async () => {
+        if (!mongoose.isValidObjectId(req.params.challengeId)) throw new Error('Valid challenge ID required');
+        const challenge = await Challenge.findOneAndUpdate({ _id: req.params.challengeId },
+          { $inc: { securityRevision: 1 } }, { new: true });
+        if (!challenge) throw new Error('Challenge not found');
+        if (await TeamChallenge.exists({ challengeId: challenge._id })) throw new Error('Archive challenges with gameplay history instead of deleting them');
+        await Question.deleteMany({ challengeId: challenge._id });
+        await Challenge.deleteOne({ _id: challenge._id });
+      });
+      return success(res, null, 'Unused challenge deleted');
+    } catch (err) { return badRequest(res, err.message); }
+  }
+
   async getQuestions(req, res, next) {
     try {
       const filter = {};
@@ -363,6 +504,9 @@ class AdminController {
       // Include flag if admin explicitly requests it or by default for admin question manager.
       const query = Question.find(filter)
         .populate('challengeId', 'levelNumber title category difficulty points status isActive')
+        .populate('checkpointId', 'checkpointCode name locationDescription status mode')
+        .populate('claimedByTeamId', 'name teamCode')
+        .populate('completedByTeamId', 'name teamCode')
         .sort({ levelNumber: 1, createdAt: -1 });
 
       if (req.query.includeFlag === 'true' || req.query.withFlag === 'true') {
@@ -372,6 +516,34 @@ class AdminController {
       }
 
       const questions = await query;
+      await Promise.all(
+        questions.map(async (q) => {
+          if (!q.qrCodeDataUrl) {
+            try {
+              const cp = q.checkpointId || await Checkpoint.findOne({ levelNumber: q.levelNumber });
+              const qrInfo = await qrGenerator.generateQuestionQr(q, cp);
+              q.qrCodeDataUrl = qrInfo.qrCodeDataUrl;
+              q.qrScanUrl = qrInfo.scanUrl;
+              q.qrToken = qrInfo.token;
+              q.checkpointCode = qrInfo.checkpointCode;
+              await Question.updateOne(
+                { _id: q._id },
+                {
+                  $set: {
+                    qrCodeDataUrl: qrInfo.qrCodeDataUrl,
+                    qrScanUrl: qrInfo.scanUrl,
+                    qrToken: qrInfo.token,
+                    checkpointCode: qrInfo.checkpointCode,
+                    ...(q.checkpointId ? {} : (cp ? { checkpointId: cp._id } : {}))
+                  }
+                }
+              );
+            } catch (err) {
+              logger.warn(`Lazy QR generation error for question ${q._id}: ${err.message}`);
+            }
+          }
+        })
+      );
 
       return success(res, { questions });
     } catch (error) {
@@ -386,6 +558,7 @@ class AdminController {
         challenge: challengeName,
         levelNumber,
         level,
+        checkpointId,
         title,
         prompt,
         category,
@@ -432,11 +605,42 @@ class AdminController {
         ? [{ hintIndex: 1, content: hint.trim(), penaltyPoints: 20 }]
         : [];
 
-      const initialStatus = ['Published', 'Draft', 'Paused'].includes(status) ? status : 'Published';
+      const initialStatus = ['Published', 'Draft', 'Paused', 'Archived'].includes(status) ? status : 'Published';
+
+      // Auto-resolve or create associated Checkpoint for this challenge level
+      let checkpoint = null;
+      if (checkpointId && /^[0-9a-fA-F]{24}$/.test(checkpointId)) {
+        checkpoint = await Checkpoint.findById(checkpointId);
+      }
+      if (!checkpoint) {
+        checkpoint = await Checkpoint.findOne({ levelNumber: targetChallenge.levelNumber });
+      }
+      if (!checkpoint) {
+        const candidateCode = `HTG-CP${String(targetChallenge.levelNumber).padStart(2, '0')}`;
+        const codeExists = await Checkpoint.findOne({ checkpointCode: candidateCode });
+        const finalCode = codeExists
+          ? `HTG-CP${String(targetChallenge.levelNumber).padStart(2, '0')}-${Date.now().toString(36).slice(-4).toUpperCase()}`
+          : candidateCode;
+
+        checkpoint = await Checkpoint.create({
+          levelNumber: targetChallenge.levelNumber,
+          name: `Checkpoint Level ${targetChallenge.levelNumber}`,
+          locationDescription: `Campus Station — ${targetChallenge.title}`,
+          checkpointCode: finalCode,
+          associatedChallengeId: targetChallenge._id,
+          status: 'Active',
+          isActive: true,
+          mode: 'Public QR'
+        });
+      }
+
+      const resolvedCheckpointId = checkpoint._id;
 
       const question = await Question.create({
         challengeId: targetChallenge._id,
         levelNumber: targetChallenge.levelNumber,
+        checkpointId: resolvedCheckpointId,
+        checkpointCode: checkpoint.checkpointCode,
         title: String(title).trim(),
         prompt: String(prompt).trim(),
         type: ['Text Answer', 'Flag', 'Multiple Choice', 'File Upload'].includes(type) ? type : 'Flag',
@@ -455,11 +659,153 @@ class AdminController {
         assetUrls: Array.isArray(assetUrls) ? assetUrls : []
       });
 
+      // Automatically generate unique QR code on the backend
+      const qrData = await qrGenerator.generateQuestionQr(question, checkpoint);
+      question.qrCodeDataUrl = qrData.qrCodeDataUrl;
+      question.qrScanUrl = qrData.scanUrl;
+      question.qrToken = qrData.token;
+      question.checkpointCode = qrData.checkpointCode;
+      await question.save();
+
       const populatedQuestion = await Question.findById(question._id)
         .select('+flag')
-        .populate('challengeId', 'levelNumber title category difficulty points status isActive');
+        .populate('challengeId', 'levelNumber title category difficulty points status isActive')
+        .populate('checkpointId', 'checkpointCode name locationDescription status mode');
 
-      return success(res, { question: populatedQuestion }, 'Question added to challenge pool', 201);
+      return success(
+        res,
+        {
+          question: populatedQuestion,
+          qrCodeDataUrl: qrData.qrCodeDataUrl,
+          qrScanUrl: qrData.scanUrl,
+          qrToken: qrData.token
+        },
+        'Question added to challenge pool with generated QR code',
+        201
+      );
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async uploadQuestions(req, res, next) {
+    try {
+      const rawQuestions = Array.isArray(req.body)
+        ? req.body
+        : Array.isArray(req.body?.questions)
+        ? req.body.questions
+        : null;
+
+      if (!rawQuestions || rawQuestions.length === 0) {
+        return badRequest(res, 'An array of questions is required for upload');
+      }
+
+      const createdQuestions = [];
+      const errors = [];
+
+      for (let i = 0; i < rawQuestions.length; i++) {
+        const item = rawQuestions[i];
+        const title = item.title;
+        const prompt = item.prompt;
+        const secretFlag = item.flag || item.answer;
+
+        if (!title || !prompt || !secretFlag) {
+          errors.push({ index: i, error: 'Question title, prompt, and secret flag / answer are required' });
+          continue;
+        }
+
+        const targetLevel = item.levelNumber !== undefined ? Number(item.levelNumber) : (item.level !== undefined ? Number(item.level) : 1);
+        let targetChallenge = null;
+        if (item.challengeId && /^[0-9a-fA-F]{24}$/.test(item.challengeId)) {
+          targetChallenge = await Challenge.findById(item.challengeId);
+        } else if (item.challenge && typeof item.challenge === 'string') {
+          targetChallenge = await Challenge.findOne({ title: item.challenge.trim() });
+        }
+        if (!targetChallenge && targetLevel !== undefined) {
+          targetChallenge = await Challenge.findOne({ levelNumber: targetLevel });
+        }
+
+        if (!targetChallenge) {
+          errors.push({ index: i, error: `No challenge found for Level ${targetLevel}` });
+          continue;
+        }
+
+        let checkpoint = null;
+        if (item.checkpointId && /^[0-9a-fA-F]{24}$/.test(item.checkpointId)) {
+          checkpoint = await Checkpoint.findById(item.checkpointId);
+        }
+        if (!checkpoint) {
+          checkpoint = await Checkpoint.findOne({ levelNumber: targetChallenge.levelNumber });
+        }
+        if (!checkpoint) {
+          const candidateCode = `HTG-CP${String(targetChallenge.levelNumber).padStart(2, '0')}`;
+          checkpoint = await Checkpoint.create({
+            levelNumber: targetChallenge.levelNumber,
+            name: `Checkpoint Level ${targetChallenge.levelNumber}`,
+            locationDescription: `Campus Station — ${targetChallenge.title}`,
+            checkpointCode: candidateCode,
+            associatedChallengeId: targetChallenge._id,
+            status: 'Active',
+            isActive: true,
+            mode: 'Public QR'
+          });
+        }
+
+        const formattedHints = Array.isArray(item.hints)
+          ? item.hints
+          : item.hint && typeof item.hint === 'string' && item.hint.trim()
+          ? [{ hintIndex: 1, content: item.hint.trim(), penaltyPoints: 20 }]
+          : [];
+
+        const initialStatus = ['Published', 'Draft', 'Paused', 'Archived'].includes(item.status) ? item.status : 'Published';
+
+        const question = await Question.create({
+          challengeId: targetChallenge._id,
+          levelNumber: targetChallenge.levelNumber,
+          checkpointId: checkpoint._id,
+          checkpointCode: checkpoint.checkpointCode,
+          title: String(title).trim(),
+          prompt: String(prompt).trim(),
+          type: ['Text Answer', 'Flag', 'Multiple Choice', 'File Upload'].includes(item.type) ? item.type : 'Flag',
+          category: item.category || targetChallenge.category,
+          difficulty: item.difficulty ? String(item.difficulty).trim().toUpperCase() : targetChallenge.difficulty,
+          points: item.points !== undefined && !Number.isNaN(Number(item.points)) ? Math.max(0, Number(item.points)) : 100,
+          status: initialStatus,
+          isActive: initialStatus === 'Published',
+          attempts: item.attempts !== undefined && !Number.isNaN(Number(item.attempts)) ? Math.max(1, Number(item.attempts)) : 3,
+          required: item.required !== undefined ? Boolean(item.required) : true,
+          flag: String(secretFlag).trim(),
+          isCaseSensitive: item.isCaseSensitive !== undefined ? Boolean(item.isCaseSensitive) : true,
+          hints: formattedHints,
+          assetUrls: Array.isArray(item.assetUrls) ? item.assetUrls : []
+        });
+
+        const qrData = await qrGenerator.generateQuestionQr(question, checkpoint);
+        question.qrCodeDataUrl = qrData.qrCodeDataUrl;
+        question.qrScanUrl = qrData.scanUrl;
+        question.qrToken = qrData.token;
+        question.checkpointCode = qrData.checkpointCode;
+        await question.save();
+
+        const populated = await Question.findById(question._id)
+          .select('+flag')
+          .populate('challengeId', 'levelNumber title category difficulty points status isActive')
+          .populate('checkpointId', 'checkpointCode name locationDescription status mode');
+
+        createdQuestions.push(populated);
+      }
+
+      return success(
+        res,
+        {
+          createdCount: createdQuestions.length,
+          totalSubmitted: rawQuestions.length,
+          questions: createdQuestions,
+          errors: errors.length > 0 ? errors : undefined
+        },
+        `Uploaded and generated QR codes for ${createdQuestions.length} questions`,
+        201
+      );
     } catch (error) {
       return badRequest(res, error.message);
     }
@@ -484,6 +830,7 @@ class AdminController {
         challenge: challengeName,
         levelNumber,
         level,
+        checkpointId,
         type,
         category,
         difficulty,
@@ -512,6 +859,9 @@ class AdminController {
         }
         existing.prompt = prompt.trim();
       }
+      if (checkpointId !== undefined) {
+        existing.checkpointId = checkpointId && /^[0-9a-fA-F]{24}$/.test(checkpointId) ? checkpointId : null;
+      }
       if (type !== undefined && ['Text Answer', 'Flag', 'Multiple Choice', 'File Upload'].includes(type)) {
         existing.type = type;
       }
@@ -539,7 +889,7 @@ class AdminController {
         existing.required = Boolean(required);
       }
 
-      const validStatuses = ['Published', 'Draft', 'Paused'];
+      const validStatuses = ['Published', 'Draft', 'Paused', 'Archived'];
       if (status !== undefined && validStatuses.includes(status)) {
         existing.status = status;
         existing.isActive = status === 'Published';
@@ -582,15 +932,107 @@ class AdminController {
         existing.levelNumber = targetChallenge.levelNumber;
       }
 
+      if (!existing.qrCodeDataUrl || existing.isModified('levelNumber') || existing.isModified('checkpointId')) {
+        const cp = existing.checkpointId ? await Checkpoint.findById(existing.checkpointId) : await Checkpoint.findOne({ levelNumber: existing.levelNumber });
+        const qrData = await qrGenerator.generateQuestionQr(existing, cp);
+        existing.qrCodeDataUrl = qrData.qrCodeDataUrl;
+        existing.qrScanUrl = qrData.scanUrl;
+        existing.qrToken = qrData.token;
+        existing.checkpointCode = qrData.checkpointCode;
+      }
+
       await existing.save();
 
       const populated = await Question.findById(existing._id)
         .select('+flag')
-        .populate('challengeId', 'levelNumber title category difficulty points status isActive');
+        .populate('challengeId', 'levelNumber title category difficulty points status isActive')
+        .populate('checkpointId', 'checkpointCode name locationDescription status mode');
 
       return success(res, { question: populated }, `Question "${existing.title}" updated`);
     } catch (error) {
       return badRequest(res, error.message);
+    }
+  }
+
+  async deleteQuestion(req, res) {
+    try {
+      await transaction(async () => {
+        if (!mongoose.isValidObjectId(req.params.questionId)) throw new Error('Valid question ID required');
+        const question = await Question.findOneAndUpdate({ _id: req.params.questionId },
+          { $inc: { securityRevision: 1 } }, { new: true });
+        if (!question) throw new Error('Question not found');
+        if (await TeamChallenge.exists({ assignedQuestionId: question._id })) throw new Error('Archive assigned questions instead of deleting them');
+        await Question.deleteOne({ _id: question._id });
+      });
+      return success(res, null, 'Unused question deleted');
+    } catch (err) { return badRequest(res, err.message); }
+  }
+
+  /**
+   * Release FCFS Claim on a question (Admin only)
+   * Makes the question QR code available for other teams if not yet completed.
+   */
+  async releaseQuestionClaim(req, res, next) {
+    try {
+      const { questionId } = req.params;
+      if (!mongoose.isValidObjectId(questionId)) {
+        return badRequest(res, 'A valid Question ObjectId is required');
+      }
+
+      const question = await Question.findById(questionId);
+      if (!question) {
+        return notFound(res, 'Question not found');
+      }
+
+      if (question.isCompleted) {
+        return badRequest(res, 'Cannot release claim on an already completed question.');
+      }
+
+      if (!question.isClaimed) {
+        return success(res, question, 'Question is not currently claimed.');
+      }
+
+      const updated = await Question.findOneAndUpdate(
+        { _id: questionId, isCompleted: false },
+        {
+          $set: {
+            isClaimed: false,
+            claimedByTeamId: null,
+            claimedAt: null,
+            claimExpiresAt: null
+          },
+          $inc: { securityRevision: 1 }
+        },
+        { new: true }
+      );
+
+      // Reset any unsolved TeamChallenge referencing this question
+      await TeamChallenge.updateMany(
+        { assignedQuestionId: questionId, status: { $ne: 'SOLVED' } },
+        {
+          $set: {
+            checkpointScanned: false,
+            checkpointScannedAt: null,
+            status: 'LOCKED'
+          }
+        }
+      );
+
+      await SecurityLog.create({
+        eventId: `EVT-${crypto.randomUUID()}`,
+        severity: 'INFO',
+        category: 'ADMIN ACTION',
+        event: 'Question claim released by admin',
+        actor: String(req.user.userId),
+        target: String(questionId),
+        source: 'backend',
+        detail: `Claim released for question "${question.title}" (Level ${question.levelNumber})`,
+        status: 'RECORDED'
+      });
+
+      return success(res, updated, 'Question claim released successfully. QR code is now available for other teams.');
+    } catch (err) {
+      return badRequest(res, err.message);
     }
   }
 
@@ -602,16 +1044,31 @@ class AdminController {
 
       const enriched = await Promise.all(
         checkpoints.map(async (cp) => {
-          const token = generateCheckpointToken(cp.checkpointCode, cp.levelNumber);
+          const token = checkpointToken(cp);
           const teamsCount = await TeamChallenge.countDocuments({
             levelNumber: cp.levelNumber,
             checkpointScanned: true
           });
 
+          let qrDataUrl = cp.qrCodeDataUrl;
+          let scanUrl = cp.qrScanUrl || (token ? `/checkpoint/scan?code=${cp.checkpointCode}&token=${token}` : null);
+          if (!qrDataUrl && token) {
+            try {
+              const qrArtifacts = await qrGenerator.generateCheckpointQr(cp);
+              qrDataUrl = qrArtifacts.qrCodeDataUrl;
+              scanUrl = qrArtifacts.scanUrl;
+              await Checkpoint.updateOne({ _id: cp._id }, { $set: { qrCodeDataUrl: qrDataUrl, qrScanUrl: scanUrl, qrToken: token } });
+            } catch (err) {
+              logger.warn(`QR generation for checkpoint ${cp._id} failed: ${err.message}`);
+            }
+          }
+
           return {
             ...cp.toObject(),
             token,
             hmacToken: token,
+            qrCodeDataUrl: qrDataUrl,
+            qrScanUrl: scanUrl,
             teamsCount,
             teams: teamsCount,
             scans: cp.scanCount || 0,
@@ -622,7 +1079,7 @@ class AdminController {
             status: cp.status || (cp.isActive ? 'Active' : 'Paused'),
             mode: cp.mode || 'Team-bound QR',
             lastScan: cp.lastScanAt ? new Date(cp.lastScanAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—',
-            sampleQrUrl: `/checkpoint/scan?code=${cp.checkpointCode}&token=${token}`
+            sampleQrUrl: scanUrl
           };
         })
       );
@@ -648,7 +1105,8 @@ class AdminController {
         locationDescription,
         status,
         mode,
-        notes
+        notes,
+        boundTeamId
       } = req.body;
 
       const codeVal = String(code || checkpointCode || '').trim().toUpperCase();
@@ -681,6 +1139,7 @@ class AdminController {
       const finalMode = ['Public QR', 'Team-bound QR'].includes(mode) ? mode : 'Team-bound QR';
 
       const checkpoint = await Checkpoint.create({
+        boundTeamId: boundTeamId || null,
         name: nameVal,
         checkpointCode: codeVal,
         locationDescription: locVal,
@@ -692,7 +1151,12 @@ class AdminController {
         notes: notes ? String(notes).trim() : null
       });
 
-      const token = generateCheckpointToken(checkpoint.checkpointCode, checkpoint.levelNumber);
+      const qrData = await qrGenerator.generateCheckpointQr(checkpoint);
+      checkpoint.qrCodeDataUrl = qrData.qrCodeDataUrl;
+      checkpoint.qrScanUrl = qrData.scanUrl;
+      checkpoint.qrToken = qrData.token;
+      await checkpoint.save();
+
       const populated = await Checkpoint.findById(checkpoint._id)
         .populate('associatedChallengeId', 'levelNumber title category difficulty points status isActive');
 
@@ -701,8 +1165,10 @@ class AdminController {
         {
           checkpoint: {
             ...populated.toObject(),
-            token,
-            hmacToken: token,
+            token: qrData.token,
+            hmacToken: qrData.token,
+            qrCodeDataUrl: qrData.qrCodeDataUrl,
+            qrScanUrl: qrData.scanUrl,
             challenge: populated.associatedChallengeId?.title || `Level ${populated.levelNumber}`,
             location: populated.locationDescription,
             code: populated.checkpointCode,
@@ -710,12 +1176,13 @@ class AdminController {
             scans: 0,
             teams: 0,
             lastScan: '—',
-            sampleQrUrl: `/checkpoint/scan?code=${checkpoint.checkpointCode}&token=${token}`
+            sampleQrUrl: qrData.scanUrl
           },
-          token,
-          sampleQrUrl: `/checkpoint/scan?code=${checkpoint.checkpointCode}&token=${token}`
+          token: qrData.token,
+          sampleQrUrl: qrData.scanUrl,
+          qrCodeDataUrl: qrData.qrCodeDataUrl
         },
-        'Checkpoint created',
+        'Checkpoint created with automatic QR code generation',
         201
       );
     } catch (error) {
@@ -731,6 +1198,10 @@ class AdminController {
       }
 
       const existing = await Checkpoint.findById(checkpointId);
+      if (req.body.boundTeamId !== undefined) {
+        if (req.body.boundTeamId && !await Team.exists({ _id: req.body.boundTeamId })) return badRequest(res, 'Bound team not found');
+        if (existing) existing.boundTeamId = req.body.boundTeamId || null;
+      }
       if (!existing) {
         return notFound(res, 'Checkpoint not found');
       }
@@ -828,7 +1299,7 @@ class AdminController {
       const populated = await Checkpoint.findById(existing._id)
         .populate('associatedChallengeId', 'levelNumber title category difficulty points status isActive');
 
-      const token = generateCheckpointToken(populated.checkpointCode, populated.levelNumber);
+      const token = checkpointToken(populated);
       const teamsCount = await TeamChallenge.countDocuments({
         levelNumber: populated.levelNumber,
         checkpointScanned: true
@@ -848,7 +1319,7 @@ class AdminController {
             location: populated.locationDescription,
             code: populated.checkpointCode,
             level: populated.levelNumber,
-            sampleQrUrl: `/checkpoint/scan?code=${populated.checkpointCode}&token=${token}`
+            sampleQrUrl: token ? `/checkpoint/scan?code=${populated.checkpointCode}&token=${token}` : null
           }
         },
         `Checkpoint "${existing.name}" updated`
@@ -1010,190 +1481,21 @@ class AdminController {
     }
   }
 
-  async reviewSubmission(req, res, next) {
+  async reviewSubmission(req, res) {
     try {
-      const { submissionId } = req.params;
-      const { result, points, reviewNote } = req.body;
-      const adminUserId = req.user.userId;
-
-      // Handle rawId or displayId lookup
-      let submission = null;
-      if (mongoose.Types.ObjectId.isValid(submissionId)) {
-        submission = await Submission.findById(submissionId)
-          .populate('teamId')
-          .populate('challengeId')
-          .populate('questionId');
-      } else {
-        // Try looking up by ending 4 chars or ID
-        const clean = String(submissionId).replace(/^SUB-/, '').toLowerCase();
-        const allSubs = await Submission.find()
-          .populate('teamId')
-          .populate('challengeId')
-          .populate('questionId')
-          .sort({ submittedAt: -1 })
-          .limit(200);
-        submission = allSubs.find(
-          (s) => String(s._id).toLowerCase().endsWith(clean)
-        );
-      }
-
-      if (!submission) {
-        return notFound(res, 'Submission record not found');
-      }
-
-      if (!['Correct', 'Incorrect'].includes(result)) {
-        return badRequest(res, "Result must be 'Correct' or 'Incorrect'");
-      }
-
-      // Prevent duplicate points award if already approved and scored
-      if (submission.reviewed && submission.isCorrect && result === 'Correct') {
-        return badRequest(
-          res,
-          'Submission is already approved and scored. Duplicate scoring is forbidden.'
-        );
-      }
-
-      const questionMaxPoints =
-        submission.questionId?.points || submission.challengeId?.points || 100;
-      let awardedPoints = 0;
-
-      if (result === 'Correct') {
-        awardedPoints =
-          points !== undefined ? Math.max(0, Number(points)) : questionMaxPoints;
-        if (Number.isNaN(awardedPoints)) {
-          return badRequest(res, 'Awarded points must be a valid number');
-        }
-        if (awardedPoints > questionMaxPoints) {
-          return badRequest(
-            res,
-            `Awarded points (${awardedPoints}) cannot exceed question max points (${questionMaxPoints})`
-          );
-        }
-      }
-
-      const previousPoints = submission.pointsDelta || 0;
-      const pointsDiff = awardedPoints - previousPoints;
-
-      // Update submission fields
-      submission.reviewed = true;
-      submission.reviewedBy = adminUserId;
-      submission.reviewedAt = new Date();
-      submission.reviewNote = reviewNote ? String(reviewNote).trim() : '';
-      submission.isCorrect = result === 'Correct';
-      submission.status =
-        result === 'Correct'
-          ? SUBMISSION_STATUS.CORRECT
-          : SUBMISSION_STATUS.INCORRECT;
-      submission.pointsDelta = awardedPoints;
-
-      await submission.save();
-
-      // If approved, update TeamChallenge and Team scores atomically
-      if (result === 'Correct') {
-        let tc = null;
-        if (submission.teamChallengeId) {
-          tc = await TeamChallenge.findById(submission.teamChallengeId);
-        }
-        if (!tc && submission.teamId && submission.challengeId) {
-          tc = await TeamChallenge.findOne({
-            teamId: submission.teamId._id,
-            challengeId: submission.challengeId._id
-          });
-        }
-
-        if (tc) {
-          tc.status = 'SOLVED';
-          tc.solvedAt = tc.solvedAt || new Date();
-          tc.solvedByUserId = tc.solvedByUserId || submission.userId;
-          tc.pointsAwarded = awardedPoints;
-          await tc.save();
-        }
-
-        if (pointsDiff !== 0 && submission.teamId) {
-          await Team.findByIdAndUpdate(submission.teamId._id, {
-            $inc: { totalScore: pointsDiff },
-            $set: { lastSolveTimestamp: new Date() }
-          });
-
-          await Score.findOneAndUpdate(
-            { teamId: submission.teamId._id },
-            {
-              $inc: { currentScore: pointsDiff, solvedLevelsCount: 1 },
-              $set: { lastSolveTimestamp: new Date() },
-              $push: {
-                history: {
-                  levelNumber: submission.levelNumber,
-                  challengeId: submission.challengeId?._id,
-                  pointsAwarded: awardedPoints,
-                  solvedAt: new Date(),
-                  submissionId: submission._id
-                }
-              }
-            },
-            { upsert: true, new: true }
-          );
-        }
-      } else if (previousPoints > 0 && submission.teamId) {
-        // If reversing a previously awarded submission
-        await Team.findByIdAndUpdate(submission.teamId._id, {
-          $inc: { totalScore: -previousPoints }
-        });
-
-        await Score.findOneAndUpdate(
-          { teamId: submission.teamId._id },
-          { $inc: { currentScore: -previousPoints } }
-        );
-
-        if (submission.teamChallengeId) {
-          const tc = await TeamChallenge.findById(submission.teamChallengeId);
-          if (tc) {
-            tc.pointsAwarded = Math.max(0, (tc.pointsAwarded || 0) - previousPoints);
-            await tc.save();
-          }
-        }
-      }
-
-      logger.info(
-        `[Admin Review] Submission ${submission._id} marked ${result} (${awardedPoints} pts) by Admin ${adminUserId}. Note: "${reviewNote || ''}"`
-      );
-
-      const dateObj = submission.submittedAt || new Date();
-      const timeStr = dateObj.toTimeString ? dateObj.toTimeString().split(' ')[0] : '00:00:00';
-      const dateStr = dateObj.toLocaleDateString
-        ? dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        : 'Oct 13, 2026';
-
-      const updatedRecord = {
-        id: `SUB-${String(submission._id).slice(-4).toUpperCase()}`,
-        rawId: String(submission._id),
-        team: submission.teamId?.name || 'Unknown Team',
-        teamCode: submission.teamId?.joinCode || 'TEAM-??',
-        question: submission.questionId?.title || 'Challenge Question',
-        challenge: submission.challengeId?.title || `Level ${submission.levelNumber} Challenge`,
-        level: submission.levelNumber,
-        answer: submission.submittedAnswer,
-        result,
-        points: awardedPoints,
-        maxPoints: questionMaxPoints,
-        submittedAt: timeStr,
-        date: dateStr,
-        attempts: 1,
-        reviewed: true,
-        reviewNote: submission.reviewNote || '',
-        reviewedBy: req.user.username || 'Admin',
-        reviewedAt: submission.reviewedAt,
-        mode: submission.questionId?.type || 'Text Answer',
-        isLive: true
-      };
-
-      return success(
-        res,
-        { submission: updatedRecord },
-        `Submission marked ${result} with ${awardedPoints} points awarded.`
-      );
-    } catch (error) {
-      return next(error);
-    }
+      if (!mongoose.isValidObjectId(req.params.submissionId)) return badRequest(res, 'Full submission ID required');
+      const submission = await require('../services/scoring.service').review({
+        submissionId: req.params.submissionId, ...req.body, adminUserId: req.user.userId
+      });
+      return success(res, { submission: {
+        id: `SUB-${String(submission._id).slice(-4).toUpperCase()}`, rawId: String(submission._id),
+        team: submission.teamId?.name, teamCode: submission.teamId?.joinCode,
+        question: submission.questionId?.title, challenge: submission.challengeId?.title,
+        level: submission.levelNumber, answer: submission.submittedAnswer,
+        result: submission.isCorrect ? 'Correct' : 'Incorrect', points: submission.pointsDelta,
+        reviewed: submission.reviewed, reviewNote: submission.reviewNote, isLive: true
+      } }, 'Submission review recorded');
+    } catch (err) { return badRequest(res, err.message); }
   }
 
   async updateEventConfig(req, res, next) {
@@ -1206,7 +1508,7 @@ class AdminController {
         state,
         maintenanceMode,
         isLeaderboardFrozen,
-        ...otherFields
+        ..._otherFields
       } = req.body;
 
       if (duration !== undefined && (Number(duration) <= 0 || Number.isNaN(Number(duration)))) {
@@ -1217,27 +1519,58 @@ class AdminController {
         return badRequest(res, 'Maximum teams must be a positive number');
       }
 
-      if (minTeamSize !== undefined && (Number(minTeamSize) < 1 || Number(minTeamSize) > 4)) {
-        return badRequest(res, 'Minimum team size must be between 1 and 4');
+      if (minTeamSize !== undefined && (!Number.isInteger(Number(minTeamSize)) || Number(minTeamSize) < 2 || Number(minTeamSize) > 4)) {
+        return badRequest(res, 'Minimum team size must be between 2 and 4');
       }
 
-      if (maxTeamSize !== undefined && (Number(maxTeamSize) < 1 || Number(maxTeamSize) > 4)) {
-        return badRequest(res, 'Maximum team size must be between 1 and 4');
+      if (maxTeamSize !== undefined && (!Number.isInteger(Number(maxTeamSize)) || Number(maxTeamSize) < 2 || Number(maxTeamSize) > 4)) {
+        return badRequest(res, 'Maximum team size must be between 2 and 4');
       }
 
       let config = await EventConfig.findOne();
+      if (Number(minTeamSize ?? config?.minTeamSize ?? 2) > Number(maxTeamSize ?? config?.maxTeamSize ?? 4)) {
+        return badRequest(res, 'Minimum team size cannot exceed maximum team size');
+      }
       if (!config) {
         config = await EventConfig.create(req.body);
       } else {
         // Audit logging for sensitive operations
+        const changedFields = [];
         if (maintenanceMode !== undefined && config.maintenanceMode !== Boolean(maintenanceMode)) {
+          changedFields.push(`maintenanceMode: ${config.maintenanceMode} -> ${maintenanceMode}`);
           logger.warn(`AUDIT: Maintenance mode set to ${maintenanceMode} by admin ${req.user?.username || 'Admin'}`);
         }
         if (state !== undefined && config.state !== state) {
+          changedFields.push(`state: ${config.state} -> ${state}`);
           logger.info(`AUDIT: Event state transitioned to ${state} by admin ${req.user?.username || 'Admin'}`);
         }
         if (isLeaderboardFrozen !== undefined && config.isLeaderboardFrozen !== Boolean(isLeaderboardFrozen)) {
+          changedFields.push(`isLeaderboardFrozen: ${config.isLeaderboardFrozen} -> ${isLeaderboardFrozen}`);
           logger.info(`AUDIT: Leaderboard freeze toggled to ${isLeaderboardFrozen} by admin ${req.user?.username || 'Admin'}`);
+        }
+        if (req.body.isLeaderboardVisible !== undefined && config.isLeaderboardVisible !== Boolean(req.body.isLeaderboardVisible)) {
+          changedFields.push(`isLeaderboardVisible: ${config.isLeaderboardVisible} -> ${req.body.isLeaderboardVisible}`);
+          logger.info(`AUDIT: Leaderboard visibility set to ${req.body.isLeaderboardVisible} by admin ${req.user?.username || 'Admin'}`);
+        }
+        if (req.body.registrationOpen !== undefined && config.registrationOpen !== Boolean(req.body.registrationOpen)) {
+          changedFields.push(`registrationOpen: ${config.registrationOpen} -> ${req.body.registrationOpen}`);
+          logger.info(`AUDIT: Registration open set to ${req.body.registrationOpen} by admin ${req.user?.username || 'Admin'}`);
+        }
+
+        if (changedFields.length > 0) {
+          const eventId = `EVT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+          await SecurityLog.create({
+            eventId,
+            severity: Boolean(maintenanceMode) || state === 'PAUSED' ? 'WARNING' : 'INFO',
+            category: 'CONFIGURATION',
+            event: 'Event configuration updated',
+            actor: req.user?.username || 'admin',
+            target: 'EventConfig',
+            source: req.ip || '127.0.0.1',
+            detail: changedFields.join('; '),
+            status: 'RECORDED',
+            timestamp: new Date()
+          }).catch((err) => logger.warn(`Failed to write SecurityLog: ${err.message}`));
         }
 
         Object.assign(config, req.body);
@@ -1328,22 +1661,6 @@ class AdminController {
       }
 
       // Check if any logs exist; if not, seed initial reference audit logs
-      const totalCount = await SecurityLog.countDocuments();
-      if (totalCount === 0) {
-        const seedLogs = [
-          { eventId: 'EVT-9F21A', severity: 'CRITICAL', category: 'AUTHENTICATION', event: 'Repeated failed admin login', actor: 'unknown@192.168.1.84', target: 'Admin portal', source: '192.168.1.84', detail: 'Six failed sign-in attempts detected within the configured window.', status: 'FLAGGED', timestamp: new Date(Date.now() - 3 * 60 * 1000) },
-          { eventId: 'EVT-9F219', severity: 'WARNING', category: 'RATE LIMIT', event: 'Submission rate limit triggered', actor: 'team_4821', target: 'POST /api/v1/submissions', source: '10.0.4.28', detail: 'Request rate exceeded the configured submission threshold.', status: 'REVIEW', timestamp: new Date(Date.now() - 5 * 60 * 1000) },
-          { eventId: 'EVT-9F218', severity: 'INFO', category: 'CHECKPOINT', event: 'Checkpoint token validated', actor: 'team_1038', target: 'QR checkpoint 04', source: '10.0.2.17', detail: 'Eligible team passed checkpoint access validation.', status: 'RECORDED', timestamp: new Date(Date.now() - 8 * 60 * 1000) },
-          { eventId: 'EVT-9F217', severity: 'WARNING', category: 'AUTHORIZATION', event: 'Forbidden admin action', actor: 'participant_203', target: 'PATCH /api/v1/admin/event', source: '10.0.7.11', detail: 'A participant session attempted to access an administrator-only route.', status: 'FLAGGED', timestamp: new Date(Date.now() - 11 * 60 * 1000) },
-          { eventId: 'EVT-9F216', severity: 'INFO', category: 'ADMIN ACTION', event: 'Leaderboard visibility updated', actor: 'admin_hr', target: 'Public leaderboard', source: '10.0.0.12', detail: 'Visibility setting changed by an authenticated administrator.', status: 'RECORDED', timestamp: new Date(Date.now() - 15 * 60 * 1000) },
-          { eventId: 'EVT-9F215', severity: 'CRITICAL', category: 'INTEGRITY', event: 'Duplicate score update blocked', actor: 'system_guard', target: 'Team score ledger', source: 'internal', detail: 'A duplicate scoring operation was rejected by the integrity guard.', status: 'FLAGGED', timestamp: new Date(Date.now() - 19 * 60 * 1000) },
-          { eventId: 'EVT-9F214', severity: 'INFO', category: 'SESSION', event: 'Administrator session created', actor: 'admin_hr', target: 'Admin portal', source: '10.0.0.12', detail: 'New authenticated administrator session created.', status: 'RECORDED', timestamp: new Date(Date.now() - 25 * 60 * 1000) },
-          { eventId: 'EVT-9F213', severity: 'WARNING', category: 'QR CHECKPOINT', event: 'Invalid checkpoint token', actor: 'team_7730', target: 'QR checkpoint 07', source: '10.0.5.43', detail: 'Checkpoint token was invalid or expired and was rejected.', status: 'REVIEW', timestamp: new Date(Date.now() - 31 * 60 * 1000) },
-          { eventId: 'EVT-9F212', severity: 'INFO', category: 'CONFIGURATION', event: 'Event setting updated', actor: 'admin_hr', target: 'Registration state', source: '10.0.0.12', detail: 'Registration setting was updated through the event control panel.', status: 'RECORDED', timestamp: new Date(Date.now() - 38 * 60 * 1000) }
-        ];
-        await SecurityLog.insertMany(seedLogs);
-      }
-
       const logs = await SecurityLog.find(filter)
         .sort({ timestamp: -1 })
         .limit(200);
@@ -1439,38 +1756,32 @@ class AdminController {
         return notFound(res, 'Administrator user not found');
       }
 
-      // Aggregate operational activity metrics
+      // Aggregate real operational activity metrics
       const totalSecurityLogs = await SecurityLog.countDocuments();
       const securityReviews = await SecurityLog.countDocuments({ status: 'REVIEWED' });
       const managedTeams = await Team.countDocuments();
-      const adminActionCount = Math.max(128, totalSecurityLogs);
+      const adminActionCount = await SecurityLog.countDocuments({ actor: admin.username });
 
       // Fetch recent 3 audit events
       const recentLogs = await SecurityLog.find()
         .sort({ timestamp: -1, createdAt: -1 })
         .limit(3);
 
-      const recentActivity = recentLogs.length > 0
-        ? recentLogs.map((log) => {
-            const d = log.timestamp || log.createdAt || new Date();
-            const time = d.toTimeString ? d.toTimeString().split(' ')[0] : '14:00:00';
-            const cat = (log.category || '').toLowerCase();
-            const type = cat.includes('sec') ? 'security' : (cat.includes('check') || cat.includes('event') ? 'event' : 'settings');
-            return [time, log.event, `${log.target || 'Mission Control'} · ${log.detail || log.category}`, type];
-          })
-        : [
-            ['14:02:51', 'Leaderboard visibility updated', 'Event Control · Public leaderboard', 'settings'],
-            ['13:51:26', 'Security logs reviewed', 'Security Logs · Audit stream', 'security'],
-            ['13:39:18', 'Registration state checked', 'Event Control · Registration', 'event']
-          ];
+      const recentActivity = recentLogs.map((log) => {
+        const d = log.timestamp || log.createdAt || new Date();
+        const time = d.toTimeString ? d.toTimeString().split(' ')[0] : '14:00:00';
+        const cat = (log.category || '').toLowerCase();
+        const type = cat.includes('sec') ? 'security' : (cat.includes('check') || cat.includes('event') ? 'event' : 'settings');
+        return [time, log.event, `${log.target || 'Mission Control'} · ${log.detail || log.category}`, type];
+      });
 
       const profileData = {
         name: admin.fullName || 'Hrithik Roshan',
         username: admin.username || 'hrx_admin',
-        email: admin.email || 'hrithik@example.com',
+        email: admin.email || 'admin@codesphere.tulas.edu.in',
         role: 'Super Administrator',
         department: admin.department || 'CodeSphere · Event Operations',
-        bio: admin.bio || 'Managing event operations, team coordination, and platform integrity for Hack the Grid.',
+        bio: admin.bio || 'Managing event operations, team coordination, and platform integrity for The Tech Mystery.',
         github: admin.github || 'ydv-hrx',
         linkedin: admin.linkedin || 'hrithik-roshan',
         phone: admin.phone || 'Not added',
@@ -1494,8 +1805,8 @@ class AdminController {
           admin: profileData,
           stats: {
             adminActions: String(adminActionCount),
-            securityReviews: String(securityReviews || 24),
-            managedTeams: String(managedTeams || 32),
+            securityReviews: String(securityReviews),
+            managedTeams: String(managedTeams),
             sessionStatus: 'ACTIVE',
             accessLevel: 'LEVEL 04',
             privilege: 'PRIVILEGED ACCOUNT'
@@ -1556,6 +1867,8 @@ class AdminController {
       }
 
       // Email validation
+      if (req.clerkIdentity && email !== undefined && email !== admin.email) return badRequest(res, 'Email changes require organizer identity reconciliation');
+      if (req.clerkIdentity && email !== undefined && email !== admin.email) return badRequest(res, 'Email changes require organizer identity reconciliation');
       if (email !== undefined && email !== admin.email) {
         if (typeof email !== 'string' || !/^\S+@\S+\.\S+$/.test(email)) {
           return badRequest(res, 'Please provide a valid email address');
@@ -1641,8 +1954,14 @@ class AdminController {
 
   async revokeSession(req, res, next) {
     try {
+      if (req.clerkIdentity) {
+        const revoked = await require('../services/clerk.service').revokeOtherSessions(req.clerkIdentity);
+        return success(res, { revokedSessions: revoked }, 'Other Clerk sessions revoked');
+      }
       const admin = await User.findById(req.user.userId || req.user._id);
-      logger.security(`Admin ${admin?.username || 'Admin'} revoked other active sessions`);
+      const updated = await User.findByIdAndUpdate(req.user.userId, { $inc: { tokenVersion: 1 } }, { new: true }).select('+tokenVersion');
+      const { accessToken } = require('../services/auth.service').generateTokens(updated);
+      logger.security('Administrator revoked account sessions');
 
       await SecurityLog.create({
         eventId: `EVT-${Date.now().toString(16).toUpperCase()}`,
@@ -1656,7 +1975,101 @@ class AdminController {
         status: 'RECORDED'
       });
 
-      return success(res, null, 'Other active administrator sessions revoked successfully');
+      return success(res, { accessToken }, 'Previous administrator sessions revoked; current session replaced');
+    } catch (error) {
+      return next(error);
+    }
+  }
+  async getQuestionQr(req, res, next) {
+    try {
+      const { questionId } = req.params;
+      const question = await Question.findById(questionId)
+        .populate('challengeId', 'levelNumber title')
+        .populate('checkpointId', 'checkpointCode name locationDescription');
+      if (!question) return notFound(res, 'Question not found');
+
+      if (!question.qrCodeDataUrl) {
+        const cp = question.checkpointId || await Checkpoint.findOne({ levelNumber: question.levelNumber });
+        const qrData = await qrGenerator.generateQuestionQr(question, cp);
+        question.qrCodeDataUrl = qrData.qrCodeDataUrl;
+        question.qrScanUrl = qrData.scanUrl;
+        question.qrToken = qrData.token;
+        question.checkpointCode = qrData.checkpointCode;
+        await question.save();
+      }
+
+      return success(res, {
+        questionId: question._id,
+        levelNumber: question.levelNumber,
+        checkpointCode: question.checkpointCode,
+        qrCodeDataUrl: question.qrCodeDataUrl,
+        qrScanUrl: question.qrScanUrl,
+        qrToken: question.qrToken
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async downloadQuestionQr(req, res, next) {
+    try {
+      const { questionId } = req.params;
+      const question = await Question.findById(questionId);
+      if (!question) return notFound(res, 'Question not found');
+
+      const cp = question.checkpointId ? await Checkpoint.findById(question.checkpointId) : await Checkpoint.findOne({ levelNumber: question.levelNumber });
+      const qrData = await qrGenerator.generateQuestionQr(question, cp);
+      const buffer = await qrGenerator.generatePngBuffer(qrData.scanUrl, 800);
+
+      const filename = `HTG-Question-L${question.levelNumber}-${question._id}.png`;
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.send(buffer);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async getCheckpointQr(req, res, next) {
+    try {
+      const { checkpointId } = req.params;
+      const checkpoint = await Checkpoint.findById(checkpointId);
+      if (!checkpoint) return notFound(res, 'Checkpoint not found');
+
+      if (!checkpoint.qrCodeDataUrl) {
+        const qrData = await qrGenerator.generateCheckpointQr(checkpoint);
+        checkpoint.qrCodeDataUrl = qrData.qrCodeDataUrl;
+        checkpoint.qrScanUrl = qrData.scanUrl;
+        checkpoint.qrToken = qrData.token;
+        await checkpoint.save();
+      }
+
+      return success(res, {
+        checkpointId: checkpoint._id,
+        checkpointCode: checkpoint.checkpointCode,
+        levelNumber: checkpoint.levelNumber,
+        qrCodeDataUrl: checkpoint.qrCodeDataUrl,
+        qrScanUrl: checkpoint.qrScanUrl,
+        qrToken: checkpoint.qrToken
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async downloadCheckpointQr(req, res, next) {
+    try {
+      const { checkpointId } = req.params;
+      const checkpoint = await Checkpoint.findById(checkpointId);
+      if (!checkpoint) return notFound(res, 'Checkpoint not found');
+
+      const qrData = await qrGenerator.generateCheckpointQr(checkpoint);
+      const buffer = await qrGenerator.generatePngBuffer(qrData.scanUrl, 800);
+
+      const filename = `HTG-Checkpoint-${checkpoint.checkpointCode}.png`;
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.send(buffer);
     } catch (error) {
       return next(error);
     }

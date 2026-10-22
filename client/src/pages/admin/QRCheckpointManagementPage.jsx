@@ -7,136 +7,6 @@ import adminService from "../../services/admin.service";
 import AdminSidebar from "../../components/navigation/AdminSidebar";
 import "../../styles/QRCheckpointManagementPage.css";
 
-const initialCheckpoints = [
-  {
-    id: "CP-01",
-    name: "Welcome Signal",
-    code: "HTG-CP01",
-    level: 1,
-    challenge: "The Starting Point",
-    location: "Main Auditorium Entrance",
-    status: "Active",
-    scans: 42,
-    teams: 32,
-    mode: "Public QR",
-    lastScan: "2 min ago",
-    notes: "Starting checkpoint. Verify team registration before opening Level 1.",
-    token: "demo-token-cp01",
-    isDemo: true,
-  },
-  {
-    id: "CP-02",
-    name: "Hidden in Plain Sight",
-    code: "HTG-CP02",
-    level: 2,
-    challenge: "Hidden in Plain Sight",
-    location: "Computer Centre — Lab 5",
-    status: "Active",
-    scans: 31,
-    teams: 27,
-    mode: "Public QR",
-    lastScan: "5 min ago",
-    notes: "Unlock after Level 1 completion.",
-    token: "demo-token-cp02",
-    isDemo: true,
-  },
-  {
-    id: "CP-03",
-    name: "Lost Transmission",
-    code: "HTG-CP03",
-    level: 3,
-    challenge: "Lost Transmission",
-    location: "Innovation Lab",
-    status: "Active",
-    scans: 24,
-    teams: 21,
-    mode: "Team-bound QR",
-    lastScan: "8 min ago",
-    notes: "Challenge opens only for eligible teams.",
-    token: "demo-token-cp03",
-    isDemo: true,
-  },
-  {
-    id: "CP-04",
-    name: "System Breach",
-    code: "HTG-CP04",
-    level: 4,
-    challenge: "System Breach",
-    location: "Networking Lab",
-    status: "Paused",
-    scans: 0,
-    teams: 0,
-    mode: "Team-bound QR",
-    lastScan: "—",
-    notes: "Keep paused until volunteers confirm the station is ready.",
-    token: "demo-token-cp04",
-    isDemo: true,
-  },
-  {
-    id: "CP-05",
-    name: "Digital Forensics",
-    code: "HTG-CP05",
-    level: 5,
-    challenge: "Digital Forensics",
-    location: "Library Help Desk",
-    status: "Active",
-    scans: 18,
-    teams: 15,
-    mode: "Team-bound QR",
-    lastScan: "12 min ago",
-    notes: "Use only the supplied offline forensic artifact.",
-    token: "demo-token-cp05",
-    isDemo: true,
-  },
-  {
-    id: "CP-06",
-    name: "Privilege Escalation",
-    code: "HTG-CP06",
-    level: 6,
-    challenge: "Privilege Escalation",
-    location: "Cyber Lab",
-    status: "Draft",
-    scans: 0,
-    teams: 0,
-    mode: "Team-bound QR",
-    lastScan: "—",
-    notes: "Draft checkpoint; verify the sandbox before publishing.",
-    token: "demo-token-cp06",
-    isDemo: true,
-  },
-  {
-    id: "CP-07",
-    name: "Encrypted Shadows",
-    code: "HTG-CP07",
-    level: 7,
-    challenge: "Encrypted Shadows",
-    location: "Seminar Hall Corridor",
-    status: "Active",
-    scans: 12,
-    teams: 10,
-    mode: "Public QR",
-    lastScan: "21 min ago",
-    notes: "Cryptography puzzle and a server-validated answer.",
-    token: "demo-token-cp07",
-    isDemo: true,
-  },
-  {
-    id: "CP-08",
-    name: "The Insider",
-    code: "HTG-CP08",
-    level: 8,
-    challenge: "The Insider",
-    location: "Media Room",
-    status: "Draft",
-    scans: 0,
-    teams: 0,
-    mode: "Team-bound QR",
-    lastScan: "—",
-    notes: "Publish after the media artifact is uploaded.",
-    token: "demo-token-cp08",
-    isDemo: true,
-  },
-];
 
 const fallbackChallenges = [
   "The Starting Point",
@@ -178,7 +48,7 @@ function ScannableQrImage({ value, size = 100, className = "" }) {
 
   useEffect(() => {
     let isMounted = true;
-    if (!value) return;
+    if (!value) { setDataUrl(""); return; }
 
     QRCode.toDataURL(value, {
       margin: 1,
@@ -222,9 +92,9 @@ function ScannableQrImage({ value, size = 100, className = "" }) {
 
 export default function QRCheckpointManagementPage() {
   const { user, isAuthenticated } = useAuth();
-  const [checkpoints, setCheckpoints] = useState(initialCheckpoints);
+  const [checkpoints, setCheckpoints] = useState([]);
   const [challenges, setChallenges] = useState(fallbackChallenges);
-  const [selectedId, setSelectedId] = useState("CP-03");
+  const [selectedId, setSelectedId] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [modeFilter, setModeFilter] = useState("All Modes");
@@ -237,11 +107,13 @@ export default function QRCheckpointManagementPage() {
   const [dbBannerDismissed, setDbBannerDismissed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [printTarget, setPrintTarget] = useState(null);
 
   // Compute canonical scan URL for a checkpoint
   const getScanUrl = useCallback((cp) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "https://hackthegrid.codesphere.org";
-    const token = cp?.token || cp?.hmacToken || "demo-token";
+    const token = cp?.token || cp?.hmacToken || "";
+    if (!token) return "";
     return `${origin}/checkpoint/scan?code=${encodeURIComponent(cp?.code || "HTG-CP01")}&token=${encodeURIComponent(token)}`;
   }, []);
 
@@ -279,6 +151,8 @@ export default function QRCheckpointManagementPage() {
       lastScan: lastScanFormatted,
       notes: cp.notes || "",
       token: token,
+      qrCodeDataUrl: cp.qrCodeDataUrl || null,
+      qrScanUrl: cp.qrScanUrl || null,
       isDemo: false,
     };
   }, []);
@@ -320,7 +194,8 @@ export default function QRCheckpointManagementPage() {
             mapped.some((m) => m.id === prev) ? prev : mapped[0]?.id || "CP-01"
           );
         } else {
-          setIsLiveDb(false);
+          setCheckpoints([]);
+          setIsLiveDb(true);
         }
       } else {
         setIsLiveDb(false);
@@ -337,7 +212,7 @@ export default function QRCheckpointManagementPage() {
   }, [fetchCheckpoints]);
 
   const selected =
-    checkpoints.find((item) => item.id === selectedId) || checkpoints[0] || blankCheckpoint;
+    checkpoints.find((item) => item.id === selectedId) || checkpoints[0] || null;
 
   const filtered = useMemo(
     () =>
@@ -365,6 +240,36 @@ export default function QRCheckpointManagementPage() {
     0
   );
 
+  const handleDownloadQr = (item) => {
+    if (!item) return;
+    if (item.qrCodeDataUrl) {
+      const link = document.createElement("a");
+      link.href = item.qrCodeDataUrl;
+      link.download = `HTG-Checkpoint-${item.code}.png`;
+      link.click();
+      setNotice(`Downloaded QR code for station ${item.code}.`);
+      return;
+    }
+
+    const url = getScanUrl(item);
+    if (!url) {
+      setNotice("No token available to generate QR download.");
+      return;
+    }
+
+    QRCode.toDataURL(url, { width: 600, margin: 2, errorCorrectionLevel: "H" })
+      .then((dataUrl) => {
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = `HTG-Checkpoint-${item.code}.png`;
+        link.click();
+        setNotice(`Generated and downloaded QR code for station ${item.code}.`);
+      })
+      .catch((err) => {
+        setNotice(`Failed to generate QR download: ${err.message}`);
+      });
+  };
+
   const resetFilters = () => {
     setSearch("");
     setStatusFilter("All Status");
@@ -377,7 +282,7 @@ export default function QRCheckpointManagementPage() {
     setDraft({
       ...blankCheckpoint,
       code: `HTG-CP${String(nextNum).padStart(2, "0")}`,
-      token: `demo-token-cp${String(nextNum).padStart(2, "0")}`,
+      token: "",
     });
     setShowEditor(true);
   };
@@ -395,7 +300,7 @@ export default function QRCheckpointManagementPage() {
       return;
     }
 
-    if (isLiveDb) {
+    if (isLiveDb || (isAuthenticated && user?.role === "ADMIN")) {
       try {
         const payload = {
           name: draft.name.trim(),
@@ -423,7 +328,7 @@ export default function QRCheckpointManagementPage() {
         setNotice(`API Error: ${err.response?.data?.message || err.message}`);
       }
     } else {
-      // Local state fallback for demo preview
+      // Local state update fallback
       if (editingId) {
         setCheckpoints((items) =>
           items.map((item) =>
@@ -450,7 +355,7 @@ export default function QRCheckpointManagementPage() {
           scans: 0,
           teams: 0,
           lastScan: "—",
-          isDemo: true,
+          isDemo: false,
         };
         setCheckpoints((items) => [...items, created]);
         setSelectedId(id);
@@ -528,7 +433,7 @@ export default function QRCheckpointManagementPage() {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `hack-the-grid-checkpoints-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `the-tech-mystery-checkpoints-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
     setNotice(`Exported ${filtered.length} checkpoints to CSV.`);
@@ -538,6 +443,10 @@ export default function QRCheckpointManagementPage() {
   const downloadPlacard = async () => {
     try {
       const scanUrl = getScanUrl(selected);
+      if (!scanUrl) {
+        setNotice("A server-issued signed QR is required. Configure team binding or public mode, then reload checkpoints.");
+        return;
+      }
       const qrDataUrl = await QRCode.toDataURL(scanUrl, {
         margin: 2,
         width: 320,
@@ -563,7 +472,7 @@ export default function QRCheckpointManagementPage() {
       ctx.fillStyle = "#b8ff3d";
       ctx.font = "bold 15px 'DM Mono', monospace";
       ctx.textAlign = "center";
-      ctx.fillText("HACK THE GRID 2026 // QR CHECKPOINT", canvas.width / 2, 36);
+      ctx.fillText("THE TECH MYSTERY 2026 // QR CHECKPOINT", canvas.width / 2, 36);
 
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 20px 'Manrope', sans-serif";
@@ -670,11 +579,7 @@ export default function QRCheckpointManagementPage() {
         <section className="qrcm-hero">
           <div className="qrcm-breadcrumb">
             Admin <span>›</span> QR Checkpoints
-            {isLiveDb ? (
-              <span className="qrcm-data-pill live">● LIVE DATABASE</span>
-            ) : (
-              <span className="qrcm-data-pill demo">● DEMO PREVIEW DATA</span>
-            )}
+            <span className="qrcm-data-pill live">● LIVE DATABASE</span>
           </div>
           <div className="qrcm-heading-row">
             <div>
@@ -705,28 +610,7 @@ export default function QRCheckpointManagementPage() {
           </div>
         </section>
 
-        {/* Live/Demo info banner */}
-        {!isLiveDb && !dbBannerDismissed && (
-          <div className="qrcm-api-banner">
-            <div>
-              <strong>● DEMO PREVIEW DATA</strong> — Connect authenticated
-              administrator session for live database synchronization. Generated
-              QR codes encode authentic server verification URLs.
-            </div>
-            <div className="qrcm-api-banner-actions">
-              <Link to={ROUTES.ADMIN_LOGIN} className="qrcm-banner-link">
-                Admin Login →
-              </Link>
-              <button
-                type="button"
-                onClick={() => setDbBannerDismissed(true)}
-                aria-label="Dismiss banner"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
+        
 
         {notice && (
           <div className="qrcm-notice" role="status">
@@ -941,6 +825,28 @@ export default function QRCheckpointManagementPage() {
                           <button
                             type="button"
                             className="qrcm-row-action"
+                            title="Download QR code"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleDownloadQr(item);
+                            }}
+                          >
+                            ⇩ QR
+                          </button>
+                          <button
+                            type="button"
+                            className="qrcm-row-action"
+                            title="Print Station Beacon"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setPrintTarget(item);
+                            }}
+                          >
+                            ⎙
+                          </button>
+                          <button
+                            type="button"
+                            className="qrcm-row-action"
                             title="Edit checkpoint"
                             onClick={(event) => {
                               event.stopPropagation();
@@ -1024,134 +930,219 @@ export default function QRCheckpointManagementPage() {
 
           {/* Right Detail Inspector Panel */}
           <aside className="qrcm-detail">
-            <div className="qrcm-detail-head">
-              <div>
-                <small>CHECKPOINT DETAILS</small>
-                <h2>{selected.name}</h2>
-                <p>
-                  {selected.id} <span>•</span> {selected.code}
-                </p>
-              </div>
-              <span className={`qrcm-status ${statusClass(selected.status)}`}>
-                {selected.status}
-              </span>
+          {!selected ? (
+            <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--htg-text-secondary, #94a3b8)" }}>
+              <div style={{ fontSize: "2.5rem", marginBottom: "12px", opacity: 0.3 }}>📍</div>
+              <h3 style={{ fontSize: "1.1rem", marginBottom: "8px", color: "var(--htg-text-primary, #ffffff)" }}>No Checkpoint Selected</h3>
+              <p style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
+                Select a checkpoint from the list to view its configuration, station token, and scannable QR code.
+              </p>
             </div>
-            <div className="qrcm-qr-preview">
-              <div className="qrcm-qr-paper">
-                <ScannableQrImage
-                  value={getScanUrl(selected)}
-                  size={106}
-                />
-                <small>{selected.code}</small>
+          ) : (
+            <div className="qrcm-detail-card">
+              <div className="qrcm-detail-header">
+                <div>
+                  <small>STATION DETAILS</small>
+                  <h2>{selected.name}</h2>
+                  <p>
+                    {selected.code} · Level {selected.level} · {selected.challenge}
+                  </p>
+                </div>
+                <span className={`qrcm-status-chip ${statusClass(selected.status)}`}>
+                  {selected.status}
+                </span>
               </div>
-              <div className="qrcm-qr-copy">
-                <span className="qrcm-secure-tag">⌑ GENUINE SCANNABLE QR</span>
-                <h3>Scan to continue</h3>
-                <p>
-                  Participants scan this QR to request access to its linked challenge.
-                </p>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    className="qrcm-outline-button"
-                    onClick={downloadPlacard}
-                    title="Download high-resolution printable placard"
-                  >
-                    ↓ Download QR Placard
-                  </button>
-                  <button
-                    type="button"
-                    className="qrcm-outline-button"
-                    onClick={copyScanUrl}
-                    title="Copy server-validated scan URL"
-                  >
-                    ⎘ Copy URL
-                  </button>
+
+              <div className="qrcm-qr-preview-box">
+                <div className="qrcm-qr-canvas-wrap">
+                  {selected.qrCodeDataUrl ? (
+                    <img
+                      src={selected.qrCodeDataUrl}
+                      alt={`QR Code: ${selected.code}`}
+                      className="qrcm-detail-qr"
+                      style={{ width: 180, height: 180, display: "block", objectFit: "contain" }}
+                    />
+                  ) : selected.token ? (
+                    <ScannableQrImage
+                      value={getScanUrl(selected)}
+                      size={180}
+                      className="qrcm-detail-qr"
+                    />
+                  ) : (
+                    <div className="qrcm-qr-empty">
+                      <span>No Security Token</span>
+                    </div>
+                  )}
+                </div>
+                <div className="qrcm-qr-instructions">
+                  <strong>Official Checkpoint Beacon</strong>
+                  <p>
+                    Participants scan this token with a mobile device or the in-app scanner to verify physical presence at {selected.location}.
+                  </p>
+                  <div className="qrcm-qr-actions">
+                    <button
+                      type="button"
+                      className="qrcm-primary-button small"
+                      onClick={() => handleDownloadQr(selected)}
+                      title="Download high-resolution PNG QR sticker"
+                    >
+                      ⇩ Download PNG
+                    </button>
+                    <button
+                      type="button"
+                      className="qrcm-outline-button small"
+                      onClick={() => setPrintTarget(selected)}
+                      title="Print physical campus checkpoint placard"
+                    >
+                      ⎙ Print Beacon
+                    </button>
+                    <button
+                      type="button"
+                      className="qrcm-outline-button small"
+                      onClick={() => {
+                        const url = getScanUrl(selected);
+                        if (!url) {
+                          setNotice("No token available to generate scan URL.");
+                          return;
+                        }
+                        navigator.clipboard?.writeText(url);
+                        setNotice(`Copied scan URL for ${selected.code} to clipboard.`);
+                      }}
+                    >
+                      Copy Scan URL ⎘
+                    </button>
+                    <button
+                      type="button"
+                      className="qrcm-outline-button small"
+                      onClick={() => handleOpenEditor(selected)}
+                    >
+                      Edit Station ✎
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="qrcm-detail-metrics">
-              <div>
-                <strong>{selected.scans}</strong>
-                <small>Total scans</small>
+
+              <div className="qrcm-detail-metrics">
+                <div>
+                  <strong>{selected.scans}</strong>
+                  <span>Total Scans</span>
+                </div>
+                <div>
+                  <strong>{selected.teams}</strong>
+                  <span>Unique Teams</span>
+                </div>
+                <div>
+                  <strong>{selected.lastScan}</strong>
+                  <span>Last Scanned</span>
+                </div>
               </div>
-              <div>
-                <strong>{selected.teams}</strong>
-                <small>Teams reached</small>
-              </div>
-              <div>
-                <strong>Level {selected.level}</strong>
-                <small>Unlock level</small>
-              </div>
-            </div>
-            <div className="qrcm-detail-body">
-              <h3>Checkpoint Configuration</h3>
-              <div className="qrcm-detail-row">
-                <span>Linked challenge</span>
-                <strong>{selected.challenge}</strong>
-              </div>
-              <div className="qrcm-detail-row">
-                <span>Physical location</span>
-                <strong>{selected.location}</strong>
-              </div>
-              <div className="qrcm-detail-row">
-                <span>QR access mode</span>
-                <strong>{selected.mode}</strong>
-              </div>
-              <div className="qrcm-detail-row">
-                <span>Last scan</span>
-                <strong>{selected.lastScan}</strong>
-              </div>
-              <div className="qrcm-detail-row">
-                <span>Opaque token</span>
-                <strong style={{ font: "9px 'DM Mono', monospace" }}>
-                  {selected.token ? `${selected.token.slice(0, 16)}...` : "None"}
-                </strong>
-              </div>
-              <h3>Volunteer Notes</h3>
-              <p className="qrcm-notes">
-                {selected.notes || "No notes configured."}
-              </p>
-              <div className="qrcm-security-note">
-                <span>⬡</span>
-                <p>
-                  <strong>Security reminder</strong>
-                  <br />
-                  QR codes identify a physical station; they must never contain
-                  answer keys or secret flags. Team eligibility and challenge
-                  unlocks are enforced strictly server-side.
-                </p>
+
+              <div className="qrcm-detail-info-rows">
+                <div className="qrcm-info-row">
+                  <span>Physical Location</span>
+                  <strong>{selected.location}</strong>
+                </div>
+                <div className="qrcm-info-row">
+                  <span>Access Mode</span>
+                  <strong>{selected.mode}</strong>
+                </div>
+                <div className="qrcm-info-row">
+                  <span>HMAC Station Token</span>
+                  <code style={{ fontSize: "11px", wordBreak: "break-all" }}>
+                    {selected.token ? `${selected.token.slice(0, 16)}...${selected.token.slice(-8)}` : "None"}
+                  </code>
+                </div>
+                {selected.notes && (
+                  <div className="qrcm-info-row full">
+                    <span>Organizer Notes</span>
+                    <p>{selected.notes}</p>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="qrcm-detail-actions">
-              <button
-                type="button"
-                className="qrcm-pause-button"
-                onClick={() => toggleStatus(selected)}
-              >
-                {selected.status === "Active"
-                  ? "Ⅱ Pause checkpoint"
-                  : "▶ Activate checkpoint"}
-              </button>
-              <button
-                type="button"
-                className="qrcm-primary-button"
-                onClick={() => openEdit(selected)}
-              >
-                ✎ Edit Checkpoint
-              </button>
-            </div>
-          </aside>
+          )}
+        </aside>
         </section>
 
         {/* Footer */}
         <footer className="qrcm-footer">
           Build with <span>♥</span> by Hrithik Roshan{" "}
-          <small>HACK THE GRID · MISSION CONTROL</small>
+          <small>THE TECH MYSTERY · MISSION CONTROL</small>
         </footer>
       </main>
 
-      {/* Create / Edit Modal Dialog */}
+      {/* Print Placard Modal */}
+      {printTarget && (
+        <div className="htg-print-modal-backdrop" onClick={() => setPrintTarget(null)}>
+          <div className="htg-print-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="htg-print-modal-header no-print">
+              <h3>Official Checkpoint QR Beacon</h3>
+              <div className="htg-print-header-actions">
+                <button
+                  type="button"
+                  className="qrcm-primary-button small"
+                  onClick={() => window.print()}
+                >
+                  ⎙ Print Now
+                </button>
+                <button
+                  type="button"
+                  className="qrcm-outline-button small"
+                  onClick={() => setPrintTarget(null)}
+                >
+                  ✕ Close
+                </button>
+              </div>
+            </div>
+
+            <div className="htg-printable-badge" id="htg-print-badge-area">
+              <div className="htg-badge-branding">
+                <span className="htg-badge-logo" style={{ fontSize: "24px", color: "#000" }}>◈</span>
+                <div>
+                  <h2>THE TECH MYSTERY 2026</h2>
+                  <small>OFFICIAL CAMPUS CHECKPOINT BEACON</small>
+                </div>
+              </div>
+
+              <div className="htg-badge-level-row">
+                <span className="htg-badge-pill">LEVEL {printTarget.level}</span>
+                <span className="htg-badge-code">{printTarget.code}</span>
+              </div>
+
+              <h3 className="htg-badge-challenge">{printTarget.name}</h3>
+              <p style={{ margin: "2px 0 8px", fontSize: "11px", color: "#555" }}>
+                ⌖ {printTarget.location}
+              </p>
+
+              <div className="htg-badge-qr-container">
+                {printTarget.qrCodeDataUrl ? (
+                  <img src={printTarget.qrCodeDataUrl} alt="Checkpoint QR" />
+                ) : (
+                  <ScannableQrImage
+                    value={getScanUrl(printTarget)}
+                    size={220}
+                  />
+                )}
+              </div>
+
+              <div className="htg-badge-instructions">
+                <strong>SCAN WITH THE TECH MYSTERY SCANNER</strong>
+                <p>
+                  Verify physical presence at this campus checkpoint station to unlock Challenge Level {printTarget.level}.
+                  Points awarded strictly upon valid flag capture submission.
+                </p>
+              </div>
+
+              <footer className="htg-badge-footer">
+                <span>CODESPHERE • TULA'S UNIVERSITY</span>
+                <span>TAMPERING IS STRICTLY PROHIBITED</span>
+              </footer>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Edit Modal */}
       {showEditor && (
         <div
           className="qrcm-modal-backdrop"

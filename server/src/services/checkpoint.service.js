@@ -1,93 +1,58 @@
-const { Checkpoint, Team, TeamChallenge } = require('../models');
+const { safeContent, privateAnswers } = require('../utils/participantData');
+const { Checkpoint, Challenge } = require('../models');
 const { verifyCheckpointToken } = require('../utils/crypto');
-const questionAssignmentService = require('./questionAssignment.service');
-const logger = require('../utils/logger');
+const assignment = require('./questionAssignment.service');
+const { eventFor, teamFor } = require('./eligibility.service');
+const transaction = require('../utils/transaction');
 
-/**
- * Checkpoint Service
- * Validates physical QR scans, unlocks levels, and coordinates persistent question assignment.
- */
-class CheckpointService {
-  /**
-   * Processes a physical checkpoint scan from a participant.
-   *
-   * @param {object} params
-   * @param {string} params.checkpointCode - e.g. "CP-A7F92B"
-   * @param {string} params.token - HMAC token generated for QR
-   * @param {string} params.teamId - ID of logged-in user's team
-   * @returns {Promise<object>} Status and assigned question details (without answers)
-   */
-  async processScan({ checkpointCode, token, teamId }) {
-    // 1. Find checkpoint
-    const checkpoint = await Checkpoint.findOne({
-      checkpointCode: checkpointCode.toUpperCase(),
-      isActive: true
-    });
-
-    if (!checkpoint) {
-      throw new Error('Invalid or inactive checkpoint QR code');
-    }
-
-    // 2. Cryptographic token verification (if token verification active)
-    if (token) {
-      const isValid = verifyCheckpointToken(checkpoint.checkpointCode, checkpoint.levelNumber, token);
-      if (!isValid) {
-        throw new Error('Tampered or forged QR checkpoint token');
+module.exports = {
+  processScan({ checkpointCode, token, teamId, userId, questionId }) {
+    return transaction(async () => {
+      if (typeof checkpointCode !== 'string' || !checkpointCode.trim()) throw new Error('A valid checkpoint code is required');
+      const config = await eventFor('scan');
+      const team = await teamFor(teamId, userId, config);
+      const checkpoint = await Checkpoint.findOne({ checkpointCode: checkpointCode.trim().toUpperCase(), isActive: true, status: 'Active' });
+      if (!checkpoint) throw new Error('Checkpoint is unavailable');
+      const bound = checkpoint.mode === 'Team-bound QR';
+      if (bound && (!checkpoint.boundTeamId || String(checkpoint.boundTeamId) !== String(team._id))) {
+        throw new Error('Checkpoint is not assigned to this team');
       }
-    }
+      if (!verifyCheckpointToken(checkpoint.checkpointCode, checkpoint.levelNumber, token,
+        { teamId: bound ? checkpoint.boundTeamId : null, qid: questionId })) throw new Error('A valid, unexpired signed checkpoint token is required');
+      const challenge = await Challenge.findOne({ _id: checkpoint.associatedChallengeId,
+        levelNumber: checkpoint.levelNumber, isActive: true, status: 'Published' });
+      if (!challenge) throw new Error('Checkpoint challenge is not published or active');
+      if (team.currentLevel < checkpoint.levelNumber) throw new Error('Checkpoint locked. Solve prior levels first.');
+      if (team.currentLevel > checkpoint.levelNumber) throw new Error('This level has already been cleared by your team.');
 
-    // 3. Verify Team level eligibility
-    const team = await Team.findById(teamId);
-    if (!team) throw new Error('Team not found');
-
-    if (team.isDisqualified) {
-      throw new Error('Your team has been disqualified from participating');
-    }
-
-    // Is the team at or past this level?
-    if (team.currentLevel < checkpoint.levelNumber) {
-      throw new Error(
-        `Checkpoint locked! Your team is currently on Level ${team.currentLevel}. Solve prior levels first.`
-      );
-    }
-
-    // 4. Retrieve or assign team-specific question variation persistently
-    const { teamChallenge, question, isNewAssignment } =
-      await questionAssignmentService.getOrAssignQuestion(teamId, checkpoint.levelNumber);
-
-    // 5. Unlock the TeamChallenge if it was locked behind checkpoint scan
-    if (!teamChallenge.checkpointScanned) {
-      teamChallenge.checkpointScanned = true;
-      teamChallenge.checkpointScannedAt = new Date();
-      teamChallenge.status = 'UNLOCKED';
-      teamChallenge.unlockedAt = new Date();
-      await teamChallenge.save();
-
-      // Increment checkpoint physical scan metrics
-      await Checkpoint.findByIdAndUpdate(checkpoint._id, { $inc: { scanCount: 1 } });
-    }
-
-    logger.info(
-      `[Checkpoint] Team ${teamId} verified at Checkpoint ${checkpoint.checkpointCode} (Level ${checkpoint.levelNumber})`
-    );
-
-    return {
-      checkpoint: {
-        name: checkpoint.name,
-        levelNumber: checkpoint.levelNumber,
-        locationDescription: checkpoint.locationDescription
-      },
-      teamChallenge: {
-        status: teamChallenge.status,
-        levelNumber: teamChallenge.levelNumber,
-        checkpointScanned: true,
-        unlockedAt: teamChallenge.unlockedAt
-      },
-      question,
-      isNewAssignment
-    };
+      const { teamChallenge, question, isNewAssignment } = await assignment.getOrAssignQuestion(teamId, checkpoint.levelNumber, questionId);
+      const alreadyScanned = teamChallenge.checkpointScanned;
+      if (!alreadyScanned) {
+        teamChallenge.checkpointScanned = true;
+        teamChallenge.checkpointScannedAt = new Date();
+        if (teamChallenge.status !== 'SOLVED') teamChallenge.status = 'UNLOCKED';
+        teamChallenge.unlockedAt = teamChallenge.unlockedAt || new Date();
+        await teamChallenge.save();
+        await Checkpoint.updateOne({ _id: checkpoint._id }, { $inc: { scanCount: 1 }, $set: { lastScanAt: new Date() } });
+      }
+      const answers = await privateAnswers();
+      return {
+        checkpoint: {
+          name: safeContent(checkpoint.name, answers),
+          levelNumber: checkpoint.levelNumber,
+          locationDescription: safeContent(checkpoint.locationDescription, answers),
+          code: safeContent(checkpoint.checkpointCode, answers)
+        },
+        teamChallenge: {
+          status: teamChallenge.status,
+          levelNumber: teamChallenge.levelNumber,
+          checkpointScanned: true,
+          unlockedAt: teamChallenge.unlockedAt
+        },
+        question,
+        alreadyScanned,
+        isNewAssignment
+      };
+    });
   }
-}
-
-module.exports = new CheckpointService();
-
+};

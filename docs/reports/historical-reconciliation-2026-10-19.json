@@ -1,0 +1,683 @@
+{
+  "capturedAt": "2026-10-19T08:42:53.902Z",
+  "startedAt": "2026-10-19T08:42:53.812Z",
+  "database": "hack_the_grid",
+  "topology": "standalone",
+  "counts": {
+    "users": 97,
+    "teams": 42,
+    "challenges": 10,
+    "questions": 17,
+    "checkpoints": 10,
+    "teamchallenges": 52,
+    "submissions": 72,
+    "scores": 42
+  },
+  "endingCounts": {
+    "users": 97,
+    "teams": 42,
+    "challenges": 10,
+    "questions": 17,
+    "checkpoints": 10,
+    "teamchallenges": 52,
+    "submissions": 72,
+    "scores": 42
+  },
+  "countsStable": true,
+  "consistency": "Sequential read-only observations; not an atomic snapshot or backup. Stable counts do not prove no edits occurred.",
+  "summary": {
+    "teams": 42,
+    "storedTeamPoints": 10090,
+    "solvedPoints": 1700,
+    "unsupportedTeams": 6,
+    "candidateSolves": 14,
+    "scoreDiscrepancies": 3,
+    "orphanTeamGroups": 5,
+    "orphanSubmissions": 20
+  },
+  "unsupportedTeams": [
+    {
+      "teamId": "6ace7c2bf5fda84bd9c5fccf",
+      "teamPoints": 1840,
+      "currentLevel": 8,
+      "scoreSnapshotIds": [
+        "6ace7c2b6014ea747c698d70"
+      ],
+      "snapshotPoints": [
+        1840
+      ],
+      "solvedPoints": 0,
+      "historyPoints": 0,
+      "reason": "No recorded solves support the stored total",
+      "disposition": "Organizer review required; no repair authorized"
+    },
+    {
+      "teamId": "6ace7c2cf5fda84bd9c5fcdd",
+      "teamPoints": 1690,
+      "currentLevel": 7,
+      "scoreSnapshotIds": [
+        "6ace7c2c6014ea747c698d71"
+      ],
+      "snapshotPoints": [
+        1690
+      ],
+      "solvedPoints": 0,
+      "historyPoints": 0,
+      "reason": "No recorded solves support the stored total",
+      "disposition": "Organizer review required; no repair authorized"
+    },
+    {
+      "teamId": "6ace7c2cf5fda84bd9c5fce8",
+      "teamPoints": 1510,
+      "currentLevel": 7,
+      "scoreSnapshotIds": [
+        "6ace7c2c6014ea747c698d72"
+      ],
+      "snapshotPoints": [
+        1510
+      ],
+      "solvedPoints": 0,
+      "historyPoints": 0,
+      "reason": "No recorded solves support the stored total",
+      "disposition": "Organizer review required; no repair authorized"
+    },
+    {
+      "teamId": "6ace7c2cf5fda84bd9c5fcf3",
+      "teamPoints": 1320,
+      "currentLevel": 6,
+      "scoreSnapshotIds": [
+        "6ace7c2c6014ea747c698d73"
+      ],
+      "snapshotPoints": [
+        1320
+      ],
+      "solvedPoints": 0,
+      "historyPoints": 0,
+      "reason": "No recorded solves support the stored total",
+      "disposition": "Organizer review required; no repair authorized"
+    },
+    {
+      "teamId": "6ace7c2cf5fda84bd9c5fd01",
+      "teamPoints": 1280,
+      "currentLevel": 6,
+      "scoreSnapshotIds": [
+        "6ace7c2c6014ea747c698d74"
+      ],
+      "snapshotPoints": [
+        1280
+      ],
+      "solvedPoints": 0,
+      "historyPoints": 0,
+      "reason": "No recorded solves support the stored total",
+      "disposition": "Organizer review required; no repair authorized"
+    },
+    {
+      "teamId": "6ad07bddd38f05b1e19784ca",
+      "teamPoints": 750,
+      "currentLevel": 1,
+      "scoreSnapshotIds": [
+        "6ad07bddd38f05b1e19784cd"
+      ],
+      "snapshotPoints": [
+        750
+      ],
+      "solvedPoints": 0,
+      "historyPoints": 0,
+      "reason": "No recorded solves support the stored total",
+      "disposition": "Organizer review required; no repair authorized"
+    }
+  ],
+  "scoreDiscrepancies": [
+    {
+      "teamId": "6ace7d0cfe5a4232d239b3cb",
+      "assignmentId": "6ace7d0cfe5a4232d239b3e9",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc87",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ace7d0cfe5a4232d239b3ce"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ace7d0cfe5a4232d239b404",
+          "recordedPoints": 0,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Manual review required; do not infer or alter awarded points"
+    },
+    {
+      "teamId": "6ace8199fe5a4232d239b59c",
+      "assignmentId": "6ace8199fe5a4232d239b5ba",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc7f",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ace8199fe5a4232d239b59f"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ace8199fe5a4232d239b5d5",
+          "recordedPoints": 0,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Manual review required; do not infer or alter awarded points"
+    },
+    {
+      "teamId": "6ad07c58b9813a8ca5e87848",
+      "assignmentId": "6ad07c59b9813a8ca5e87869",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc83",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad07c58b9813a8ca5e8784b"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad07c59b9813a8ca5e87884",
+          "recordedPoints": 0,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Manual review required; do not infer or alter awarded points"
+    }
+  ],
+  "candidateSolves": [
+    {
+      "teamId": "6ad080e7666d7dc7bc9b2460",
+      "assignmentId": "6ad080e7666d7dc7bc9b2470",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc83",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad080e7666d7dc7bc9b2463"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad080e7666d7dc7bc9b247f",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad0811ef97208b3274e2ef3",
+      "assignmentId": "6ad0811ef97208b3274e2f03",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc7f",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad0811ef97208b3274e2ef6"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad0811ef97208b3274e2f12",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad08125f97208b3274e2f5c",
+      "assignmentId": "6ad08126f97208b3274e2f7d",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc83",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad08125f97208b3274e2f5f"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad08126f97208b3274e2f98",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad09704c1c8aa5e3b765195",
+      "assignmentId": "6ad09704c1c8aa5e3b7651b6",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc87",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad09704c1c8aa5e3b765198"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad09704c1c8aa5e3b7651d7",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad09709c1c8aa5e3b765295",
+      "assignmentId": "6ad09709c1c8aa5e3b7652a8",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc7f",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad09709c1c8aa5e3b765298"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad09709c1c8aa5e3b7652ba",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad09776d302b02553cce02e",
+      "assignmentId": "6ad09776d302b02553cce041",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc87",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad09776d302b02553cce031"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad09776d302b02553cce053",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad09820d302b02553cce1cf",
+      "assignmentId": "6ad09820d302b02553cce1f0",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc83",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad09820d302b02553cce1d2"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad09820d302b02553cce211",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad09828d302b02553cce355",
+      "assignmentId": "6ad09828d302b02553cce368",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc87",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad09828d302b02553cce358"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad09828d302b02553cce37a",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad0998e9daf0ef14b6d8682",
+      "assignmentId": "6ad0998f9daf0ef14b6d8695",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc87",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad0998e9daf0ef14b6d8685"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad0998f9daf0ef14b6d86a7",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad099979daf0ef14b6d8785",
+      "assignmentId": "6ad099979daf0ef14b6d87a6",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc83",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad099979daf0ef14b6d8788"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad099979daf0ef14b6d87c7",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad5cce95853b87ba757b749",
+      "assignmentId": "6ad5cce95853b87ba757b76a",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc87",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad5cce95853b87ba757b74c"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad5ccea5853b87ba757b78b",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad5ccfa5853b87ba757b8cf",
+      "assignmentId": "6ad5ccfa5853b87ba757b8e2",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc7f",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad5ccfa5853b87ba757b8d2"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad5ccfa5853b87ba757b8f4",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad5cdcb5853b87ba757baa3",
+      "assignmentId": "6ad5cdcc5853b87ba757bac4",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc83",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad5cdcb5853b87ba757baa6"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad5cdcc5853b87ba757bae5",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    },
+    {
+      "teamId": "6ad5cddc5853b87ba757bc29",
+      "assignmentId": "6ad5cddc5853b87ba757bc3c",
+      "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+      "questionId": "6ace7c2bf5fda84bd9c5fc83",
+      "level": 1,
+      "solvePoints": 100,
+      "scoreSnapshotIds": [
+        "6ad5cddc5853b87ba757bc2c"
+      ],
+      "correctSubmissions": [
+        {
+          "submissionId": "6ad5cddc5853b87ba757bc4e",
+          "recordedPoints": 100,
+          "associationsMatch": true,
+          "historyReferenceMatches": true
+        }
+      ],
+      "disposition": "Evidence candidate only; approval required before owner backfill"
+    }
+  ],
+  "alreadyOwnedSolves": [],
+  "deletedTeamSubmissions": [
+    {
+      "missingTeamId": "6ad096f7c1c8aa5e3b764ffb",
+      "submissions": [
+        {
+          "submissionId": "6ad096f8c1c8aa5e3b765074",
+          "assignmentId": "6ad096f8c1c8aa5e3b76504e",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc87",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad096f8c1c8aa5e3b765080",
+          "assignmentId": "6ad096f8c1c8aa5e3b76504e",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc87",
+          "isCorrect": true,
+          "recordedPoints": 100,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad096f8c1c8aa5e3b7650a9",
+          "assignmentId": "6ad096f8c1c8aa5e3b76509b",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad096f8c1c8aa5e3b7650b5",
+          "assignmentId": "6ad096f8c1c8aa5e3b76509b",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": true,
+          "recordedPoints": 600,
+          "assignmentExists": false
+        }
+      ]
+    },
+    {
+      "missingTeamId": "6ad0977ad302b02553cce0c2",
+      "submissions": [
+        {
+          "submissionId": "6ad0977ad302b02553cce13b",
+          "assignmentId": "6ad0977ad302b02553cce115",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc83",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad0977ad302b02553cce147",
+          "assignmentId": "6ad0977ad302b02553cce115",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc83",
+          "isCorrect": true,
+          "recordedPoints": 100,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad0977ad302b02553cce170",
+          "assignmentId": "6ad0977ad302b02553cce162",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad0977ad302b02553cce17c",
+          "assignmentId": "6ad0977ad302b02553cce162",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": true,
+          "recordedPoints": 600,
+          "assignmentExists": false
+        }
+      ]
+    },
+    {
+      "missingTeamId": "6ad099879daf0ef14b6d850c",
+      "submissions": [
+        {
+          "submissionId": "6ad099879daf0ef14b6d8585",
+          "assignmentId": "6ad099879daf0ef14b6d855f",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc83",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad099879daf0ef14b6d8591",
+          "assignmentId": "6ad099879daf0ef14b6d855f",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc83",
+          "isCorrect": true,
+          "recordedPoints": 100,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad099879daf0ef14b6d85ba",
+          "assignmentId": "6ad099879daf0ef14b6d85ac",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad099879daf0ef14b6d85c6",
+          "assignmentId": "6ad099879daf0ef14b6d85ac",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": true,
+          "recordedPoints": 600,
+          "assignmentExists": false
+        }
+      ]
+    },
+    {
+      "missingTeamId": "6ad5cd025853b87ba757b963",
+      "submissions": [
+        {
+          "submissionId": "6ad5cd025853b87ba757b9dc",
+          "assignmentId": "6ad5cd025853b87ba757b9b6",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc87",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad5cd025853b87ba757b9e8",
+          "assignmentId": "6ad5cd025853b87ba757b9b6",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc87",
+          "isCorrect": true,
+          "recordedPoints": 100,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad5cd025853b87ba757ba11",
+          "assignmentId": "6ad5cd025853b87ba757ba03",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad5cd025853b87ba757ba1d",
+          "assignmentId": "6ad5cd025853b87ba757ba03",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": true,
+          "recordedPoints": 600,
+          "assignmentExists": false
+        }
+      ]
+    },
+    {
+      "missingTeamId": "6ad5cde95853b87ba757bcbd",
+      "submissions": [
+        {
+          "submissionId": "6ad5cde95853b87ba757bd36",
+          "assignmentId": "6ad5cde95853b87ba757bd10",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc7f",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad5cde95853b87ba757bd42",
+          "assignmentId": "6ad5cde95853b87ba757bd10",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc39",
+          "questionId": "6ace7c2bf5fda84bd9c5fc7f",
+          "isCorrect": true,
+          "recordedPoints": 100,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad5cde95853b87ba757bd6b",
+          "assignmentId": "6ad5cde95853b87ba757bd5d",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": false,
+          "recordedPoints": 0,
+          "assignmentExists": false
+        },
+        {
+          "submissionId": "6ad5cde95853b87ba757bd77",
+          "assignmentId": "6ad5cde95853b87ba757bd5d",
+          "challengeId": "6ace7c2bf5fda84bd9c5fc54",
+          "questionId": "6ace7c2bf5fda84bd9c5fcbf",
+          "isCorrect": true,
+          "recordedPoints": 600,
+          "assignmentExists": false
+        }
+      ]
+    }
+  ],
+  "policy": "Read-only evidence, not an executable migration. Original records and IDs remain unchanged."
+}

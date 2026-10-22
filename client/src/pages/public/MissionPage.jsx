@@ -1,8 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import "../../styles/MissionPage.css";
 import { ROUTES } from "../../constants/routes";
 import Navbar from "../../components/navigation/Navbar";
+import {
+  PageTransition,
+  RevealSection,
+  StaggerContainer,
+  StaggerItem,
+} from "../../components/common/Motion";
+import { cardHoverMotion, buttonHoverTap } from "../../utils/motion";
 
 const steps = [
   ["01", "START HERE", "Register Your Team", "Create your team, add members and get ready to enter the Grid.", "Teams contain 2–4 participants. Use accurate details and keep team credentials private."],
@@ -36,44 +44,11 @@ const levels = [
 export default function MissionPage() {
   const [active, setActive] = useState(0);
   const [all, setAll] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.hash) {
-      const scrollToHash = () => {
-        const el = document.querySelector(location.hash);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth" });
-        }
-      };
-      scrollToHash();
-      const t1 = setTimeout(scrollToHash, 60);
-      const t2 = setTimeout(scrollToHash, 200);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, [location.hash, location.pathname]);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const scrollToSection = (id) => {
-    const el = document.querySelector(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-  };
 
   const s = steps[active];
 
   return (
-    <div className="htg-mission">
+    <PageTransition className="htg-mission">
       <div className="mp-bg" />
       <div className="mp-overlay" />
       <div className="mp-grid" />
@@ -82,17 +57,25 @@ export default function MissionPage() {
 
       <main className="mp-main">
         <section className="mp-hero" id="mission">
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
             <p className="mp-eyebrow"><i /> YOUR MISSION BEGINS HERE</p>
             <h1>ONE TEAM.<br /><span>TEN LEVELS.</span><br />ONE GRID.</h1>
             <p className="mp-hero-desc">
-              Think sharp. Work together. Follow the clues. Hack the Grid is a team-based campus challenge where logic, creativity and technical skills lead the way.
+              Think sharp. Work together. Follow the clues. The Tech Mystery is a team-based campus challenge where logic, creativity and technical skills lead the way.
             </p>
             <div className="mp-actions">
-              <Link className="mp-primary" to={ROUTES.REGISTER}>JOIN THE MISSION <b>↗</b></Link>
-              <Link className="mp-secondary" to={ROUTES.RULES}>READ THE RULES <b>→</b></Link>
+              <motion.div {...buttonHoverTap}>
+                <Link className="mp-primary" to={ROUTES.REGISTER}>JOIN THE MISSION <b>↗</b></Link>
+              </motion.div>
+              <motion.div {...buttonHoverTap}>
+                <Link className="mp-secondary" to={ROUTES.RULES}>READ THE RULES <b>→</b></Link>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
 
           <div className="mp-hero-visual" aria-hidden="true">
             <div className="mp-orbit orbit-one" />
@@ -111,26 +94,26 @@ export default function MissionPage() {
           </div>
         </section>
 
-        <section className="mp-stats">
-          <div>
+        <StaggerContainer className="mp-stats">
+          <StaggerItem>
             <strong>10</strong>
             <span>PROGRESSIVE LEVELS</span>
-          </div>
-          <div>
+          </StaggerItem>
+          <StaggerItem>
             <strong>2–4</strong>
             <span>MEMBERS PER TEAM</span>
-          </div>
-          <div>
+          </StaggerItem>
+          <StaggerItem>
             <strong>90–120</strong>
             <span>MINUTES OF ACTION</span>
-          </div>
-          <div>
+          </StaggerItem>
+          <StaggerItem>
             <strong>01</strong>
             <span>ULTIMATE MASTER FLAG</span>
-          </div>
-        </section>
+          </StaggerItem>
+        </StaggerContainer>
 
-        <section className="mp-how" id="how-it-works">
+        <RevealSection className="mp-how" id="how-it-works">
           <div className="mp-section-heading">
             <div>
               <p className="mp-kicker">MISSION PLAYBOOK / 01</p>
@@ -164,14 +147,24 @@ export default function MissionPage() {
                 <span>MISSION STEP / {s[0]}</span>
                 <span className="mp-live"><i /> IN SEQUENCE</span>
               </div>
-              <div className="mp-detail-symbol">{["＋", "⌘", "▦", "⌁", "↗", "⚑"][active]}</div>
-              <p className="mp-kicker">{s[1]}</p>
-              <h3>{s[2]}</h3>
-              <p className="mp-detail-text">{s[3]}</p>
-              <div className="mp-detail-note">
-                <b>FIELD NOTE</b>
-                <p>{s[4]}</p>
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={active}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <div className="mp-detail-symbol">{["＋", "⌘", "▦", "⌁", "↗", "⚑"][active]}</div>
+                  <p className="mp-kicker">{s[1]}</p>
+                  <h3>{s[2]}</h3>
+                  <p className="mp-detail-text">{s[3]}</p>
+                  <div className="mp-detail-note">
+                    <b>FIELD NOTE</b>
+                    <p>{s[4]}</p>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
               <div className="mp-detail-controls">
                 <span>{s[0]} <i>/ 06</i></span>
                 <button type="button" onClick={() => setActive((active + 1) % steps.length)}>
@@ -180,9 +173,9 @@ export default function MissionPage() {
               </div>
             </div>
           </div>
-        </section>
+        </RevealSection>
 
-        <section className="mp-pillars">
+        <RevealSection className="mp-pillars">
           <div className="mp-section-heading">
             <div>
               <p className="mp-kicker">THE WAY WE PLAY</p>
@@ -191,21 +184,23 @@ export default function MissionPage() {
             <p>More than a race to the finish: learn, experiment and grow together.</p>
           </div>
 
-          <div className="mp-pillar-grid">
+          <StaggerContainer className="mp-pillar-grid">
             {pillars.map((p, i) => (
-              <article className="mp-pillar" key={p[1]}>
-                <div className="mp-pillar-top">
-                  <span>0{i + 1}</span>
-                  <b>{p[0]}</b>
-                </div>
-                <h3>{p[1]}</h3>
-                <p>{p[2]}</p>
-              </article>
+              <StaggerItem key={p[1]}>
+                <motion.article className="mp-pillar" {...cardHoverMotion}>
+                  <div className="mp-pillar-top">
+                    <span>0{i + 1}</span>
+                    <b>{p[0]}</b>
+                  </div>
+                  <h3>{p[1]}</h3>
+                  <p>{p[2]}</p>
+                </motion.article>
+              </StaggerItem>
             ))}
-          </div>
-        </section>
+          </StaggerContainer>
+        </RevealSection>
 
-        <section className="mp-levels" id="challenges">
+        <RevealSection className="mp-levels" id="challenges">
           <div className="mp-section-heading">
             <div>
               <p className="mp-kicker">THE CHALLENGE MAP</p>
@@ -216,42 +211,46 @@ export default function MissionPage() {
             </button>
           </div>
 
-          <div className="mp-level-grid">
+          <StaggerContainer className="mp-level-grid">
             {levels.slice(0, all ? 10 : 5).map((name, i) => (
-              <div className={`mp-level ${i === 9 ? "final" : ""}`} key={name}>
-                <span>LEVEL {String(i + 1).padStart(2, "0")}</span>
-                <strong>{name}</strong>
-                <small>
-                  {i === 9
-                    ? "FINAL OBJECTIVE"
-                    : i === 8
-                    ? "MULTI-STAGE REASONING"
-                    : i === 7
-                    ? "HIDDEN INFORMATION"
-                    : "SOLVE & ADVANCE"}
-                </small>
-                <b>{i === 9 ? "⚑" : "↗"}</b>
-              </div>
+              <StaggerItem key={name}>
+                <motion.div className={`mp-level ${i === 9 ? "final" : ""}`} {...cardHoverMotion}>
+                  <span>LEVEL {String(i + 1).padStart(2, "0")}</span>
+                  <strong>{name}</strong>
+                  <small>
+                    {i === 9
+                      ? "FINAL OBJECTIVE"
+                      : i === 8
+                      ? "MULTI-STAGE REASONING"
+                      : i === 7
+                      ? "HIDDEN INFORMATION"
+                      : "SOLVE & ADVANCE"}
+                  </small>
+                  <b>{i === 9 ? "⚑" : "↗"}</b>
+                </motion.div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
           <p className="mp-level-footnote">
             Challenge details and difficulty may be revealed during the event. Follow official instructions at each checkpoint.
           </p>
-        </section>
+        </RevealSection>
 
-        <section className="mp-final-cta">
+        <RevealSection className="mp-final-cta">
           <div>
             <p className="mp-kicker">THE GRID IS WAITING</p>
             <h2>READY TO <span>MAKE YOUR MOVE?</span></h2>
             <p>Bring your team. Bring your curiosity. Your mission starts here.</p>
           </div>
-          <Link to={ROUTES.REGISTER}>REGISTER YOUR TEAM <b>↗</b></Link>
-        </section>
+          <motion.div {...buttonHoverTap}>
+            <Link to={ROUTES.REGISTER}>REGISTER YOUR TEAM <b>↗</b></Link>
+          </motion.div>
+        </RevealSection>
       </main>
 
       <footer className="mp-footer">
         <Link className="mp-brand" to="/">
-          <strong>HACK THE <span>GRID</span></strong>
+          <strong>THE TECH <span>MYSTERY</span></strong>
           <small>CODESPHERE × UTKRISHT 2026</small>
         </Link>
         <p>CodeSphere Coding Club · Tula's University, Dehradun</p>
@@ -262,7 +261,6 @@ export default function MissionPage() {
           <Link to={ROUTES.REGISTER}>REGISTER</Link>
         </div>
       </footer>
-    </div>
+    </PageTransition>
   );
 }
-

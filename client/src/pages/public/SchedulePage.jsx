@@ -20,7 +20,7 @@ export const SchedulePage = () => {
           EVENT <span className="text-cyber-cyan">SCHEDULE</span>
         </h1>
         <p className="font-mono text-xs sm:text-sm text-cyber-muted max-w-xl mx-auto">
-          Operational timeline for Hack the Grid event day.
+          Operational timeline for The Tech Mystery event day.
         </p>
       </div>
 

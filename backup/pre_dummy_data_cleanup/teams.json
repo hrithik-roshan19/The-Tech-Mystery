@@ -1,0 +1,854 @@
+[
+  {
+    "_id": "6ace7c2bf5fda84bd9c5fccf",
+    "name": "Null Pointers",
+    "joinCode": "HTG-7A9B1C",
+    "leaderId": "6ace7c2bf5fda84bd9c5fcc3",
+    "members": [
+      "6ace7c2bf5fda84bd9c5fcc3",
+      "6ace7c2bf5fda84bd9c5fcc6",
+      "6ace7c2bf5fda84bd9c5fcc9",
+      "6ace7c2bf5fda84bd9c5fccc"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 8,
+    "totalScore": 1840,
+    "lastSolveTimestamp": "2026-10-13T18:39:59.993Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-13T18:44:59.792Z",
+    "updatedAt": "2026-10-13T18:44:59.792Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2cf5fda84bd9c5fcdd",
+    "name": "Byte Bandits",
+    "joinCode": "HTG-2C4D6E",
+    "leaderId": "6ace7c2bf5fda84bd9c5fcd4",
+    "members": [
+      "6ace7c2bf5fda84bd9c5fcd4",
+      "6ace7c2bf5fda84bd9c5fcd7",
+      "6ace7c2cf5fda84bd9c5fcda"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 7,
+    "totalScore": 1690,
+    "lastSolveTimestamp": "2026-10-13T18:18:44.871Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-13T18:45:00.079Z",
+    "updatedAt": "2026-10-13T18:45:00.079Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2cf5fda84bd9c5fce8",
+    "name": "Stack Smashers",
+    "joinCode": "HTG-3E5F7A",
+    "leaderId": "6ace7c2cf5fda84bd9c5fce2",
+    "members": [
+      "6ace7c2cf5fda84bd9c5fce2",
+      "6ace7c2cf5fda84bd9c5fce5"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 7,
+    "totalScore": 1510,
+    "lastSolveTimestamp": "2026-10-13T17:45:15.267Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-13T18:45:00.260Z",
+    "updatedAt": "2026-10-13T18:45:00.260Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2cf5fda84bd9c5fcf3",
+    "name": "Cyber Wolves",
+    "joinCode": "HTG-8B0D2F",
+    "leaderId": "6ace7c2cf5fda84bd9c5fced",
+    "members": [
+      "6ace7c2cf5fda84bd9c5fced",
+      "6ace7c2cf5fda84bd9c5fcf0"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 6,
+    "totalScore": 1320,
+    "lastSolveTimestamp": "2026-10-13T18:33:54.717Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-13T18:45:00.411Z",
+    "updatedAt": "2026-10-13T18:45:00.411Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7c2cf5fda84bd9c5fd01",
+    "name": "PacketRiders",
+    "joinCode": "HTG-1038",
+    "leaderId": "6ace7c2cf5fda84bd9c5fcf8",
+    "members": [
+      "6ace7c2cf5fda84bd9c5fcf8",
+      "6ace7c2cf5fda84bd9c5fcfb",
+      "6ace7c2cf5fda84bd9c5fcfe"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 6,
+    "totalScore": 1280,
+    "lastSolveTimestamp": "2026-10-13T18:29:53.410Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-13T18:45:00.626Z",
+    "updatedAt": "2026-10-13T18:45:00.626Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ace7ca2ed4dc2a2ea0e8844",
+    "name": "Alpha Squad 38485",
+    "joinCode": "HTG-A0EAA0",
+    "leaderId": "6ace7ca2ed4dc2a2ea0e883f",
+    "members": [
+      "6ace7ca2ed4dc2a2ea0e883f",
+      "6ace7ca2ed4dc2a2ea0e884a"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-13T18:46:58.917Z",
+    "updatedAt": "2026-10-13T18:46:58.999Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ace7ce6802adcabc4a3cec5",
+    "name": "Alpha Squad 12324",
+    "joinCode": "HTG-F38AD5",
+    "leaderId": "6ace7ce6802adcabc4a3cebe",
+    "members": [
+      "6ace7ce6802adcabc4a3cebe",
+      "6ace7ce6802adcabc4a3cecc"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-13T18:48:06.812Z",
+    "updatedAt": "2026-10-13T18:48:06.893Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ace7d0cfe5a4232d239b3cb",
+    "name": "Alpha Squad 13234",
+    "joinCode": "HTG-53A26E",
+    "leaderId": "6ace7d0cfe5a4232d239b3c4",
+    "members": [
+      "6ace7d0cfe5a4232d239b3c4",
+      "6ace7d0cfe5a4232d239b3d2"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-13T18:48:44.739Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-13T18:48:44.543Z",
+    "updatedAt": "2026-10-13T18:48:44.741Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ace8199fe5a4232d239b59c",
+    "name": "Alpha Squad 96358",
+    "joinCode": "HTG-BC3F74",
+    "leaderId": "6ace8199fe5a4232d239b595",
+    "members": [
+      "6ace8199fe5a4232d239b595",
+      "6ace8199fe5a4232d239b5a3"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-13T19:08:09.664Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-13T19:08:09.491Z",
+    "updatedAt": "2026-10-13T19:08:09.666Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ad07bddd38f05b1e19784ca",
+    "name": "Admin Squad 16856 [Renamed]",
+    "college": "Tula's Institute of Engineering",
+    "joinCode": "HTG-2C381D",
+    "leaderId": "6ad07bddd38f05b1e19784c5",
+    "members": [
+      "6ad07bddd38f05b1e19784c5",
+      "6ad07bddd38f05b1e19784db"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 750,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T07:08:13.370Z",
+    "updatedAt": "2026-10-15T07:08:13.516Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ad07c51b9813a8ca5e87803",
+    "name": "Runner Team 90769",
+    "college": "Tula's University",
+    "joinCode": "HTG-B3DBAB",
+    "leaderId": "6ad07c51b9813a8ca5e877fb",
+    "members": [
+      "6ad07c51b9813a8ca5e877fb"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T07:10:09.553Z",
+    "updatedAt": "2026-10-15T07:10:09.553Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad07c58b9813a8ca5e87848",
+    "name": "Alpha Squad 30294",
+    "college": "Tula's University",
+    "joinCode": "HTG-0A73A4",
+    "leaderId": "6ad07c58b9813a8ca5e8783d",
+    "members": [
+      "6ad07c58b9813a8ca5e8783d",
+      "6ad07c58b9813a8ca5e8784f"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T07:10:17.127Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T07:10:16.969Z",
+    "updatedAt": "2026-10-15T07:10:17.129Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ad080e7666d7dc7bc9b2410",
+    "name": "AlphaGuard_19721",
+    "college": "Tula's University",
+    "joinCode": "HTG-FAB282",
+    "leaderId": "6ad080e7666d7dc7bc9b2408",
+    "members": [
+      "6ad080e7666d7dc7bc9b2408"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T07:29:43.186Z",
+    "updatedAt": "2026-10-15T07:29:43.186Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad080e7666d7dc7bc9b2460",
+    "name": "CipherElite_25280",
+    "college": "Tula's University",
+    "joinCode": "HTG-46BA59",
+    "leaderId": "6ad080e7666d7dc7bc9b2458",
+    "members": [
+      "6ad080e7666d7dc7bc9b2458"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T07:29:43.616Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T07:29:43.536Z",
+    "updatedAt": "2026-10-15T07:29:43.623Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0811ef97208b3274e2e9a",
+    "name": "AlphaGuard_28152",
+    "college": "Tula's University",
+    "joinCode": "HTG-C65CA5",
+    "leaderId": "6ad0811ef97208b3274e2e92",
+    "members": [
+      "6ad0811ef97208b3274e2e92"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T07:30:38.359Z",
+    "updatedAt": "2026-10-15T07:30:38.359Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0811ef97208b3274e2ef3",
+    "name": "CipherElite_75345",
+    "college": "Tula's University",
+    "joinCode": "HTG-EE257B",
+    "leaderId": "6ad0811ef97208b3274e2eeb",
+    "members": [
+      "6ad0811ef97208b3274e2eeb"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T07:30:38.843Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T07:30:38.748Z",
+    "updatedAt": "2026-10-15T07:30:38.848Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad08125f97208b3274e2f5c",
+    "name": "Alpha Squad 95700",
+    "college": "Tula's University",
+    "joinCode": "HTG-E65F68",
+    "leaderId": "6ad08125f97208b3274e2f51",
+    "members": [
+      "6ad08125f97208b3274e2f51",
+      "6ad08125f97208b3274e2f63"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T07:30:46.182Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T07:30:45.943Z",
+    "updatedAt": "2026-10-15T07:30:46.187Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ad0812cf97208b3274e3029",
+    "name": "Runner Team 45450",
+    "college": "Tula's University",
+    "joinCode": "HTG-EB07AC",
+    "leaderId": "6ad0812cf97208b3274e3021",
+    "members": [
+      "6ad0812cf97208b3274e3021"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T07:30:52.163Z",
+    "updatedAt": "2026-10-15T07:30:52.163Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad096ffc1c8aa5e3b76514f",
+    "name": "Runner Team 11897",
+    "college": "Tula's University",
+    "joinCode": "HTG-5EBFC9",
+    "leaderId": "6ad096ffc1c8aa5e3b765146",
+    "members": [
+      "6ad096ffc1c8aa5e3b765146"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:03:59.309Z",
+    "updatedAt": "2026-10-15T09:03:59.309Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09704c1c8aa5e3b765195",
+    "name": "Alpha Squad 99897",
+    "college": "Tula's University",
+    "joinCode": "HTG-F6D6BA",
+    "leaderId": "6ad09704c1c8aa5e3b765189",
+    "members": [
+      "6ad09704c1c8aa5e3b765189",
+      "6ad09704c1c8aa5e3b76519c"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T09:04:04.921Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:04:04.610Z",
+    "updatedAt": "2026-10-15T09:04:04.926Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ad09709c1c8aa5e3b765216",
+    "name": "AlphaGuard_66648",
+    "college": "Tula's University",
+    "joinCode": "HTG-96420C",
+    "leaderId": "6ad09709c1c8aa5e3b76520d",
+    "members": [
+      "6ad09709c1c8aa5e3b76520d"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:04:09.236Z",
+    "updatedAt": "2026-10-15T09:04:09.236Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09709c1c8aa5e3b765295",
+    "name": "CipherElite_54529",
+    "college": "Tula's University",
+    "joinCode": "HTG-465C5D",
+    "leaderId": "6ad09709c1c8aa5e3b76528c",
+    "members": [
+      "6ad09709c1c8aa5e3b76528c"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T09:04:09.521Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:04:09.480Z",
+    "updatedAt": "2026-10-15T09:04:09.522Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0973cc1c8aa5e3b7652ed",
+    "name": "TTeam_1792055100915",
+    "college": "Tula's University",
+    "joinCode": "HTG-3BF537",
+    "leaderId": "6ad0973cc1c8aa5e3b7652e4",
+    "members": [
+      "6ad0973cc1c8aa5e3b7652e4"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:05:00.928Z",
+    "updatedAt": "2026-10-15T09:05:00.928Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09775d302b02553ccdfb6",
+    "name": "AlphaGuard_40625",
+    "college": "Tula's University",
+    "joinCode": "HTG-FE550B",
+    "leaderId": "6ad09775d302b02553ccdfad",
+    "members": [
+      "6ad09775d302b02553ccdfad"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:05:57.810Z",
+    "updatedAt": "2026-10-15T09:05:57.810Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09776d302b02553cce02e",
+    "name": "CipherElite_19194",
+    "college": "Tula's University",
+    "joinCode": "HTG-31C54C",
+    "leaderId": "6ad09775d302b02553cce025",
+    "members": [
+      "6ad09775d302b02553cce025"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T09:05:58.110Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:05:58.064Z",
+    "updatedAt": "2026-10-15T09:05:58.115Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09820d302b02553cce1cf",
+    "name": "Alpha Squad 40816",
+    "college": "Tula's University",
+    "joinCode": "HTG-822B1A",
+    "leaderId": "6ad09820d302b02553cce1c3",
+    "members": [
+      "6ad09820d302b02553cce1c3",
+      "6ad09820d302b02553cce1d6"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T09:08:48.758Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:08:48.589Z",
+    "updatedAt": "2026-10-15T09:08:48.760Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ad09824d302b02553cce2a6",
+    "name": "Runner Team 46096",
+    "college": "Tula's University",
+    "joinCode": "HTG-39BD4B",
+    "leaderId": "6ad09824d302b02553cce29d",
+    "members": [
+      "6ad09824d302b02553cce29d"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:08:52.744Z",
+    "updatedAt": "2026-10-15T09:08:52.744Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09828d302b02553cce2dd",
+    "name": "AlphaGuard_78148",
+    "college": "Tula's University",
+    "joinCode": "HTG-3BAB44",
+    "leaderId": "6ad09827d302b02553cce2d4",
+    "members": [
+      "6ad09827d302b02553cce2d4"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:08:56.038Z",
+    "updatedAt": "2026-10-15T09:08:56.038Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad09828d302b02553cce355",
+    "name": "CipherElite_95479",
+    "college": "Tula's University",
+    "joinCode": "HTG-FA8687",
+    "leaderId": "6ad09828d302b02553cce34c",
+    "members": [
+      "6ad09828d302b02553cce34c"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T09:08:56.280Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:08:56.241Z",
+    "updatedAt": "2026-10-15T09:08:56.282Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0982bd302b02553cce3e9",
+    "name": "Alpha Squad mv9bh9lo",
+    "college": "Tula's University",
+    "joinCode": "HTG-352DCE",
+    "leaderId": "6ad0982bd302b02553cce3e0",
+    "members": [
+      "6ad0982bd302b02553cce3e0"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:08:59.753Z",
+    "updatedAt": "2026-10-15T09:08:59.753Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0998e9daf0ef14b6d860a",
+    "name": "AlphaGuard_58287",
+    "college": "Tula's University",
+    "joinCode": "HTG-763F54",
+    "leaderId": "6ad0998e9daf0ef14b6d8601",
+    "members": [
+      "6ad0998e9daf0ef14b6d8601"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:14:54.801Z",
+    "updatedAt": "2026-10-15T09:14:54.801Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad0998e9daf0ef14b6d8682",
+    "name": "CipherElite_41135",
+    "college": "Tula's University",
+    "joinCode": "HTG-BC7881",
+    "leaderId": "6ad0998e9daf0ef14b6d8679",
+    "members": [
+      "6ad0998e9daf0ef14b6d8679"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T09:14:55.033Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:14:54.994Z",
+    "updatedAt": "2026-10-15T09:14:55.035Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad099939daf0ef14b6d873f",
+    "name": "Runner Team 98775",
+    "college": "Tula's University",
+    "joinCode": "HTG-595A3F",
+    "leaderId": "6ad099939daf0ef14b6d8736",
+    "members": [
+      "6ad099939daf0ef14b6d8736"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:14:59.597Z",
+    "updatedAt": "2026-10-15T09:14:59.597Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad099979daf0ef14b6d8785",
+    "name": "Alpha Squad 48478",
+    "college": "Tula's University",
+    "joinCode": "HTG-9F224A",
+    "leaderId": "6ad099979daf0ef14b6d8779",
+    "members": [
+      "6ad099979daf0ef14b6d8779",
+      "6ad099979daf0ef14b6d878c"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-15T09:15:03.450Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-15T09:15:03.306Z",
+    "updatedAt": "2026-10-15T09:15:03.451Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ad5cce95853b87ba757b749",
+    "name": "Alpha Squad 60710",
+    "college": "Tula's University",
+    "joinCode": "HTG-CDFAAE",
+    "leaderId": "6ad5cce85853b87ba757b73d",
+    "members": [
+      "6ad5cce85853b87ba757b73d",
+      "6ad5cce95853b87ba757b750"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-19T07:55:22.184Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-19T07:55:21.029Z",
+    "updatedAt": "2026-10-19T07:55:22.201Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ad5ccf25853b87ba757b820",
+    "name": "Runner Team 98578",
+    "college": "Tula's University",
+    "joinCode": "HTG-1DB9ED",
+    "leaderId": "6ad5ccf15853b87ba757b817",
+    "members": [
+      "6ad5ccf15853b87ba757b817"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-19T07:55:30.060Z",
+    "updatedAt": "2026-10-19T07:55:30.060Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5ccfa5853b87ba757b857",
+    "name": "AlphaGuard_32405",
+    "college": "Tula's University",
+    "joinCode": "HTG-943D5B",
+    "leaderId": "6ad5ccfa5853b87ba757b84e",
+    "members": [
+      "6ad5ccfa5853b87ba757b84e"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-19T07:55:38.223Z",
+    "updatedAt": "2026-10-19T07:55:38.223Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5ccfa5853b87ba757b8cf",
+    "name": "CipherElite_43018",
+    "college": "Tula's University",
+    "joinCode": "HTG-C943A0",
+    "leaderId": "6ad5ccfa5853b87ba757b8c6",
+    "members": [
+      "6ad5ccfa5853b87ba757b8c6"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-19T07:55:38.554Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-19T07:55:38.493Z",
+    "updatedAt": "2026-10-19T07:55:38.557Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5cdcb5853b87ba757baa3",
+    "name": "Alpha Squad 21016",
+    "college": "Tula's University",
+    "joinCode": "HTG-8573B1",
+    "leaderId": "6ad5cdcb5853b87ba757ba97",
+    "members": [
+      "6ad5cdcb5853b87ba757ba97",
+      "6ad5cdcb5853b87ba757baaa"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-19T07:59:08.143Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-19T07:59:07.897Z",
+    "updatedAt": "2026-10-19T07:59:08.145Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ad5cdd45853b87ba757bb7a",
+    "name": "Runner Team 55891",
+    "college": "Tula's University",
+    "joinCode": "HTG-CD4FB8",
+    "leaderId": "6ad5cdd45853b87ba757bb71",
+    "members": [
+      "6ad5cdd45853b87ba757bb71"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-19T07:59:16.699Z",
+    "updatedAt": "2026-10-19T07:59:16.699Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5cddc5853b87ba757bbb1",
+    "name": "AlphaGuard_92985",
+    "college": "Tula's University",
+    "joinCode": "HTG-67385D",
+    "leaderId": "6ad5cddc5853b87ba757bba8",
+    "members": [
+      "6ad5cddc5853b87ba757bba8"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 1,
+    "totalScore": 0,
+    "lastSolveTimestamp": null,
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-19T07:59:24.267Z",
+    "updatedAt": "2026-10-19T07:59:24.267Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad5cddc5853b87ba757bc29",
+    "name": "CipherElite_76149",
+    "college": "Tula's University",
+    "joinCode": "HTG-1AC1CA",
+    "leaderId": "6ad5cddc5853b87ba757bc20",
+    "members": [
+      "6ad5cddc5853b87ba757bc20"
+    ],
+    "maxMembers": 4,
+    "currentLevel": 2,
+    "totalScore": 100,
+    "lastSolveTimestamp": "2026-10-19T07:59:24.557Z",
+    "isDisqualified": false,
+    "disqualificationReason": null,
+    "avatarUrl": null,
+    "createdAt": "2026-10-19T07:59:24.503Z",
+    "updatedAt": "2026-10-19T07:59:24.559Z",
+    "__v": 0
+  }
+]

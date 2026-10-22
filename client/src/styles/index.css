@@ -7,6 +7,7 @@
     background-color: #05070A;
     color: #F5F7FA;
     overflow-x: clip;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -22,6 +23,11 @@
     flex-direction: column;
   }
 
+  /* Ensure in-page anchor targets clear the sticky navbar (72px + offset) */
+  [id] {
+    scroll-margin-top: 92px;
+  }
+
   /* Custom Cyber Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
@@ -35,7 +41,20 @@
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #00E5FF;
+    background: #b8ff3d;
+  }
+}
+
+/* Accessibility: Disable smooth scrolling and force instant transitions for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -53,7 +72,7 @@
 }
 
 .glow-green {
-  text-shadow: 0 0 10px rgba(57, 255, 136, 0.7);
+  text-shadow: 0 0 10px rgba(184, 255, 61, 0.7);
 }
 
 .glow-orange {
@@ -72,4 +91,3 @@
   pointer-events: none;
   opacity: 0.15;
 }
-
