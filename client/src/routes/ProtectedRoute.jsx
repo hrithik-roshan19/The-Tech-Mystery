@@ -11,8 +11,9 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
  * - Redirects unauthenticated visitors to login (preserving deep links).
  * - Restricts administrative routes to server-verified ADMIN role.
  * - Redirects unauthorized participants back to their dashboard.
+ * - Protects participant dashboard: unteamed participants must complete registration at /register.
  */
-export const ProtectedRoute = ({ children, requiredRole }) => {
+export const ProtectedRoute = ({ children, requiredRole, requireTeam }) => {
   const { isAuthenticated, loading, user, identityAuthenticated } = useAuth();
   const location = useLocation();
 
@@ -29,6 +30,19 @@ export const ProtectedRoute = ({ children, requiredRole }) => {
 
   if (requiredRole && user?.role !== requiredRole && user?.role !== 'ADMIN') {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+
+  // Requirement 5: Protect /dashboard: if a participant has not completed registration, redirect to /register.
+  const isDashboardRoute =
+    location.pathname === ROUTES.DASHBOARD ||
+    location.pathname === ROUTES.PORTAL_DASHBOARD ||
+    location.pathname === '/dashboard' ||
+    location.pathname === '/portal/dashboard';
+
+  const shouldEnforceTeam = requireTeam !== undefined ? requireTeam : isDashboardRoute;
+
+  if (shouldEnforceTeam && user?.role !== 'ADMIN' && !user?.teamId) {
+    return <Navigate to={ROUTES.REGISTER} replace />;
   }
 
   return children ? children : <Outlet />;

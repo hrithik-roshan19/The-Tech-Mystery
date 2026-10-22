@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import "../../styles/RegisterPage.css";
+import "../../styles/LoginPage.css";
 import { ROUTES } from "../../constants/routes";
 import Navbar from "../../components/navigation/Navbar";
 import { authService } from "../../services/auth.service";
@@ -44,7 +45,11 @@ const benefits = [
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, login, refreshUser, updateTeamMembership } = useAuth();
+
+  // Mode: 'create' for new squad wizard, 'join' for invite code
+  const [mode, setMode] = useState("create");
+  const [joinCode, setJoinCode] = useState("");
 
   // Wizard state
   const [step, setStep] = useState(0);
@@ -57,10 +62,10 @@ export default function RegisterPage() {
   const [domain, setDomain] = useState("");
 
   // Step 1: Team Leader info
-  const [leaderName, setLeaderName] = useState("");
-  const [leaderEmail, setLeaderEmail] = useState("");
-  const [leaderPhone, setLeaderPhone] = useState("");
-  const [leaderRollNo, setLeaderRollNo] = useState("");
+  const [leaderName, setLeaderName] = useState(user?.fullName || "");
+  const [leaderEmail, setLeaderEmail] = useState(user?.email || "");
+  const [leaderPhone, setLeaderPhone] = useState(user?.phone || "");
+  const [leaderRollNo, setLeaderRollNo] = useState(user?.collegeRollNo || "");
   const [leaderPassword, setLeaderPassword] = useState("");
 
   // Step 2: Team Members
@@ -76,6 +81,26 @@ export default function RegisterPage() {
   const [submitted, setSubmitted] = useState(false);
   const [createdTeam, setCreatedTeam] = useState(null);
   const [copiedCode, setCopiedCode] = useState(false);
+
+  // Sync user information into leader fields when authenticated
+  useEffect(() => {
+    if (user) {
+      if (user.fullName && !leaderName) setLeaderName(user.fullName);
+      if (user.email && !leaderEmail) setLeaderEmail(user.email);
+      if (user.phone && !leaderPhone) setLeaderPhone(user.phone);
+      if (user.collegeRollNo && !leaderRollNo) setLeaderRollNo(user.collegeRollNo);
+    }
+  }, [user]);
+
+  // Requirement 6: If already completed team registration, protect /register by redirecting to /dashboard
+  if (!submitted && user?.teamId) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+
+  // Admin routing to admin dashboard
+  if (!submitted && user?.role === "ADMIN") {
+    return <Navigate to={ROUTES.ADMIN_DASHBOARD} replace />;
+  }
 
   const handleMemberChange = (index, field, value) => {
     setMembers((prev) => {
@@ -104,7 +129,8 @@ export default function RegisterPage() {
         setError("A valid email address is required for the team leader.");
         return;
       }
-      if (!leaderPassword || leaderPassword.length < 6) {
+      // Password is only required if the user is unauthenticated
+      if (!user && (!leaderPassword || leaderPassword.length < 6)) {
         setError("Password must be at least 6 characters long.");
         return;
       }
@@ -121,35 +147,50 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      // 1. Generate unique alphanumeric username from email or name
-      const cleanEmailUser = leaderEmail.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "_");
-      const randomSuffix = Math.floor(100 + Math.random() * 900);
-      const username = `${cleanEmailUser}_${randomSuffix}`.slice(0, 28);
+      let newTeam = null;
 
-      // 2. Register Leader User
-      const regRes = await authService.register({
-        username,
-        email: leaderEmail.trim().toLowerCase(),
-        password: leaderPassword,
-        fullName: leaderName.trim(),
-        phone: leaderPhone.trim(),
-        collegeRollNo: leaderRollNo.trim()
-      });
+      if (!user) {
+        // 1. Generate unique alphanumeric username from email or name
+        const cleanEmailUser = leaderEmail.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "_");
+        const randomSuffix = Math.floor(100 + Math.random() * 900);
+        const username = `${cleanEmailUser}_${randomSuffix}`.slice(0, 28);
 
-      const user = regRes.data?.user;
-      const accessToken = regRes.data?.accessToken;
+        // 2. Register Leader User
+        const regRes = await authService.register({
+          username,
+          email: leaderEmail.trim().toLowerCase(),
+          password: leaderPassword,
+          fullName: leaderName.trim(),
+          phone: leaderPhone.trim(),
+          collegeRollNo: leaderRollNo.trim()
+        });
 
-      if (user && accessToken) {
-        login(user, accessToken);
-      }
+        const regUser = regRes.data?.user;
+        const accessToken = regRes.data?.accessToken;
 
-      // 3. Create Team
-      const teamRes = await teamService.createTeam(teamName.trim());
-      const newTeam = teamRes.data?.team;
+        if (regUser && accessToken && login) {
+          login(regUser, accessToken);
+        }
 
-      // Update tokens in context with new team
-      if (teamRes.data?.accessToken) {
-        login(teamRes.data.user || user, teamRes.data.accessToken);
+        // 3. Create Team
+        const teamRes = await teamService.createTeam(teamName.trim());
+        newTeam = teamRes.data?.team || teamRes.team;
+
+        // Update tokens in context with new team
+        if (teamRes.data?.accessToken && login) {
+          login(teamRes.data.user || regUser, teamRes.data.accessToken);
+        }
+      } else {
+        // Authenticated user (Clerk or active session): create team directly
+        const teamRes = await teamService.createTeam(teamName.trim());
+        newTeam = teamRes.data?.team || teamRes.team;
+
+        if (newTeam?._id && updateTeamMembership) {
+          updateTeamMembership(newTeam._id, "TEAM_LEADER");
+        }
+        if (refreshUser) {
+          await refreshUser();
+        }
       }
 
       setCreatedTeam(newTeam);
@@ -159,6 +200,35 @@ export default function RegisterPage() {
         err.response?.data?.message ||
         err.message ||
         "Registration failed. Please review your details and try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoinExistingTeam = async (e) => {
+    e.preventDefault();
+    if (!joinCode.trim()) {
+      setError("Please enter a valid squad join code.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await teamService.joinTeam(joinCode.trim());
+      const joinedTeam = res.data?.team || res.team;
+      if (joinedTeam?._id && updateTeamMembership) {
+        updateTeamMembership(joinedTeam._id, "TEAM_MEMBER");
+      }
+      if (refreshUser) {
+        await refreshUser();
+      }
+      navigate(ROUTES.DASHBOARD, { replace: true });
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to join squad. Please check the invite code and try again."
       );
     } finally {
       setLoading(false);
@@ -213,17 +283,39 @@ export default function RegisterPage() {
         <section className="htg-register-card">
           <div className="register-card-heading">
             <h2>Create Your <span>Team</span></h2>
-            <p>Register now and be a part of The Tech Mystery 2026</p>
+            <p>Register your squad or join an existing team to enter The Tech Mystery 2026</p>
           </div>
 
-          <div className="register-progress">
-            {steps.map((label, index) => (
-              <div className={`register-step ${index <= step ? "active" : ""}`} key={label}>
-                <div className="register-step-node">{index + 1}</div>
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
+          {/* Mode Switcher: Create New Squad vs Join with Code */}
+          {!submitted && (
+            <div className="login-tabs" style={{ marginBottom: "20px" }}>
+              <button
+                type="button"
+                className={mode === "create" ? "selected" : ""}
+                onClick={() => { setMode("create"); setError(""); }}
+              >
+                Create New Squad
+              </button>
+              <button
+                type="button"
+                className={mode === "join" ? "selected" : ""}
+                onClick={() => { setMode("join"); setError(""); }}
+              >
+                Join with Code
+              </button>
+            </div>
+          )}
+
+          {mode === "create" && !submitted && (
+            <div className="register-progress">
+              {steps.map((label, index) => (
+                <div className={`register-step ${index <= step ? "active" : ""}`} key={label}>
+                  <div className="register-step-node">{index + 1}</div>
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {error && (
             <div
@@ -322,7 +414,33 @@ export default function RegisterPage() {
                 </Link>
               </div>
             </div>
+          ) : mode === "join" ? (
+            /* Join Existing Squad Form */
+            <form onSubmit={handleJoinExistingTeam}>
+              <div className="register-step-content">
+                <div className="register-section-title">
+                  <div className="register-section-icon"><Icon type="team" /></div>
+                  <div><h3>Join Existing Squad</h3><p>Enter the squad join code shared by your team leader.</p></div>
+                </div>
+
+                <label>Official Squad Join Code <b>*</b></label>
+                <div className="register-input">
+                  <Icon type="team" />
+                  <input
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                    placeholder="Enter join code (e.g. HTG-...)"
+                    required
+                  />
+                </div>
+
+                <button className="register-next" type="submit" disabled={loading} style={{ marginTop: "16px" }}>
+                  {loading ? "Joining Squad..." : "Join Squad & Enter Dashboard"} <Icon type="arrow" />
+                </button>
+              </div>
+            </form>
           ) : (
+            /* Create New Squad Wizard Form */
             <form onSubmit={handleNext}>
               {step === 0 && (
                 <div className="register-step-content">
@@ -398,7 +516,7 @@ export default function RegisterPage() {
                 <div className="register-step-content">
                   <div className="register-section-title">
                     <div className="register-section-icon"><Icon type="user" /></div>
-                    <div><h3>Team Leader</h3><p>Add the primary contact and login credentials.</p></div>
+                    <div><h3>Team Leader</h3><p>Primary contact and squad coordinator details.</p></div>
                   </div>
 
                   <label>Full Name <b>*</b></label>
@@ -424,17 +542,26 @@ export default function RegisterPage() {
                     />
                   </div>
 
-                  <label>Password (Account Login) <b>*</b></label>
+                  <label>Password (Account Login) {!user && <b>*</b>}</label>
                   <div className="register-input">
                     <Icon type="lock" />
-                    <input
-                      type="password"
-                      value={leaderPassword}
-                      onChange={(e) => setLeaderPassword(e.target.value)}
-                      placeholder="Create password (min 6 characters)"
-                      minLength={6}
-                      required
-                    />
+                    {user ? (
+                      <input
+                        type="text"
+                        disabled
+                        value="Authenticated via active session"
+                        style={{ opacity: 0.7, cursor: "not-allowed" }}
+                      />
+                    ) : (
+                      <input
+                        type="password"
+                        value={leaderPassword}
+                        onChange={(e) => setLeaderPassword(e.target.value)}
+                        placeholder="Create password (min 6 characters)"
+                        minLength={6}
+                        required
+                      />
+                    )}
                   </div>
 
                   <div className="register-row">
@@ -513,7 +640,7 @@ export default function RegisterPage() {
                   </div>
                   <div className="review-box">
                     <div><span>TEAM NAME</span><strong>{teamName || "—"}</strong></div>
-                    <div><span>LEADER</span><strong>{leaderName || "—"} ({leaderEmail})</strong></div>
+                    <div><span>LEADER</span><strong>{leaderName || user?.fullName || "—"} ({leaderEmail || user?.email})</strong></div>
                     <div><span>COLLEGE</span><strong>{college}</strong></div>
                     <div><span>MEMBERS</span><strong>Leader + {members.filter(m => m.name || m.email).length} operative(s)</strong></div>
                     <div><span>MOTTO</span><strong>{motto || "—"}</strong></div>

@@ -243,7 +243,61 @@ export function LoginPage() {
 }
 
 export function RegisterPage() {
-  return import.meta.env.VITE_AUTH_PROVIDER === 'clerk' ? <IdentityPage register /> : <LegacyRegister />;
+  const isClerk = import.meta.env.VITE_AUTH_PROVIDER === 'clerk';
+  const { identityAuthenticated, isAuthenticated, user, loading } = useAuth();
+
+  if (isClerk) {
+    if (loading) {
+      return (
+        <PageTransition className="htg-login">
+          <div className="htg-login-bg" />
+          <div className="htg-login-overlay" />
+          <div className="htg-login-grid" />
+          <Navbar />
+          <main className="htg-login-main" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div className="htg-login-card" style={{ textAlign: 'center' }}>
+              <div className="htg-auth-loading">
+                <div className="htg-auth-spinner" />
+                <span>Verifying application account…</span>
+              </div>
+            </div>
+          </main>
+        </PageTransition>
+      );
+    }
+
+    // Unauthenticated visitors to /register see Clerk SignUp
+    if (!identityAuthenticated) {
+      return <IdentityPage register />;
+    }
+
+    // Authenticated with Clerk but not yet mapped to backend user
+    if (!isAuthenticated || !user) {
+      return <Navigate to="/auth/complete" replace />;
+    }
+
+    // Admin accounts route to Admin SOC
+    if (user.role === 'ADMIN') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+
+    // Requirement 6: If user has already completed team registration, redirect to /dashboard
+    if (user.teamId) {
+      return <Navigate to="/dashboard" replace />;
+    }
+
+    // Authenticated participant without team: render Team Registration page
+    return <LegacyRegister />;
+  }
+
+  // Non-Clerk / legacy auth provider
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  if (user?.teamId) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <LegacyRegister />;
 }
 
 export function AuthCompletePage() {
@@ -277,8 +331,20 @@ export function AuthCompletePage() {
   if (user) {
     const stored = location.state?.from?.pathname || sessionStorage.getItem('htg_auth_return');
     sessionStorage.removeItem('htg_auth_return');
-    const destination = stored?.startsWith('/') && !stored.startsWith('//') && !stored.startsWith('/auth/')
-      ? stored : user.role === 'ADMIN' ? '/admin/dashboard' : '/portal/dashboard';
+
+    if (user.role === 'ADMIN') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+
+    // Requirement 1 & 4: New users who complete Clerk signup must be redirected to /register, not directly to /dashboard
+    if (!user.teamId) {
+      return <Navigate to="/register" replace />;
+    }
+
+    // Requirement 2 & 3: Existing users who log in must go directly to /dashboard and never back to /register
+    const destination = stored?.startsWith('/') && !stored.startsWith('//') && !stored.startsWith('/auth/') && stored !== '/register'
+      ? stored
+      : '/dashboard';
     return <Navigate to={destination} replace />;
   }
 
