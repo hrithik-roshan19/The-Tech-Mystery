@@ -13,19 +13,51 @@ function getAllowedIssuers() {
     const clean = configured.replace(/\/+$/, '');
     list.add(clean);
     list.add(`${clean}/`);
-    if (clean.startsWith('https://clerk.')) {
-      list.add(clean.replace('https://clerk.', 'https://'));
-      list.add(`${clean.replace('https://clerk.', 'https://')}/`);
-    } else if (clean.startsWith('https://')) {
-      list.add(clean.replace('https://', 'https://clerk.'));
-      list.add(`${clean.replace('https://', 'https://clerk.')}/`);
+
+    // If configured issuer is a proxy path (e.g. https://domain.com/__clerk), also derive base origin
+    if (clean.includes('/__clerk') || clean.includes('/.__clerk')) {
+      const baseOrigin = clean.replace(/\/(\.?__clerk)$/, '');
+      list.add(baseOrigin);
+      list.add(`${baseOrigin}/`);
+      if (baseOrigin.startsWith('https://clerk.')) {
+        const apex = baseOrigin.replace('https://clerk.', 'https://');
+        list.add(apex);
+        list.add(`${apex}/`);
+        list.add(`${apex}/__clerk`);
+        list.add(`${apex}/__clerk/`);
+      }
+    } else {
+      // If configured issuer is a base domain/origin, also derive its legitimate proxy paths
+      list.add(`${clean}/__clerk`);
+      list.add(`${clean}/__clerk/`);
+      list.add(`${clean}/.__clerk`);
+      list.add(`${clean}/.__clerk/`);
+
+      if (clean.startsWith('https://clerk.')) {
+        const apex = clean.replace('https://clerk.', 'https://');
+        list.add(apex);
+        list.add(`${apex}/`);
+        list.add(`${apex}/__clerk`);
+        list.add(`${apex}/__clerk/`);
+      } else if (clean.startsWith('https://')) {
+        const sub = clean.replace('https://', 'https://clerk.');
+        list.add(sub);
+        list.add(`${sub}/`);
+      }
     }
   }
-  // Allow production application and custom Clerk domains
+
+  // Canonical production deployment issuers for The Tech Mystery
+  const prodBase = 'https://the-tech-mystery.vercel.app';
+  list.add(prodBase);
+  list.add(`${prodBase}/`);
+  list.add(`${prodBase}/__clerk`);
+  list.add(`${prodBase}/__clerk/`);
+  list.add(`${prodBase}/.__clerk`);
+  list.add(`${prodBase}/.__clerk/`);
   list.add('https://clerk.the-tech-mystery.vercel.app');
   list.add('https://clerk.the-tech-mystery.vercel.app/');
-  list.add('https://the-tech-mystery.vercel.app');
-  list.add('https://the-tech-mystery.vercel.app/');
+
   return Array.from(list).filter(Boolean);
 }
 

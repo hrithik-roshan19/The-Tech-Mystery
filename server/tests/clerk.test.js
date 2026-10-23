@@ -127,6 +127,28 @@ it('regression: explicitly validates missing, string-literal null/undefined, exp
   const apexRes = await request('/auth/me', apexIssuerToken);
   assert.equal(apexRes.status, 200);
   assert.equal(apexRes.body.data.user._id, String(user._id));
+
+  // 6. Valid session token with production proxy issuer (https://<domain>/__clerk)
+  const proxyIssuerToken = token({ iss: 'https://the-tech-mystery.vercel.app/__clerk', azp: 'https://the-tech-mystery.vercel.app' });
+  const proxyRes = await request('/auth/me', proxyIssuerToken);
+  assert.equal(proxyRes.status, 200);
+  assert.equal(proxyRes.body.data.user._id, String(user._id));
+
+  // 7. Valid session token with production proxy trailing-slash issuer
+  const proxySlashToken = token({ iss: 'https://the-tech-mystery.vercel.app/__clerk/', azp: 'https://the-tech-mystery.vercel.app' });
+  const proxySlashRes = await request('/auth/me', proxySlashToken);
+  assert.equal(proxySlashRes.status, 200);
+  assert.equal(proxySlashRes.body.data.user._id, String(user._id));
+
+  // 8. Reject unrelated and unauthorized issuers
+  const unrelatedRes = await request('/auth/me', token({ iss: 'https://unrelated.example.com', azp: 'https://the-tech-mystery.vercel.app' }));
+  assert.equal(unrelatedRes.status, 401);
+
+  const unrelatedProxyRes = await request('/auth/me', token({ iss: 'https://unrelated.example.com/__clerk', azp: 'https://the-tech-mystery.vercel.app' }));
+  assert.equal(unrelatedProxyRes.status, 401);
+
+  const attackerRes = await request('/auth/me', token({ iss: 'https://attacker.org', azp: 'https://the-tech-mystery.vercel.app' }));
+  assert.equal(attackerRes.status, 401);
 });
 it('allows bounded clock drift but rejects tokens issued far in the future', async () => {
   const now = Math.floor(Date.now() / 1000);
