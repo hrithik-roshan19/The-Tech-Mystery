@@ -346,4 +346,136 @@ describe('Clerk Vercel Proxy Handler (api/clerk.js)', () => {
     assert.equal(body.error, 'clerk_proxy_error');
     assert.ok(body.message.includes('Connection refused'));
   });
+
+  it('never exposes the secret key in response bodies, headers, or health check', async () => {
+    const secretValue = 'sk_test_super_confidential_secret_value_123';
+    process.env.CLERK_SECRET_KEY = secretValue;
+
+    global.fetch = mock.fn(async () => {
+      return new Response(JSON.stringify({ response: { status: 'ok' } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      });
+    });
+
+    // 1. Health check response verification
+    const healthReq = {
+      method: 'GET',
+      headers: { host: 'the-tech-mystery.vercel.app' },
+      query: { health: '1' }
+    };
+    const healthRes = createMockResponse();
+    await proxyHandler(healthReq, healthRes);
+
+    assert.equal(healthRes.statusCode, 200);
+    const healthBodyStr = healthRes.body.toString('utf8');
+    assert.equal(healthBodyStr.includes(secretValue), false, 'Health check must never leak the secret key');
+    const healthJson = JSON.parse(healthBodyStr);
+    assert.equal(healthJson.hasSecretKey, true);
+    assert.ok(Array.isArray(healthJson.configuredClerkKeys));
+
+    // 2. Proxied API response verification
+    const apiReq = {
+      method: 'GET',
+      headers: { host: 'the-tech-mystery.vercel.app' },
+      query: { path: 'v1/environment' }
+    };
+    const apiRes = createMockResponse();
+    await proxyHandler(apiReq, apiRes);
+
+    assert.equal(apiRes.statusCode, 200);
+    assert.equal(apiRes.body.toString('utf8').includes(secretValue), false, 'API response must never leak the secret key');
+    for (const [headerName, headerVal] of Object.entries(apiRes.headers)) {
+      assert.equal(String(headerVal).includes(secretValue), false, `Response header ${headerName} must not contain secret`);
+    }
+  });
+
+  it('strips incoming client Clerk-Secret-Key to prevent header spoofing', async () => {
+    let capturedOptions;
+    process.env.CLERK_SECRET_KEY = 'sk_test_authentic_server_secret';
+
+    global.fetch = mock.fn(async (url, options) => {
+      capturedOptions = options;
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      });
+    });
+
+    const req = {
+      method: 'GET',
+      headers: {
+        host: 'the-tech-mystery.vercel.app',
+        'clerk-secret-key': 'attacker_supplied_spoofed_key'
+      },
+      query: { path: 'v1/environment' }
+    };
+    const res = createMockResponse();
+
+    await proxyHandler(req, res);
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(capturedOptions.headers['Clerk-Secret-Key'], 'sk_test_authentic_server_secret');
+    assert.equal(capturedOptions.headers['clerk-secret-key'], undefined);
+  });
+
+  it('does not read or authenticate using VITE_CLERK_SECRET_KEY when CLERK_SECRET_KEY is absent', async () => {
+    delete process.env.CLERK_SECRET_KEY;
+    delete process.env.CLERK_API_KEY;
+    process.env.VITE_CLERK_SECRET_KEY = 'sk_test_accidental_vite_variable';
+
+    const req = {
+      method: 'GET',
+      headers: { host: 'the-tech-mystery.vercel.app' },
+      query: { path: 'v1/environment' }
+    };
+    const res = createMockResponse();
+
+    await proxyHandler(req, res);
+
+    // Must fail closed with 500 because secrets must not be configured as client-accessible VITE_ vars
+    assert.equal(res.statusCode, 500);
+    const body = JSON.parse(res.body);
+    assert.equal(body.errors[0].code, 'proxy_configuration_error');
+
+    delete process.env.VITE_CLERK_SECRET_KEY;
+  });
+
+  it('handles whitespace, casing, and surrounding quotes in CLERK_SECRET_KEY dynamically at runtime', async () => {
+    let capturedOptions;
+    global.fetch = mock.fn(async (url, options) => {
+      capturedOptions = options;
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      });
+    });
+
+    // Case 1: Surrounding quotes and whitespace in CLERK_SECRET_KEY
+    process.env.CLERK_SECRET_KEY = '  "sk_test_quoted_secret_key"  ';
+
+    const req1 = {
+      method: 'GET',
+      headers: { host: 'the-tech-mystery.vercel.app' },
+      query: { path: 'v1/environment' }
+    };
+    const res1 = createMockResponse();
+    await proxyHandler(req1, res1);
+
+    assert.equal(res1.statusCode, 200);
+    assert.equal(capturedOptions.headers['Clerk-Secret-Key'], 'sk_test_quoted_secret_key');
+
+    // Case 2: Dynamically changed between requests at runtime
+    process.env.CLERK_SECRET_KEY = 'sk_test_runtime_updated_key';
+    const req2 = {
+      method: 'GET',
+      headers: { host: 'the-tech-mystery.vercel.app' },
+      query: { path: 'v1/environment' }
+    };
+    const res2 = createMockResponse();
+    await proxyHandler(req2, res2);
+
+    assert.equal(res2.statusCode, 200);
+    assert.equal(capturedOptions.headers['Clerk-Secret-Key'], 'sk_test_runtime_updated_key');
+  });
 });

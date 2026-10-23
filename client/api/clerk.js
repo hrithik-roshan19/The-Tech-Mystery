@@ -29,6 +29,29 @@ function parsePublishableKey(key) {
   }
 }
 
+/**
+ * Reads the Clerk Secret Key dynamically at runtime from server-side environment variables.
+ * Note: Never read from VITE_ client environment variables to avoid exposing secrets to client bundles.
+ */
+function getSecretKey() {
+  const direct = process.env.CLERK_SECRET_KEY || process.env.CLERK_API_KEY;
+  if (direct && typeof direct === 'string') {
+    return direct.trim().replace(/^["']|["']$/g, '').trim();
+  }
+
+  // Case-insensitive / whitespace-trimmed scan of process.env keys to handle dashboard typos
+  for (const [key, val] of Object.entries(process.env)) {
+    const normalizedKey = key.trim().toUpperCase();
+    if (normalizedKey === 'CLERK_SECRET_KEY' || normalizedKey === 'CLERK_API_KEY') {
+      if (typeof val === 'string' && val.trim()) {
+        return val.trim().replace(/^["']|["']$/g, '').trim();
+      }
+    }
+  }
+
+  return '';
+}
+
 function getFapiHost(publishableKey) {
   if (process.env.CLERK_FAPI_URL) {
     try {
@@ -87,8 +110,8 @@ export default async function handler(req, res) {
       targetPath = '/' + targetPath;
     }
 
-    // 2. Resolve secret key and publishable key
-    const secretKey = process.env.CLERK_SECRET_KEY || process.env.CLERK_API_KEY || process.env.VITE_CLERK_SECRET_KEY;
+    // 2. Resolve secret key and publishable key dynamically at runtime
+    const secretKey = getSecretKey();
     const publishableKey = process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY;
     const fapiHost = getFapiHost(publishableKey);
 
@@ -101,13 +124,19 @@ export default async function handler(req, res) {
 
     // 4. Health check response for direct verification of deployed Vercel Function
     if (!targetPath || targetPath === '/' || (req.query && req.query.health)) {
+      // Diagnostic report of environment variable names present (names only, values never exposed)
+      const configuredClerkKeys = Object.keys(process.env)
+        .filter(k => k.trim().toUpperCase().includes('CLERK'))
+        .map(k => k.trim());
+
       return res.status(200).json({
         status: 'ok',
         service: 'clerk-proxy',
         target: fapiHost,
         proxyUrl,
         hasSecretKey: !!secretKey,
-        hasPublishableKey: !!publishableKey
+        hasPublishableKey: !!publishableKey,
+        configuredClerkKeys
       });
     }
 
@@ -159,6 +188,9 @@ export default async function handler(req, res) {
       }
     }
 
+    // Strip any client-supplied Clerk-Secret-Key to prevent header spoofing or leakage
+    delete forwardHeaders['clerk-secret-key'];
+
     forwardHeaders['Host'] = fapiHost;
     forwardHeaders['Clerk-Proxy-Url'] = proxyUrl;
     if (secretKey) {
@@ -189,7 +221,12 @@ export default async function handler(req, res) {
     // 10. Forward response headers
     for (const [key, val] of clerkRes.headers.entries()) {
       const lower = key.toLowerCase();
-      if (HOP_BY_HOP.has(lower) || lower === 'content-encoding' || lower === 'content-length') {
+      if (
+        HOP_BY_HOP.has(lower) ||
+        lower === 'content-encoding' ||
+        lower === 'content-length' ||
+        lower === 'clerk-secret-key'
+      ) {
         continue;
       }
       if (lower === 'location') {
@@ -218,7 +255,7 @@ export default async function handler(req, res) {
       res.send(resBuffer);
     }
   } catch (error) {
-    console.error('[Clerk Proxy Error]:', error);
+    console.error('[Clerk Proxy Error]:', error.message || error);
     res.status(502).json({
       error: 'clerk_proxy_error',
       message: error.message || 'Failed to proxy request to Clerk Frontend API'
