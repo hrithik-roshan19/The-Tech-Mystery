@@ -61,8 +61,8 @@ async function main() {
     console.log(`[\u2713] Approved unique identity index already exists: '${existingApproved.name}'`);
     console.log(`    Key: ${JSON.stringify(existingApproved.key)}, unique: ${existingApproved.unique}, sparse: ${!!existingApproved.sparse}`);
   } else {
-    console.log('[*] Unique identity index (clerkUserId_1) is missing. Creating index via User.init()...');
-    await User.init();
+    console.log('[*] Unique identity index (clerkUserId_1) is missing. Creating index via User.createIndexes()...');
+    await User.createIndexes();
     const afterIndexes = await User.collection.indexes();
     const verified = afterIndexes.find(isApprovedIdentityIndex);
     if (!verified) {

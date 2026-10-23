@@ -55,7 +55,7 @@ const startServer = async () => {
     if (config.authProvider === 'clerk') {
       try {
         const { User } = require('./models');
-        await User.init();
+        await User.createIndexes();
         logger.info('[Database] User identity indexes verified and synchronized');
       } catch (indexError) {
         logger.error(`[Database] User index initialization error: ${indexError.message}`);
