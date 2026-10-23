@@ -1,5 +1,4 @@
 // Vercel Serverless Function to proxy Clerk Frontend API traffic for Vite on Vercel
-const FAPI_HOST = 'frontend-api.clerk.dev';
 
 const HOP_BY_HOP = new Set([
   'connection',
@@ -12,6 +11,39 @@ const HOP_BY_HOP = new Set([
   'upgrade',
   'host'
 ]);
+
+function parsePublishableKey(key) {
+  if (!key || typeof key !== 'string') return null;
+  const match = key.match(/^pk_(test|live)_([a-zA-Z0-9_\-]+)\$?$/);
+  if (!match) return null;
+  const [_, instanceType, encoded] = match;
+  try {
+    const raw = Buffer.from(encoded, 'base64').toString('utf8');
+    const frontendApi = raw.endsWith('$') ? raw.slice(0, -1) : raw;
+    return {
+      instanceType: instanceType === 'test' ? 'development' : 'production',
+      frontendApi
+    };
+  } catch {
+    return null;
+  }
+}
+
+function getFapiHost(publishableKey) {
+  if (process.env.CLERK_FAPI_URL) {
+    try {
+      return new URL(process.env.CLERK_FAPI_URL).host;
+    } catch (_) {}
+  }
+  const parsed = parsePublishableKey(publishableKey || process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY);
+  const frontendApi = parsed?.frontendApi;
+  if (!frontendApi) return 'frontend-api.clerk.dev';
+
+  if (frontendApi.endsWith('.accounts.dev') || frontendApi.endsWith('.accountsstage.dev')) {
+    return frontendApi;
+  }
+  return 'frontend-api.clerk.dev';
+}
 
 async function getRawBody(req) {
   if (req.body) {
@@ -31,7 +63,7 @@ export default async function handler(req, res) {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Clerk-Proxy-Url, Clerk-Secret-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Clerk-Proxy-Url, Clerk-Secret-Key, X-Clerk-Publishable-Key');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
@@ -55,25 +87,44 @@ export default async function handler(req, res) {
       targetPath = '/' + targetPath;
     }
 
-    // 2. Determine proxy URL registered with Clerk
+    // 2. Resolve secret key and publishable key
+    const secretKey = process.env.CLERK_SECRET_KEY || process.env.CLERK_API_KEY || process.env.VITE_CLERK_SECRET_KEY;
+    const publishableKey = process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY;
+    const fapiHost = getFapiHost(publishableKey);
+
+    // 3. Determine proxy URL registered with Clerk
     const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'the-tech-mystery.vercel.app';
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const matchedPath = req.headers['x-matched-path'] || req.url || '';
-    const prefix = matchedPath.includes('.__clerk') ? '/.__clerk' : '/__clerk';
+    const prefix = matchedPath.includes('.__clerk') ? '/.__clerk' : (matchedPath.includes('__clerk') ? '/__clerk' : '/.__clerk');
     const proxyUrl = process.env.CLERK_PROXY_URL || `${proto}://${host}${prefix}`;
 
-    // 3. Health check response for direct verification of deployed Vercel Function
+    // 4. Health check response for direct verification of deployed Vercel Function
     if (!targetPath || targetPath === '/' || (req.query && req.query.health)) {
       return res.status(200).json({
         status: 'ok',
         service: 'clerk-proxy',
-        target: FAPI_HOST,
+        target: fapiHost,
         proxyUrl,
-        hasSecretKey: !!process.env.CLERK_SECRET_KEY
+        hasSecretKey: !!secretKey,
+        hasPublishableKey: !!publishableKey
       });
     }
 
-    // 4. Build target query string (excluding internal 'path' rewrite param)
+    // 5. Fail early with descriptive error if secret key is missing for API requests
+    const isScriptRequest = targetPath.startsWith('/npm/');
+    if (!secretKey && !isScriptRequest) {
+      return res.status(500).json({
+        errors: [
+          {
+            code: 'proxy_configuration_error',
+            message: 'Missing CLERK_SECRET_KEY environment variable. Add CLERK_SECRET_KEY in Vercel Project Settings > Environment Variables and redeploy.'
+          }
+        ]
+      });
+    }
+
+    // 6. Build target query string (excluding internal 'path' rewrite param)
     const searchParams = new URLSearchParams();
     if (targetPath.includes('?')) {
       const [cleanPath, extraQuery] = targetPath.split('?');
@@ -97,9 +148,9 @@ export default async function handler(req, res) {
     }
 
     const queryString = searchParams.toString();
-    const targetUrl = `https://${FAPI_HOST}${targetPath}${queryString ? '?' + queryString : ''}`;
+    const targetUrl = `https://${fapiHost}${targetPath}${queryString ? '?' + queryString : ''}`;
 
-    // 5. Construct forwarding headers
+    // 7. Construct forwarding headers
     const forwardHeaders = {};
     for (const [key, val] of Object.entries(req.headers)) {
       const lower = key.toLowerCase();
@@ -108,22 +159,24 @@ export default async function handler(req, res) {
       }
     }
 
-    forwardHeaders['Host'] = FAPI_HOST;
+    forwardHeaders['Host'] = fapiHost;
     forwardHeaders['Clerk-Proxy-Url'] = proxyUrl;
-    if (process.env.CLERK_SECRET_KEY) {
-      forwardHeaders['Clerk-Secret-Key'] = process.env.CLERK_SECRET_KEY;
+    if (secretKey) {
+      forwardHeaders['Clerk-Secret-Key'] = secretKey;
     }
-    const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress;
+    forwardHeaders['Accept-Encoding'] = 'identity';
+
+    const clientIp = req.headers['x-forwarded-for']?.split(',')?.[0]?.trim() || req.socket?.remoteAddress;
     if (clientIp) {
       forwardHeaders['X-Forwarded-For'] = clientIp;
     }
     forwardHeaders['X-Forwarded-Host'] = host;
     forwardHeaders['X-Forwarded-Proto'] = proto;
 
-    // 6. Read body
+    // 8. Read body
     const body = (req.method === 'GET' || req.method === 'HEAD') ? undefined : await getRawBody(req);
 
-    // 7. Forward to Clerk FAPI
+    // 9. Forward to Clerk FAPI
     const clerkRes = await fetch(targetUrl, {
       method: req.method,
       headers: forwardHeaders,
@@ -133,7 +186,7 @@ export default async function handler(req, res) {
 
     res.status(clerkRes.status);
 
-    // 8. Forward response headers
+    // 10. Forward response headers
     for (const [key, val] of clerkRes.headers.entries()) {
       const lower = key.toLowerCase();
       if (HOP_BY_HOP.has(lower) || lower === 'content-encoding' || lower === 'content-length') {
@@ -141,8 +194,8 @@ export default async function handler(req, res) {
       }
       if (lower === 'location') {
         try {
-          const locUrl = new URL(val, `https://${FAPI_HOST}`);
-          if (locUrl.host === FAPI_HOST) {
+          const locUrl = new URL(val, `https://${fapiHost}`);
+          if (locUrl.host === fapiHost) {
             res.setHeader('location', `${prefix}${locUrl.pathname}${locUrl.search}${locUrl.hash}`);
             continue;
           }

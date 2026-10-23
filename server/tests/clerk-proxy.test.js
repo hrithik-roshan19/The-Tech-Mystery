@@ -12,6 +12,7 @@ describe('Clerk Vercel Proxy Handler (api/clerk.js)', () => {
     originalFetch = global.fetch;
     process.env.CLERK_SECRET_KEY = 'sk_test_fixture_secret_key';
     process.env.CLERK_PROXY_URL = 'https://the-tech-mystery.vercel.app/.__clerk';
+    process.env.VITE_CLERK_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsudGhlLXRlY2gtbXlzdGVyeS52ZXJjZWwuYXBwJA';
     // Import the ES module handler with file:// URL for Windows compatibility
     const fileUrl = pathToFileURL(path.resolve(__dirname, '../../api/clerk.js')).href;
     const mod = await import(fileUrl);
@@ -22,6 +23,8 @@ describe('Clerk Vercel Proxy Handler (api/clerk.js)', () => {
     global.fetch = originalFetch;
     delete process.env.CLERK_SECRET_KEY;
     delete process.env.CLERK_PROXY_URL;
+    delete process.env.VITE_CLERK_PUBLISHABLE_KEY;
+    delete process.env.CLERK_FAPI_URL;
   });
 
   function createMockResponse() {
@@ -93,6 +96,8 @@ describe('Clerk Vercel Proxy Handler (api/clerk.js)', () => {
     assert.equal(body.service, 'clerk-proxy');
     assert.equal(body.target, 'frontend-api.clerk.dev');
     assert.equal(body.proxyUrl, 'https://the-tech-mystery.vercel.app/.__clerk');
+    assert.equal(body.hasSecretKey, true);
+    assert.equal(body.hasPublishableKey, true);
   });
 
   it('proxies GET request to frontend-api.clerk.dev with required headers and query parameters', async () => {
@@ -135,10 +140,122 @@ describe('Clerk Vercel Proxy Handler (api/clerk.js)', () => {
     assert.equal(capturedOptions.headers['Clerk-Secret-Key'], 'sk_test_fixture_secret_key');
     assert.equal(capturedOptions.headers['X-Forwarded-For'], '203.0.113.195');
     assert.equal(capturedOptions.headers['X-Forwarded-Host'], 'the-tech-mystery.vercel.app');
+    assert.equal(capturedOptions.headers['Accept-Encoding'], 'identity');
 
     assert.equal(res.statusCode, 200);
     assert.equal(res.headers['content-type'], 'application/javascript; charset=utf-8');
     assert.equal(res.body.toString('utf8'), 'console.log("clerk-js");');
+  });
+
+  it('regression: accurately proxies /.__clerk/v1/environment with complete query parameters and headers', async () => {
+    let capturedUrl;
+    let capturedOptions;
+
+    global.fetch = mock.fn(async (url, options) => {
+      capturedUrl = url;
+      capturedOptions = options;
+      return new Response(JSON.stringify({
+        auth_config: { id: 'aac_123', single_session_mode: false }
+      }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json; charset=utf-8'
+        }
+      });
+    });
+
+    const req = {
+      method: 'GET',
+      headers: {
+        host: 'the-tech-mystery.vercel.app',
+        'x-forwarded-proto': 'https',
+        'x-matched-path': '/.__clerk/v1/environment'
+      },
+      query: {
+        path: 'v1/environment',
+        __clerk_api_version: '2024-10-01'
+      }
+    };
+    const res = createMockResponse();
+
+    await proxyHandler(req, res);
+
+    assert.equal(capturedUrl, 'https://frontend-api.clerk.dev/v1/environment?__clerk_api_version=2024-10-01');
+    assert.equal(capturedOptions.headers['Clerk-Secret-Key'], 'sk_test_fixture_secret_key');
+    assert.equal(capturedOptions.headers['Clerk-Proxy-Url'], 'https://the-tech-mystery.vercel.app/.__clerk');
+    assert.equal(capturedOptions.headers['Host'], 'frontend-api.clerk.dev');
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.headers['content-type'], 'application/json; charset=utf-8');
+    const data = JSON.parse(res.body.toString('utf8'));
+    assert.equal(data.auth_config.id, 'aac_123');
+  });
+
+  it('regression: accurately proxies /.__clerk/v1/client returning session state and cookies', async () => {
+    let capturedUrl;
+    let capturedOptions;
+
+    global.fetch = mock.fn(async (url, options) => {
+      capturedUrl = url;
+      capturedOptions = options;
+      return new Response(JSON.stringify({
+        response: { id: 'client_abc', sessions: [] }
+      }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'set-cookie': '__client_uat=12345; Path=/; HttpOnly; SameSite=Lax; Secure'
+        }
+      });
+    });
+
+    const req = {
+      method: 'GET',
+      headers: {
+        host: 'the-tech-mystery.vercel.app',
+        'x-forwarded-proto': 'https',
+        'x-matched-path': '/.__clerk/v1/client',
+        cookie: '__client_uat=0'
+      },
+      query: {
+        path: 'v1/client',
+        __clerk_api_version: '2024-10-01'
+      }
+    };
+    const res = createMockResponse();
+
+    await proxyHandler(req, res);
+
+    assert.equal(capturedUrl, 'https://frontend-api.clerk.dev/v1/client?__clerk_api_version=2024-10-01');
+    assert.equal(capturedOptions.headers['cookie'], '__client_uat=0');
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.headers['set-cookie']);
+    const data = JSON.parse(res.body.toString('utf8'));
+    assert.equal(data.response.id, 'client_abc');
+  });
+
+  it('returns explicit 500 configuration error when secret key is missing for API calls', async () => {
+    delete process.env.CLERK_SECRET_KEY;
+
+    const req = {
+      method: 'GET',
+      headers: {
+        host: 'the-tech-mystery.vercel.app',
+        'x-forwarded-proto': 'https'
+      },
+      query: {
+        path: 'v1/environment',
+        __clerk_api_version: '2024-10-01'
+      }
+    };
+    const res = createMockResponse();
+
+    await proxyHandler(req, res);
+
+    assert.equal(res.statusCode, 500);
+    const body = JSON.parse(res.body);
+    assert.equal(body.errors[0].code, 'proxy_configuration_error');
+    assert.ok(body.errors[0].message.includes('CLERK_SECRET_KEY'));
   });
 
   it('rewrites redirect location headers targeting frontend-api.clerk.dev to proxy path', async () => {
