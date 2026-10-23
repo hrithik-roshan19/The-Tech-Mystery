@@ -255,6 +255,49 @@ it('regression: rejects non-unique or composite index definitions as unapproved'
     await User.collection.createIndex({ clerkUserId: 1 }, { unique: true, sparse: true });
   }
 });
+it('regression: distinguishes missing event config baseline vs maintenance mode vs closed vs open registration', async () => {
+  // 1. Missing event config document -> fails closed and accurately reports "Registration is currently closed" (not maintenance mode)
+  await EventConfig.deleteMany({});
+  email = 'event_test_empty@example.test';
+  let res = await request('/auth/clerk/register', token(), { username: 'evt_user_1', fullName: 'Event User 1' });
+  assert.equal(res.status, 403);
+  assert.equal(res.body.message, 'Registration is currently closed');
+
+  // 2. Explicit maintenance mode -> correctly rejects with "Event is unavailable or in maintenance mode"
+  await EventConfig.create({ state: 'LIVE', maintenanceMode: true, registrationOpen: true });
+  email = 'event_test_maint@example.test';
+  res = await request('/auth/clerk/register', token(), { username: 'evt_user_2', fullName: 'Event User 2' });
+  assert.equal(res.status, 403);
+  assert.equal(res.body.message, 'Event is unavailable or in maintenance mode');
+
+  // 3. Explicit closed registration -> correctly rejects with "Registration is currently closed"
+  await EventConfig.updateOne({}, { state: 'LIVE', maintenanceMode: false, registrationOpen: false });
+  email = 'event_test_closed@example.test';
+  res = await request('/auth/clerk/register', token(), { username: 'evt_user_3', fullName: 'Event User 3' });
+  assert.equal(res.status, 403);
+  assert.equal(res.body.message, 'Registration is currently closed');
+
+  // 4. Default DRAFT state -> correctly rejects with "Registration is currently closed"
+  await EventConfig.updateOne({}, { state: 'DRAFT', maintenanceMode: false, registrationOpen: true });
+  email = 'event_test_draft@example.test';
+  res = await request('/auth/clerk/register', token(), { username: 'evt_user_4', fullName: 'Event User 4' });
+  assert.equal(res.status, 403);
+  assert.equal(res.body.message, 'Registration is currently closed');
+
+  // 5. Open registration with REGISTRATION_OPEN state -> succeeds with 201 Created
+  await User.deleteMany({ clerkUserId: 'user_fixture' });
+  await EventConfig.updateOne({}, { state: 'REGISTRATION_OPEN', maintenanceMode: false, registrationOpen: true });
+  email = 'event_test_regopen@example.test';
+  res = await request('/auth/clerk/register', token(), { username: 'evt_user_5', fullName: 'Event User 5' });
+  assert.equal(res.status, 201);
+
+  // 6. Open registration with LIVE state -> succeeds with 201 Created
+  await User.deleteMany({ clerkUserId: 'user_fixture' });
+  await EventConfig.updateOne({}, { state: 'LIVE', maintenanceMode: false, registrationOpen: true });
+  email = 'event_test_live@example.test';
+  res = await request('/auth/clerk/register', token(), { username: 'evt_user_6', fullName: 'Event User 6' });
+  assert.equal(res.status, 201);
+});
 it('fails closed for missing Clerk configuration, unexpected providers and development keys in production', () => {
   const environment = require.resolve('../src/config/environment');
   for (const override of [ { CLERK_SECRET_KEY: '' }, { CLERK_JWT_ISSUER_DOMAIN: 'http://insecure.example' },

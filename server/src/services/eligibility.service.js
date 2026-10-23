@@ -5,7 +5,13 @@ async function eventFor(action) {
   // Write conflict with lifecycle edits prevents a concurrent pause/close from
   // being ignored by a transaction using an older snapshot.
   const config = await EventConfig.findOneAndUpdate({}, { $inc: { securityRevision: 1 } }, { new: true });
-  if (!config || config.maintenanceMode) throw denied('Event is unavailable or in maintenance mode');
+  if (!config) {
+    if (action === 'registration') {
+      throw denied('Registration is currently closed');
+    }
+    throw denied('Event must be LIVE for gameplay');
+  }
+  if (config.maintenanceMode) throw denied('Event is unavailable or in maintenance mode');
   if (action === 'registration') {
     if (!config.registrationOpen || !['REGISTRATION_OPEN', 'LIVE'].includes(config.state)) {
       throw denied('Registration is currently closed');

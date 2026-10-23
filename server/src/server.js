@@ -62,6 +62,18 @@ const startServer = async () => {
       }
     }
 
+    // Ensure baseline singleton EventConfig exists
+    try {
+      const { EventConfig } = require('./models');
+      const existingConfig = await EventConfig.findOne();
+      if (!existingConfig) {
+        await EventConfig.create({});
+        logger.info('[Database] Baseline EventConfig singleton initialized');
+      }
+    } catch (configError) {
+      logger.error(`[Database] EventConfig initialization error: ${configError.message}`);
+    }
+
     const server = app.listen(config.port, () => {
       logger.info(`=======================================================`);
       logger.info(`  THE TECH MYSTERY - CTF CORE ENGINE READY`);

@@ -17,6 +17,7 @@
     "dev:client": "npm run dev --workspace=client",
     "install:all": "npm install --workspaces",
     "db:sync-indexes": "npm run db:sync-indexes --workspace=server",
+    "db:configure-event": "npm run db:configure-event --workspace=server",
     "dev:clerk": "node server/scripts/clerk-development.js --start server/.env client/.env --configured-frontend"
   },
   "keywords": [
