@@ -9,7 +9,8 @@ const HOP_BY_HOP = new Set([
   'trailer',
   'transfer-encoding',
   'upgrade',
-  'host'
+  'host',
+  'content-length'
 ]);
 
 function parsePublishableKey(key) {
@@ -72,6 +73,10 @@ async function getRawBody(req) {
   if (req.body) {
     if (Buffer.isBuffer(req.body)) return req.body;
     if (typeof req.body === 'string') return Buffer.from(req.body);
+    const contentType = (req.headers['content-type'] || '').toLowerCase();
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      return Buffer.from(new URLSearchParams(req.body).toString());
+    }
     return Buffer.from(JSON.stringify(req.body));
   }
   const chunks = [];
@@ -93,9 +98,11 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
+  let targetPath = '';
+  let fapiHost = 'frontend-api.clerk.dev';
+
   try {
     // 1. Determine subpath
-    let targetPath = '';
     if (req.query && req.query.path) {
       targetPath = Array.isArray(req.query.path) ? req.query.path.join('/') : req.query.path;
     } else {
@@ -113,7 +120,7 @@ export default async function handler(req, res) {
     // 2. Resolve secret key and publishable key dynamically at runtime
     const secretKey = getSecretKey();
     const publishableKey = process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY;
-    const fapiHost = getFapiHost(publishableKey);
+    fapiHost = getFapiHost(publishableKey);
 
     // 3. Determine proxy URL registered with Clerk
     const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'the-tech-mystery.vercel.app';
@@ -190,6 +197,7 @@ export default async function handler(req, res) {
 
     // Strip any client-supplied Clerk-Secret-Key to prevent header spoofing or leakage
     delete forwardHeaders['clerk-secret-key'];
+    delete forwardHeaders['content-length'];
 
     forwardHeaders['Host'] = fapiHost;
     forwardHeaders['Clerk-Proxy-Url'] = proxyUrl;
@@ -255,7 +263,16 @@ export default async function handler(req, res) {
       res.send(resBuffer);
     }
   } catch (error) {
-    console.error('[Clerk Proxy Error]:', error.message || error);
+    // Log safe diagnostic details without exposing passwords, cookies, or secrets
+    console.error('[Clerk Proxy Upstream Error]:', {
+      errorName: error?.name,
+      errorMessage: error?.message,
+      causeName: error?.cause?.name,
+      causeCode: error?.cause?.code,
+      causeMessage: error?.cause?.message,
+      upstreamHost: fapiHost,
+      upstreamPath: targetPath
+    });
     res.status(502).json({
       error: 'clerk_proxy_error',
       message: error.message || 'Failed to proxy request to Clerk Frontend API'

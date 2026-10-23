@@ -502,4 +502,123 @@ describe('Clerk Vercel Proxy Handler (api/clerk.js)', () => {
     assert.equal(res.statusCode, 200);
     assert.equal(capturedOptions.headers['Clerk-Proxy-Url'], 'https://the-tech-mystery.vercel.app/__clerk');
   });
+
+  it('regression: correctly forwards POST /v1/client/sign_ups with form-urlencoded body and strips content-length', async () => {
+    let capturedOptions;
+    let capturedUrl;
+
+    global.fetch = mock.fn(async (url, options) => {
+      capturedUrl = url;
+      capturedOptions = options;
+      return new Response(JSON.stringify({
+        response: { id: 'sua_test_123', status: 'complete' }
+      }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+          'set-cookie': '__client_uat=12345; Path=/; Secure'
+        }
+      });
+    });
+
+    const req = {
+      method: 'POST',
+      headers: {
+        host: 'the-tech-mystery.vercel.app',
+        'content-type': 'application/x-www-form-urlencoded',
+        'content-length': '9999', // Stale or mismatched client content-length header
+        'x-matched-path': '/.__clerk/v1/client/sign_ups'
+      },
+      query: {
+        path: 'v1/client/sign_ups',
+        __clerk_api_version: '2024-10-01'
+      },
+      body: {
+        email_address: 'operative@test.com',
+        password: 'SuperSecretPassword123!'
+      }
+    };
+    const res = createMockResponse();
+
+    await proxyHandler(req, res);
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(capturedUrl, 'https://frontend-api.clerk.dev/v1/client/sign_ups?__clerk_api_version=2024-10-01');
+    assert.equal(capturedOptions.method, 'POST');
+    // Content-length header must be stripped so fetch computes the correct body length without mismatch
+    assert.equal(capturedOptions.headers['content-length'], undefined);
+    assert.equal(capturedOptions.headers['Content-Length'], undefined);
+    // Body must be correctly serialized as application/x-www-form-urlencoded
+    const decodedBody = capturedOptions.body.toString('utf8');
+    assert.ok(decodedBody.includes('email_address=operative%40test.com'));
+    assert.ok(decodedBody.includes('password=SuperSecretPassword123%21'));
+    // Set-cookie header must be forwarded back
+    assert.ok(res.headers['set-cookie']);
+  });
+
+  it('regression: logs safe upstream fetch diagnostic details on network error without leaking secrets or passwords', async () => {
+    const errorDetails = new TypeError('fetch failed');
+    errorDetails.cause = {
+      name: 'RequestContentLengthMismatchError',
+      code: 'UND_ERR_REQ_CONTENT_LENGTH_MISMATCH',
+      message: 'Request body length does not match content-length header'
+    };
+
+    global.fetch = mock.fn(async () => {
+      throw errorDetails;
+    });
+
+    let loggedContext = null;
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      if (args[0] === '[Clerk Proxy Upstream Error]:') {
+        loggedContext = args[1];
+      }
+    };
+
+    try {
+      const req = {
+        method: 'POST',
+        headers: {
+          host: 'the-tech-mystery.vercel.app',
+          authorization: 'Bearer super_secret_token_123',
+          cookie: 'session=secret_cookie_val',
+          'content-type': 'application/x-www-form-urlencoded'
+        },
+        query: {
+          path: 'v1/client/sign_ups'
+        },
+        body: {
+          password: 'TopSecretUserPassword!'
+        }
+      };
+      const res = createMockResponse();
+
+      await proxyHandler(req, res);
+
+      assert.equal(res.statusCode, 502);
+      const resBody = JSON.parse(res.body);
+      assert.equal(resBody.error, 'clerk_proxy_error');
+      assert.equal(resBody.message, 'fetch failed');
+
+      // Verify safe diagnostic logging
+      assert.ok(loggedContext, 'Diagnostic details must be logged');
+      assert.equal(loggedContext.errorName, 'TypeError');
+      assert.equal(loggedContext.errorMessage, 'fetch failed');
+      assert.equal(loggedContext.causeName, 'RequestContentLengthMismatchError');
+      assert.equal(loggedContext.causeCode, 'UND_ERR_REQ_CONTENT_LENGTH_MISMATCH');
+      assert.equal(loggedContext.causeMessage, 'Request body length does not match content-length header');
+      assert.equal(loggedContext.upstreamHost, 'frontend-api.clerk.dev');
+      assert.equal(loggedContext.upstreamPath, '/v1/client/sign_ups');
+
+      // Verify credentials and sensitive fields are NEVER logged
+      const loggedJson = JSON.stringify(loggedContext);
+      assert.equal(loggedJson.includes('TopSecretUserPassword!'), false, 'Password must never be logged');
+      assert.equal(loggedJson.includes('super_secret_token_123'), false, 'Token must never be logged');
+      assert.equal(loggedJson.includes('secret_cookie_val'), false, 'Cookie must never be logged');
+      assert.equal(loggedJson.includes('sk_test_'), false, 'Secret key must never be logged');
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
 });
