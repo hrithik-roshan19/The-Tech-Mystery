@@ -16,6 +16,7 @@ const getHealth = async (req, res) => {
   };
 
   let identityIndexPresent = false;
+  let event = null;
   if (dbState === 1) {
     try {
       const User = mongoose.model('User');
@@ -27,6 +28,24 @@ const getHealth = async (req, res) => {
         index.key.clerkUserId &&
         Math.abs(Number(index.key.clerkUserId)) === 1
       );
+    } catch (_) {}
+
+    try {
+      const EventConfig = mongoose.model('EventConfig');
+      const cfg = await EventConfig.findOne().select('state maintenanceMode registrationOpen startTime endTime registrationDeadline');
+      if (cfg) {
+        event = {
+          exists: true,
+          state: cfg.state,
+          maintenanceMode: Boolean(cfg.maintenanceMode),
+          registrationOpen: Boolean(cfg.registrationOpen),
+          hasStartTime: Boolean(cfg.startTime),
+          hasEndTime: Boolean(cfg.endTime),
+          hasRegistrationDeadline: Boolean(cfg.registrationDeadline)
+        };
+      } else {
+        event = { exists: false };
+      }
     } catch (_) {}
   }
 
@@ -47,7 +66,8 @@ const getHealth = async (req, res) => {
         clerkIssuer: config.clerk?.issuer || null,
         clerkAuthorizedParties: config.clerk?.authorizedParties || [],
         identityIndexPresent
-      }
+      },
+      event
     },
     'The Tech Mystery Core API is healthy and operational'
   );
