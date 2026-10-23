@@ -119,8 +119,8 @@ export default async function handler(req, res) {
     const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'the-tech-mystery.vercel.app';
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const matchedPath = req.headers['x-matched-path'] || req.url || '';
-    const prefix = matchedPath.includes('.__clerk') ? '/.__clerk' : (matchedPath.includes('__clerk') ? '/__clerk' : '/.__clerk');
-    const proxyUrl = process.env.CLERK_PROXY_URL || `${proto}://${host}${prefix}`;
+    const prefix = matchedPath.includes('.__clerk') ? '/.__clerk' : '/__clerk';
+    const proxyUrl = process.env.CLERK_PROXY_URL || `${proto}://${host}/__clerk`;
 
     // 4. Health check response for direct verification of deployed Vercel Function
     if (!targetPath || targetPath === '/' || (req.query && req.query.health)) {

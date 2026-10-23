@@ -478,4 +478,28 @@ describe('Clerk Vercel Proxy Handler (api/clerk.js)', () => {
     assert.equal(res2.statusCode, 200);
     assert.equal(capturedOptions.headers['Clerk-Secret-Key'], 'sk_test_runtime_updated_key');
   });
+
+  it('defaults Clerk-Proxy-Url to /__clerk when CLERK_PROXY_URL is not set', async () => {
+    delete process.env.CLERK_PROXY_URL;
+    let capturedOptions;
+    global.fetch = mock.fn(async (url, options) => {
+      capturedOptions = options;
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      });
+    });
+
+    const req = {
+      method: 'GET',
+      headers: { host: 'the-tech-mystery.vercel.app' },
+      query: { path: 'v1/environment' }
+    };
+    const res = createMockResponse();
+
+    await proxyHandler(req, res);
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(capturedOptions.headers['Clerk-Proxy-Url'], 'https://the-tech-mystery.vercel.app/__clerk');
+  });
 });
