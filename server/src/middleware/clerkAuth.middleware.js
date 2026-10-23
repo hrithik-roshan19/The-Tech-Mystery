@@ -6,7 +6,9 @@ const sendFailure = (res, error) => res.status(error.statusCode || 503).json({ s
 
 async function verifyIdentity(req) {
   const match = /^Bearer ([^\s]+)$/.exec(req.headers.authorization || '');
-  if (!match) throw clerk.failure(401, 'Clerk Bearer session token required');
+  if (!match || !match[1] || match[1] === 'null' || match[1] === 'undefined') {
+    throw clerk.failure(401, 'Clerk Bearer session token required');
+  }
   return clerk.verifySession(match[1]);
 }
 

@@ -43,11 +43,19 @@ api.interceptors.request.use(
       config.url = config.url.replace(/^\/?api\/v1\/?/, '/');
     }
 
+    // Clean up empty, null or undefined Authorization headers
+    if (config.headers?.Authorization) {
+      const raw = String(config.headers.Authorization).trim();
+      if (raw === 'Bearer' || raw === 'Bearer null' || raw === 'Bearer undefined') {
+        delete config.headers.Authorization;
+      }
+    }
+
     const token = isClerkMode()
       ? await sessionTokenGetter?.()
       : storage.getToken();
 
-    if (token && !config.headers.Authorization) {
+    if (token && typeof token === 'string' && token !== 'null' && token !== 'undefined' && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

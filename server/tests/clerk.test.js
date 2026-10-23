@@ -88,6 +88,46 @@ it('rejects missing, expired, wrong issuer, wrong party, pending and forged toke
 it('rejects revoked sessions even before token expiration', async () => {
   sessionStatus = 'revoked'; assert.equal((await request('/auth/me')).status, 401);
 });
+it('regression: explicitly validates missing, string-literal null/undefined, expired, forged, and valid production issuer tokens', async () => {
+  // 1. Missing / null / undefined string bearers
+  const missingRes = await request('/auth/me', null);
+  assert.equal(missingRes.status, 401);
+  assert.equal(missingRes.body.message, 'Clerk Bearer session token required');
+
+  const nullStrRes = await fetch(base + '/auth/me', { headers: { Authorization: 'Bearer null' } });
+  assert.equal(nullStrRes.status, 401);
+  const nullStrJson = await nullStrRes.json();
+  assert.equal(nullStrJson.message, 'Clerk Bearer session token required');
+
+  const undefStrRes = await fetch(base + '/auth/me', { headers: { Authorization: 'Bearer undefined' } });
+  assert.equal(undefStrRes.status, 401);
+  const undefStrJson = await undefStrRes.json();
+  assert.equal(undefStrJson.message, 'Clerk Bearer session token required');
+
+  // 2. Expired session token
+  const expiredRes = await request('/auth/me', token({}, { expiresIn: -10 }));
+  assert.equal(expiredRes.status, 401);
+
+  // 3. Forged / invalid signature
+  const otherKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const forgedToken = jwt.sign({ sub: 'user_fixture', sid: 'sess_fixture', iss: process.env.CLERK_JWT_ISSUER_DOMAIN, azp: 'http://localhost:5173' },
+    otherKeys.privateKey, { algorithm: 'RS256', keyid: 'forged', expiresIn: '60s' });
+  const forgedRes = await request('/auth/me', forgedToken);
+  assert.equal(forgedRes.status, 401);
+  assert.equal(forgedRes.body.message, 'Invalid or expired Clerk session');
+
+  // 4. Valid session token with production domain issuer
+  const prodIssuerToken = token({ iss: 'https://clerk.the-tech-mystery.vercel.app', azp: 'https://the-tech-mystery.vercel.app' });
+  const prodRes = await request('/auth/me', prodIssuerToken);
+  assert.equal(prodRes.status, 200);
+  assert.equal(prodRes.body.data.user._id, String(user._id));
+
+  // 5. Valid session token with apex domain issuer
+  const apexIssuerToken = token({ iss: 'https://the-tech-mystery.vercel.app', azp: 'https://the-tech-mystery.vercel.app' });
+  const apexRes = await request('/auth/me', apexIssuerToken);
+  assert.equal(apexRes.status, 200);
+  assert.equal(apexRes.body.data.user._id, String(user._id));
+});
 it('allows bounded clock drift but rejects tokens issued far in the future', async () => {
   const now = Math.floor(Date.now() / 1000);
   assert.equal((await request('/auth/me', token({ iat: now + 2 }))).status, 200);

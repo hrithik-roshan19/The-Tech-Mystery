@@ -1,7 +1,55 @@
 const { createClerkClient, verifyToken } = require('@clerk/backend');
+const jwt = require('jsonwebtoken');
 const config = require('../config/environment');
+const logger = require('../utils/logger');
+
 let client;
 const failure = (statusCode, message, errorCode) => Object.assign(new Error(message), { statusCode, errorCode });
+
+function getAllowedIssuers() {
+  const list = new Set();
+  const configured = config.clerk?.issuer;
+  if (configured) {
+    const clean = configured.replace(/\/+$/, '');
+    list.add(clean);
+    list.add(`${clean}/`);
+    if (clean.startsWith('https://clerk.')) {
+      list.add(clean.replace('https://clerk.', 'https://'));
+      list.add(`${clean.replace('https://clerk.', 'https://')}/`);
+    } else if (clean.startsWith('https://')) {
+      list.add(clean.replace('https://', 'https://clerk.'));
+      list.add(`${clean.replace('https://', 'https://clerk.')}/`);
+    }
+  }
+  // Allow production application and custom Clerk domains
+  list.add('https://clerk.the-tech-mystery.vercel.app');
+  list.add('https://clerk.the-tech-mystery.vercel.app/');
+  list.add('https://the-tech-mystery.vercel.app');
+  list.add('https://the-tech-mystery.vercel.app/');
+  return Array.from(list).filter(Boolean);
+}
+
+function getAllowedParties(tokenAzp) {
+  const parties = new Set(config.clerk?.authorizedParties || []);
+  if (config.cors?.origin) {
+    const origins = Array.isArray(config.cors.origin) ? config.cors.origin : [config.cors.origin];
+    origins.forEach(o => {
+      if (typeof o === 'string' && o.startsWith('http')) parties.add(o.trim());
+    });
+  }
+  parties.add('https://the-tech-mystery.vercel.app');
+  parties.add('http://localhost:5173');
+  parties.add('http://localhost:5174');
+  parties.add('http://localhost:5175');
+
+  if (tokenAzp && typeof tokenAzp === 'string') {
+    if (tokenAzp.includes('the-tech-mystery') && tokenAzp.endsWith('.vercel.app')) {
+      parties.add(tokenAzp);
+    }
+  }
+
+  return Array.from(parties).filter(Boolean);
+}
 
 const service = {
   getClient() {
@@ -10,30 +58,100 @@ const service = {
   },
   async verifySession(token) {
     if (config.authProvider !== 'clerk') throw failure(404, 'Clerk authentication is not enabled');
+    if (!token || typeof token !== 'string') throw failure(401, 'Clerk Bearer session token required');
+
+    const unverified = jwt.decode(token, { complete: true }) || {};
+    const unverifiedHeader = unverified.header || {};
+    const unverifiedPayload = unverified.payload || {};
+
+    const allowedIssuers = getAllowedIssuers();
+    const allowedParties = unverifiedPayload?.azp ? getAllowedParties(unverifiedPayload.azp) : undefined;
+
     let claims;
     try {
-      claims = await verifyToken(token, { secretKey: config.clerk.secretKey, jwtKey: config.clerk.jwtKey,
-        issuer: config.clerk.issuer, authorizedParties: config.clerk.authorizedParties, clockSkewInMs: 5000 });
-    } catch { throw failure(401, 'Invalid or expired Clerk session'); }
-    if (claims.iss !== config.clerk.issuer || !config.clerk.authorizedParties.includes(claims.azp) ||
+      claims = await verifyToken(token, {
+        secretKey: config.clerk.secretKey,
+        jwtKey: config.clerk.jwtKey,
+        issuer: allowedIssuers.length ? allowedIssuers : undefined,
+        authorizedParties: allowedParties && allowedParties.length ? allowedParties : undefined,
+        clockSkewInMs: 5000
+      });
+    } catch (error) {
+      logger.error('[Clerk Session Verification Failed]:', {
+        errorName: error?.name,
+        errorMessage: error?.message,
+        reason: error?.reason || error?.code || 'verification_failed',
+        tokenKid: unverifiedHeader?.kid,
+        tokenIssuer: unverifiedPayload?.iss,
+        expectedIssuers: allowedIssuers,
+        tokenAzp: unverifiedPayload?.azp,
+        allowedParties,
+        tokenExp: unverifiedPayload?.exp,
+        now: Math.floor(Date.now() / 1000),
+        isExpired: unverifiedPayload?.exp ? unverifiedPayload.exp * 1000 <= Date.now() : null,
+        hasSecretKey: !!config.clerk.secretKey,
+        secretKeyType: config.clerk.secretKey ? (config.clerk.secretKey.startsWith('sk_live_') ? 'live' : 'test') : 'none',
+        hasJwtKey: !!config.clerk.jwtKey
+      });
+      throw failure(401, 'Invalid or expired Clerk session');
+    }
+
+    if ((allowedIssuers.length > 0 && !allowedIssuers.includes(claims.iss)) ||
+        (allowedParties && allowedParties.length > 0 && claims.azp && !allowedParties.includes(claims.azp)) ||
         !/^user_[A-Za-z0-9]+$/.test(claims.sub || '') || !/^sess_[A-Za-z0-9]+$/.test(claims.sid || '') ||
         claims.sts === 'pending' || claims.act || !Number.isFinite(claims.exp) || claims.exp * 1000 <= Date.now()) {
+      logger.error('[Clerk Session Claims Mismatch]:', {
+        claimsIss: claims.iss,
+        allowedIssuers,
+        claimsAzp: claims.azp,
+        allowedParties,
+        subValid: /^user_[A-Za-z0-9]+$/.test(claims.sub || ''),
+        sidValid: /^sess_[A-Za-z0-9]+$/.test(claims.sid || ''),
+        sts: claims.sts,
+        isExpired: !Number.isFinite(claims.exp) || claims.exp * 1000 <= Date.now()
+      });
       throw failure(401, 'Invalid Clerk session claims');
     }
-    // Check authoritative session status so already-revoked JWTs are rejected,
-    // rather than continuing to work until the short-lived token expires.
+
+    // Check authoritative session status so already-revoked JWTs are rejected
     let session;
-    try { session = await service.getClient().sessions.getSession(claims.sid); }
-    catch { throw failure(503, 'Identity provider session verification unavailable'); }
+    try {
+      session = await service.getClient().sessions.getSession(claims.sid);
+    } catch (sessionError) {
+      logger.error('[Clerk Authoritative Session Fetch Failed]:', {
+        errorMessage: sessionError?.message,
+        statusCode: sessionError?.status || sessionError?.statusCode,
+        sessionId: claims.sid,
+        userId: claims.sub
+      });
+      throw failure(503, 'Identity provider session verification unavailable');
+    }
+
     if (session.status !== 'active' || session.userId !== claims.sub || !Number.isFinite(session.expireAt) || session.expireAt <= Date.now()) {
+      logger.warn('[Clerk Session No Longer Active]:', {
+        sessionStatus: session.status,
+        expectedUser: claims.sub,
+        sessionUser: session.userId,
+        expireAt: session.expireAt,
+        now: Date.now()
+      });
       throw failure(401, 'Clerk session is no longer active');
     }
+
     return { clerkUserId: claims.sub, sessionId: claims.sid };
   },
   async verifiedEmail(identity) {
     let user;
-    try { user = await service.getClient().users.getUser(identity.clerkUserId); }
-    catch { throw failure(503, 'Identity provider account verification unavailable'); }
+    try {
+      user = await service.getClient().users.getUser(identity.clerkUserId);
+    } catch (err) {
+      logger.error('[Clerk User Fetch Failed]:', {
+        errorMessage: err?.message,
+        statusCode: err?.status || err?.statusCode,
+        clerkUserId: identity?.clerkUserId
+      });
+      throw failure(503, 'Identity provider account verification unavailable');
+    }
     const email = user.emailAddresses.find(address => address.id === user.primaryEmailAddressId);
     if (user.banned || user.locked || !email || email.verification?.status !== 'verified') {
       throw failure(403, 'A verified primary email and active Clerk account are required');

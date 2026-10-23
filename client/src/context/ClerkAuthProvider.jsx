@@ -15,7 +15,16 @@ export function ClerkBridge({ children }) {
     const requestRevision = ++revision.current;
     setLoading(true);
     try {
-      const token = await getToken();
+      let token = await getToken();
+      if (!token) {
+        token = await getToken({ skipCache: true });
+      }
+      if (!token) {
+        if (requestRevision !== revision.current) return;
+        setUser(null);
+        setAuthError(null);
+        return;
+      }
       const res = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
       if (requestRevision !== revision.current) return;
       setUser(res.data.data.user);

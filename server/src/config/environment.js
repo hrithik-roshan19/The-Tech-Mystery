@@ -10,10 +10,13 @@ const config = {
   env: process.env.NODE_ENV || 'development',
   authProvider: process.env.AUTH_PROVIDER || 'jwt',
   clerk: {
-    secretKey: process.env.CLERK_SECRET_KEY,
+    secretKey: (process.env.CLERK_SECRET_KEY || process.env.CLERK_API_KEY || '').trim().replace(/^["']|["']$/g, ''),
     jwtKey: process.env.CLERK_JWT_KEY?.replace(/\\n/g, '\n'),
-    issuer: process.env.CLERK_JWT_ISSUER_DOMAIN,
-    authorizedParties: (process.env.CLERK_AUTHORIZED_PARTIES || '').split(',').map(value => value.trim()).filter(Boolean)
+    issuer: (process.env.CLERK_JWT_ISSUER_DOMAIN || '').trim().replace(/^["']|["']$/g, ''),
+    authorizedParties: (process.env.CLERK_AUTHORIZED_PARTIES || '')
+      .split(',')
+      .map(value => value.trim().replace(/^["']|["']$/g, ''))
+      .filter(Boolean)
   },
   port: parseInt(process.env.PORT, 10) || 5000,
   apiPrefix: process.env.API_PREFIX || '/api/v1',
