@@ -7,6 +7,7 @@ import Navbar from "../../components/navigation/Navbar";
 import { authService } from "../../services/auth.service";
 import { teamService } from "../../services/team.service";
 import { useAuth } from "../../hooks/useAuth";
+import { isClerkMode } from "../../services/api";
 
 const steps = ["Team Details", "Team Leader", "Team Members", "Review"];
 
@@ -150,6 +151,12 @@ export default function RegisterPage() {
       let newTeam = null;
 
       if (!user) {
+        if (isClerkMode()) {
+          setError("Please sign in or complete operative registration before creating a squad.");
+          navigate(ROUTES.LOGIN);
+          return;
+        }
+
         // 1. Generate unique alphanumeric username from email or name
         const cleanEmailUser = leaderEmail.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "_");
         const randomSuffix = Math.floor(100 + Math.random() * 900);
@@ -173,7 +180,10 @@ export default function RegisterPage() {
         }
 
         // 3. Create Team
-        const teamRes = await teamService.createTeam(teamName.trim());
+        const teamRes = await teamService.createTeam({
+          name: teamName.trim(),
+          college: college?.trim()
+        });
         newTeam = teamRes.data?.team || teamRes.team;
 
         // Update tokens in context with new team
@@ -182,7 +192,10 @@ export default function RegisterPage() {
         }
       } else {
         // Authenticated user (Clerk or active session): create team directly
-        const teamRes = await teamService.createTeam(teamName.trim());
+        const teamRes = await teamService.createTeam({
+          name: teamName.trim(),
+          college: college?.trim()
+        });
         newTeam = teamRes.data?.team || teamRes.team;
 
         if (newTeam?._id && updateTeamMembership) {

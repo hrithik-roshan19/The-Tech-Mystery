@@ -8,7 +8,7 @@ import { PageTransition } from '../../components/common/Motion';
 import { fadeInUpVariants, staggerContainer, staggerItemVariants } from '../../utils/motion';
 import LegacyLogin from '../public/LoginPage';
 import LegacyRegister from '../public/RegisterPage';
-import api from '../../services/api';
+import api, { isClerkMode } from '../../services/api';
 import '../../styles/LoginPage.css';
 import '../../styles/ClerkAuth.css';
 
@@ -239,11 +239,11 @@ function IdentityPage({ register = false }) {
 }
 
 export function LoginPage() {
-  return import.meta.env.VITE_AUTH_PROVIDER === 'clerk' ? <IdentityPage /> : <LegacyLogin />;
+  return isClerkMode() ? <IdentityPage /> : <LegacyLogin />;
 }
 
 export function RegisterPage() {
-  const isClerk = import.meta.env.VITE_AUTH_PROVIDER === 'clerk';
+  const isClerk = isClerkMode();
   const { identityAuthenticated, isAuthenticated, user, loading } = useAuth();
 
   if (isClerk) {

@@ -9,7 +9,18 @@ vi.mock('@clerk/react', () => ({
   useClerk: () => ({ signOut: fixture.signOut, openUserProfile: fixture.openUserProfile }),
   SignIn: () => <div>Official sign-in component</div>, SignUp: () => <div>Official sign-up component</div>
 }));
-vi.mock('../services/api', () => ({ default: { get: (...args) => fixture.get(...args), post: (...args) => fixture.post(...args) }, setSessionTokenGetter: vi.fn() }));
+vi.mock('../services/api', () => ({
+  default: { get: (...args) => fixture.get(...args), post: (...args) => fixture.post(...args) },
+  setSessionTokenGetter: vi.fn(),
+  isClerkMode: () => {
+    const provider = import.meta.env.VITE_AUTH_PROVIDER;
+    if (provider === 'jwt') return false;
+    if (provider === 'clerk') return true;
+    const key = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+    return /^pk_(test|live)_/.test(key || '');
+  },
+  getNormalizedApiBaseUrl: (raw) => (raw ? (raw.endsWith('/api/v1') ? raw : `${raw}/api/v1`) : 'http://localhost:5000/api/v1')
+}));
 vi.mock('../hooks/useAuth', () => ({ useAuth: () => fixture.auth }));
 import { AuthProvider, ClerkBridge } from './ClerkAuthProvider';
 import { AuthContext } from './AuthContext';

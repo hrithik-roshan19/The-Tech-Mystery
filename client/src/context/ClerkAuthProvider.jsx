@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { ClerkProvider, useAuth as useClerkAuth, useClerk } from '@clerk/react';
 import { AuthContext, LegacyAuthProvider } from './AuthContext';
-import api, { setSessionTokenGetter } from '../services/api';
+import api, { setSessionTokenGetter, isClerkMode } from '../services/api';
 
 export function ClerkBridge({ children }) {
   const { isLoaded, isSignedIn, getToken } = useClerkAuth();
@@ -55,10 +55,9 @@ function ClerkSessionBoundary({ children }) {
 }
 
 export function AuthProvider({ children }) {
-  const provider = import.meta.env.VITE_AUTH_PROVIDER || 'jwt';
-  if (provider === 'jwt') return <LegacyAuthProvider>{children}</LegacyAuthProvider>;
+  if (import.meta.env.VITE_AUTH_PROVIDER === 'jwt') return <LegacyAuthProvider>{children}</LegacyAuthProvider>;
   const key = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  if (provider !== 'clerk' || !/^pk_(test|live)_/.test(key || '')) {
+  if (!isClerkMode() || !/^pk_(test|live)_/.test(key || '')) {
     return <main role="alert">Authentication is not configured. Contact an organizer.</main>;
   }
   return <ClerkProvider publishableKey={key} signInUrl="/login" signUpUrl="/register"

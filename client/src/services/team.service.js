@@ -1,8 +1,15 @@
 import api from './api';
 
 export const teamService = {
-  createTeam: async (name) => {
-    const res = await api.post('/teams/create', { name });
+  createTeam: async (payload) => {
+    const data = typeof payload === 'string' ? { name: payload } : payload;
+    const res = await api.post('/teams/create', data);
+    return res.data;
+  },
+
+  registerTeam: async (payload) => {
+    const data = typeof payload === 'string' ? { name: payload } : payload;
+    const res = await api.post('/teams/create', data);
     return res.data;
   },
 
@@ -21,4 +28,3 @@ export const teamService = {
     return res.data;
   }
 };
-

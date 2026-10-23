@@ -10,6 +10,7 @@ router.use(authenticate); // All team actions require authenticated user
 
 router.post('/', validate(createTeamValidator), teamController.createTeam);
 router.post('/create', validate(createTeamValidator), teamController.createTeam);
+router.post('/register', validate(createTeamValidator), teamController.createTeam);
 router.post('/join', validate(joinTeamValidator), teamController.joinTeam);
 router.get('/me', teamController.getMyTeam);
 router.get('/my-team', teamController.getMyTeam);

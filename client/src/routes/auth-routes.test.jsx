@@ -21,7 +21,15 @@ vi.mock('../services/api', () => ({
     get: vi.fn().mockResolvedValue({ data: { success: true, data: { team: null, user: null, stats: {} } } }),
     post: vi.fn().mockResolvedValue({ data: { success: true, data: {} } }),
   },
-  setSessionTokenGetter: vi.fn()
+  setSessionTokenGetter: vi.fn(),
+  isClerkMode: () => {
+    const provider = import.meta.env.VITE_AUTH_PROVIDER;
+    if (provider === 'jwt') return false;
+    if (provider === 'clerk') return true;
+    const key = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+    return /^pk_(test|live)_/.test(key || '');
+  },
+  getNormalizedApiBaseUrl: (raw) => (raw ? (raw.endsWith('/api/v1') ? raw : `${raw}/api/v1`) : 'http://localhost:5000/api/v1')
 }));
 
 vi.mock('../hooks/useAuth', () => ({ useAuth: () => fixture.auth }));

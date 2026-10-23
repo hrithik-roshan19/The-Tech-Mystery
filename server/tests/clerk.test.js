@@ -209,3 +209,31 @@ it('revokes only other sessions and confirms each provider response', async () =
     assert.deepEqual(revoked, ['sess_other']);
   } finally { stub.mock.restore(); }
 });
+
+it('allows an authenticated unteamed Clerk participant to register a squad via /teams/create and /teams/register', async () => {
+  await EventConfig.updateOne({}, { registrationOpen: true });
+  await User.updateOne({ _id: user._id }, { clerkUserId: 'user_fixture', teamId: null, role: 'TEAM_MEMBER' });
+
+  // 1. Legacy /auth/register fails closed with 404 in Clerk mode
+  const legacyRegRes = await request('/auth/register', null, { username: 'test' });
+  assert.equal(legacyRegRes.status, 404);
+
+  // 2. Unauthenticated request to /teams/register is rejected with 401
+  const unauthRegRes = await request('/teams/register', null, { name: 'Unauth Squad' });
+  assert.equal(unauthRegRes.status, 401);
+
+  // 3. Authenticated request to /teams/register successfully creates team
+  const regRes = await request('/teams/register', token(), { name: 'Alpha Squad', college: "Tula's University" });
+  assert.equal(regRes.status, 201);
+  assert.equal(regRes.body.data.team.name, 'Alpha Squad');
+  assert.ok(regRes.body.data.team.joinCode);
+
+  // User is now promoted to TEAM_LEADER with teamId
+  const updatedLeader = await User.findById(user._id);
+  assert.equal(updatedLeader.role, 'TEAM_LEADER');
+  assert.equal(String(updatedLeader.teamId), String(regRes.body.data.team._id));
+
+  // 4. Duplicate team creation for an already teamed user is rejected with 400
+  const dupeRes = await request('/teams/create', token(), { name: 'Beta Squad' });
+  assert.equal(dupeRes.status, 400);
+});
