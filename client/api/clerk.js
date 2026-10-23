@@ -68,7 +68,8 @@ export default async function handler(req, res) {
         status: 'ok',
         service: 'clerk-proxy',
         target: FAPI_HOST,
-        proxyUrl
+        proxyUrl,
+        hasSecretKey: !!process.env.CLERK_SECRET_KEY
       });
     }
 
