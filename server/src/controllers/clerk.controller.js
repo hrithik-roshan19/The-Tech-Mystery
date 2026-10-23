@@ -3,10 +3,22 @@ const clerk = require('../services/clerk.service');
 const transaction = require('../utils/transaction');
 const { eventFor } = require('../services/eligibility.service');
 const { success } = require('../utils/apiResponse');
+const logger = require('../utils/logger');
+
+function isApprovedIdentityIndex(index) {
+  if (!index || !index.unique || !index.key) return false;
+  const keys = Object.keys(index.key);
+  if (keys.length !== 1) return false;
+  return keys[0] === 'clerkUserId' && Math.abs(Number(index.key.clerkUserId)) === 1;
+}
 
 async function requireMappingIndex() {
-  const indexes = await User.collection.indexes();
-  if (!indexes.some(index => index.unique && Object.keys(index.key).length === 1 && index.key.clerkUserId === 1)) {
+  const indexes = await User.collection.indexes().catch(() => []);
+  if (!indexes.some(isApprovedIdentityIndex)) {
+    logger.error('[Clerk Identity Mapping]: Required unique identity index on clerkUserId is missing from users collection', {
+      foundIndexNames: indexes.map(i => i.name),
+      foundKeys: indexes.map(i => Object.keys(i.key || {}).join(','))
+    });
     throw clerk.failure(503, 'Account mapping requires the approved unique identity index');
   }
 }

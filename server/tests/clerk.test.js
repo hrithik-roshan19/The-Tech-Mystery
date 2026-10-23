@@ -227,6 +227,34 @@ it('fails closed if unique mapping index is missing', async () => {
   try { assert.equal((await request('/auth/clerk/register', token(), { username: 'fixture_new', fullName: 'Fixture' })).status, 503); }
   finally { await User.collection.createIndex({ clerkUserId: 1 }, { unique: true, sparse: true }); }
 });
+it('regression: recognizes equivalent approved identity index definitions (custom name and descending key)', async () => {
+  await User.collection.dropIndex('clerkUserId_1');
+  // Create an equivalent approved index with descending direction and custom name
+  await User.collection.createIndex({ clerkUserId: -1 }, { name: 'custom_unique_clerk_idx', unique: true, sparse: true });
+  try {
+    await User.updateOne({ _id: user._id }, { $unset: { clerkUserId: 1 } });
+    email = 'equivalent@example.test';
+    await EventConfig.updateOne({}, { registrationOpen: true });
+    const res = await request('/auth/clerk/register', token(), { username: 'equiv_user', fullName: 'Equiv User' });
+    assert.equal(res.status, 201);
+  } finally {
+    await User.collection.dropIndex('custom_unique_clerk_idx');
+    await User.collection.createIndex({ clerkUserId: 1 }, { unique: true, sparse: true });
+  }
+});
+it('regression: rejects non-unique or composite index definitions as unapproved', async () => {
+  await User.collection.dropIndex('clerkUserId_1');
+  // Create a non-unique index on clerkUserId
+  await User.collection.createIndex({ clerkUserId: 1 }, { name: 'non_unique_clerk_idx' });
+  try {
+    const res = await request('/auth/clerk/register', token(), { username: 'insecure_user', fullName: 'Insecure User' });
+    assert.equal(res.status, 503);
+    assert.equal(res.body.message, 'Account mapping requires the approved unique identity index');
+  } finally {
+    await User.collection.dropIndex('non_unique_clerk_idx');
+    await User.collection.createIndex({ clerkUserId: 1 }, { unique: true, sparse: true });
+  }
+});
 it('fails closed for missing Clerk configuration, unexpected providers and development keys in production', () => {
   const environment = require.resolve('../src/config/environment');
   for (const override of [ { CLERK_SECRET_KEY: '' }, { CLERK_JWT_ISSUER_DOMAIN: 'http://insecure.example' },

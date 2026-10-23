@@ -51,6 +51,17 @@ const startServer = async () => {
   try {
     await connectDB();
 
+    // Ensure critical unique schema indexes are synchronized on boot
+    if (config.authProvider === 'clerk') {
+      try {
+        const { User } = require('./models');
+        await User.init();
+        logger.info('[Database] User identity indexes verified and synchronized');
+      } catch (indexError) {
+        logger.error(`[Database] User index initialization error: ${indexError.message}`);
+      }
+    }
+
     const server = app.listen(config.port, () => {
       logger.info(`=======================================================`);
       logger.info(`  THE TECH MYSTERY - CTF CORE ENGINE READY`);

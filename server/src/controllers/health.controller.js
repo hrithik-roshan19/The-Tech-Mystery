@@ -6,7 +6,7 @@ const config = require('../config/environment');
  * Health check controller
  * Reports server status, database connectivity, and uptime.
  */
-const getHealth = (req, res) => {
+const getHealth = async (req, res) => {
   const dbState = mongoose.connection.readyState;
   const dbStateMap = {
     0: 'disconnected',
@@ -14,6 +14,21 @@ const getHealth = (req, res) => {
     2: 'connecting',
     3: 'disconnecting'
   };
+
+  let identityIndexPresent = false;
+  if (dbState === 1) {
+    try {
+      const User = mongoose.model('User');
+      const indexes = await User.collection.indexes();
+      identityIndexPresent = indexes.some(index =>
+        index?.unique &&
+        index?.key &&
+        Object.keys(index.key).length === 1 &&
+        index.key.clerkUserId &&
+        Math.abs(Number(index.key.clerkUserId)) === 1
+      );
+    } catch (_) {}
+  }
 
   return success(
     res,
@@ -30,7 +45,8 @@ const getHealth = (req, res) => {
           ? (config.clerk.secretKey.startsWith('sk_live_') ? 'live' : (config.clerk.secretKey.startsWith('sk_test_') ? 'test' : 'other'))
           : 'none',
         clerkIssuer: config.clerk?.issuer || null,
-        clerkAuthorizedParties: config.clerk?.authorizedParties || []
+        clerkAuthorizedParties: config.clerk?.authorizedParties || [],
+        identityIndexPresent
       }
     },
     'The Tech Mystery Core API is healthy and operational'
