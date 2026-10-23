@@ -1,2 +1,2 @@
-import handler from './__clerk.js';
+import handler from './clerk.js';
 export default handler;

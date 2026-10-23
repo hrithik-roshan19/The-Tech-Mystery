@@ -45,18 +45,44 @@ export default async function handler(req, res) {
       targetPath = Array.isArray(req.query.path) ? req.query.path.join('/') : req.query.path;
     } else {
       const originalPath = req.headers['x-matched-path'] || req.url || '';
-      const match = originalPath.match(/^(\/(\.?__clerk))(\/.*)?$/);
-      if (match && match[3]) {
-        targetPath = match[3];
+      const match = originalPath.match(/^(\/(\.?__clerk|api\/clerk(-proxy)?))(\/.*)?$/);
+      if (match && match[4]) {
+        targetPath = match[4];
       }
     }
 
-    if (!targetPath.startsWith('/')) {
+    if (targetPath && !targetPath.startsWith('/')) {
       targetPath = '/' + targetPath;
     }
 
-    // 2. Build target query string (excluding internal 'path' rewrite param)
+    // 2. Determine proxy URL registered with Clerk
+    const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'the-tech-mystery.vercel.app';
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const matchedPath = req.headers['x-matched-path'] || req.url || '';
+    const prefix = matchedPath.includes('.__clerk') ? '/.__clerk' : '/__clerk';
+    const proxyUrl = process.env.CLERK_PROXY_URL || `${proto}://${host}${prefix}`;
+
+    // 3. Health check response for direct verification of deployed Vercel Function
+    if (!targetPath || targetPath === '/' || (req.query && req.query.health)) {
+      return res.status(200).json({
+        status: 'ok',
+        service: 'clerk-proxy',
+        target: FAPI_HOST,
+        proxyUrl
+      });
+    }
+
+    // 4. Build target query string (excluding internal 'path' rewrite param)
     const searchParams = new URLSearchParams();
+    if (targetPath.includes('?')) {
+      const [cleanPath, extraQuery] = targetPath.split('?');
+      targetPath = cleanPath;
+      const extraParams = new URLSearchParams(extraQuery);
+      for (const [k, v] of extraParams.entries()) {
+        searchParams.append(k, v);
+      }
+    }
+
     if (req.query) {
       for (const [key, val] of Object.entries(req.query)) {
         if (key !== 'path') {
@@ -72,14 +98,7 @@ export default async function handler(req, res) {
     const queryString = searchParams.toString();
     const targetUrl = `https://${FAPI_HOST}${targetPath}${queryString ? '?' + queryString : ''}`;
 
-    // 3. Determine proxy URL registered with Clerk
-    const host = req.headers['x-forwarded-host'] || req.headers['host'] || 'the-tech-mystery.vercel.app';
-    const proto = req.headers['x-forwarded-proto'] || 'https';
-    const matchedPath = req.headers['x-matched-path'] || req.url || '';
-    const prefix = matchedPath.includes('.__clerk') ? '/.__clerk' : '/__clerk';
-    const proxyUrl = process.env.CLERK_PROXY_URL || `${proto}://${host}${prefix}`;
-
-    // 4. Construct forwarding headers
+    // 5. Construct forwarding headers
     const forwardHeaders = {};
     for (const [key, val] of Object.entries(req.headers)) {
       const lower = key.toLowerCase();
@@ -100,10 +119,10 @@ export default async function handler(req, res) {
     forwardHeaders['X-Forwarded-Host'] = host;
     forwardHeaders['X-Forwarded-Proto'] = proto;
 
-    // 5. Read body
+    // 6. Read body
     const body = (req.method === 'GET' || req.method === 'HEAD') ? undefined : await getRawBody(req);
 
-    // 6. Forward to Clerk FAPI
+    // 7. Forward to Clerk FAPI
     const clerkRes = await fetch(targetUrl, {
       method: req.method,
       headers: forwardHeaders,
@@ -113,7 +132,7 @@ export default async function handler(req, res) {
 
     res.status(clerkRes.status);
 
-    // 7. Forward response headers
+    // 8. Forward response headers
     for (const [key, val] of clerkRes.headers.entries()) {
       const lower = key.toLowerCase();
       if (lower === 'content-encoding' || lower === 'content-length' || lower === 'transfer-encoding') {

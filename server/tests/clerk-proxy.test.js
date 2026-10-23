@@ -1,10 +1,10 @@
-// Unit tests for Vercel Clerk Frontend API Serverless Proxy handler (api/__clerk.js)
+// Unit tests for Vercel Clerk Frontend API Serverless Proxy handler (api/clerk.js)
 const { it, describe, beforeEach, afterEach, mock } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
-describe('Clerk Vercel Proxy Handler (api/__clerk.js)', () => {
+describe('Clerk Vercel Proxy Handler (api/clerk.js)', () => {
   let proxyHandler;
   let originalFetch;
 
@@ -13,7 +13,7 @@ describe('Clerk Vercel Proxy Handler (api/__clerk.js)', () => {
     process.env.CLERK_SECRET_KEY = 'sk_test_fixture_secret_key';
     process.env.CLERK_PROXY_URL = 'https://the-tech-mystery.vercel.app/.__clerk';
     // Import the ES module handler with file:// URL for Windows compatibility
-    const fileUrl = pathToFileURL(path.resolve(__dirname, '../../api/__clerk.js')).href;
+    const fileUrl = pathToFileURL(path.resolve(__dirname, '../../api/clerk.js')).href;
     const mod = await import(fileUrl);
     proxyHandler = mod.default;
   });
@@ -73,6 +73,26 @@ describe('Clerk Vercel Proxy Handler (api/__clerk.js)', () => {
     assert.equal(res.headers['access-control-allow-credentials'], 'true');
     assert.ok(res.headers['access-control-allow-methods'].includes('POST'));
     assert.ok(res.headers['access-control-allow-headers'].includes('Clerk-Proxy-Url'));
+  });
+
+  it('returns health check status when invoked without target subpath', async () => {
+    const req = {
+      method: 'GET',
+      headers: {
+        host: 'the-tech-mystery.vercel.app'
+      },
+      query: {}
+    };
+    const res = createMockResponse();
+
+    await proxyHandler(req, res);
+
+    assert.equal(res.statusCode, 200);
+    const body = JSON.parse(res.body);
+    assert.equal(body.status, 'ok');
+    assert.equal(body.service, 'clerk-proxy');
+    assert.equal(body.target, 'frontend-api.clerk.dev');
+    assert.equal(body.proxyUrl, 'https://the-tech-mystery.vercel.app/.__clerk');
   });
 
   it('proxies GET request to frontend-api.clerk.dev with required headers and query parameters', async () => {

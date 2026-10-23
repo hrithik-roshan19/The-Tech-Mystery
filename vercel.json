@@ -1,29 +1,29 @@
 {
-  "buildCommand": "npm run build --workspace=client",
+  "buildCommand": "npm run build:client",
   "outputDirectory": "client/dist",
   "rewrites": [
     {
-      "source": "/\\.__clerk/:path*",
-      "destination": "/api/__clerk?path=:path*"
+      "source": "/.__clerk/:path*",
+      "destination": "/api/clerk?path=:path*"
     },
     {
       "source": "/__clerk/:path*",
-      "destination": "/api/__clerk?path=:path*"
+      "destination": "/api/clerk?path=:path*"
     },
     {
-      "source": "/\\.__clerk",
-      "destination": "/api/__clerk"
+      "source": "/.__clerk",
+      "destination": "/api/clerk"
     },
     {
       "source": "/__clerk",
-      "destination": "/api/__clerk"
+      "destination": "/api/clerk"
     },
     {
-      "source": "/api/:match*",
-      "destination": "/api/:match*"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     },
     {
-      "source": "/((?!api/|\\.__clerk|__clerk).*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ]
