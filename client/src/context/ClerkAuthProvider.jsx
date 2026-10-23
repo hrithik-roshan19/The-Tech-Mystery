@@ -9,6 +9,7 @@ export function ClerkBridge({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+  const [initTimeout, setInitTimeout] = useState(false);
   const revision = useRef(0);
   const refreshUser = useCallback(async () => {
     const requestRevision = ++revision.current;
@@ -25,6 +26,32 @@ export function ClerkBridge({ children }) {
       setAuthError(error.response?.data?.errorCode || 'ACCOUNT_VERIFICATION_FAILED');
     } finally { if (requestRevision === revision.current) setLoading(false); }
   }, [getToken]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setInitTimeout(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setInitTimeout(true);
+      setAuthError((prev) => prev || 'CLERK_INIT_FAILED');
+    }, 8000);
+
+    const handleScriptError = (event) => {
+      const target = event?.target;
+      if (target?.tagName === 'SCRIPT' && typeof target?.src === 'string' && target.src.includes('clerk')) {
+        setInitTimeout(true);
+        setAuthError((prev) => prev || 'CLERK_INIT_FAILED');
+      }
+    };
+    window.addEventListener('error', handleScriptError, true);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('error', handleScriptError, true);
+    };
+  }, [isLoaded]);
+
   useEffect(() => {
     setSessionTokenGetter(getToken);
     if (!isLoaded) return;
@@ -40,13 +67,14 @@ export function ClerkBridge({ children }) {
   const logout = async () => {
     revision.current++;
     setUser(null);
-    await clerk.signOut({ redirectUrl: '/login' });
+    await clerk?.signOut?.({ redirectUrl: '/login' });
   };
-  return <AuthContext.Provider value={{ user, token: null, loading: !isLoaded || loading,
+  return <AuthContext.Provider value={{ user, token: null, loading: initTimeout ? false : (!isLoaded || loading),
     identityAuthenticated: !!isSignedIn, isAuthenticated: !!isSignedIn && !!user,
-    isAdmin: user?.role === 'ADMIN', hasTeam: !!user?.teamId, authError,
+    isAdmin: user?.role === 'ADMIN', hasTeam: !!user?.teamId, authError: initTimeout ? (authError || 'CLERK_INIT_FAILED') : authError,
+    initFailed: initTimeout,
     refreshUser, login: refreshUser, updateTeamMembership: refreshUser, logout,
-    manageAccount: () => clerk.openUserProfile() }}>{children}</AuthContext.Provider>;
+    manageAccount: () => clerk?.openUserProfile?.() }}>{children}</AuthContext.Provider>;
 }
 
 function ClerkSessionBoundary({ children }) {
@@ -60,7 +88,13 @@ export function AuthProvider({ children }) {
   if (!isClerkMode() || !/^pk_(test|live)_/.test(key || '')) {
     return <main role="alert">Authentication is not configured. Contact an organizer.</main>;
   }
-  return <ClerkProvider publishableKey={key} signInUrl="/login" signUpUrl="/register"
+
+  // Derive proxyUrl:
+  // In production (pk_live_...) or if explicitly configured via VITE_CLERK_PROXY_URL, use the proxy route.
+  // In development (pk_test_...), leave undefined so localhost uses direct Clerk dev FAPI.
+  const proxyUrl = import.meta.env.VITE_CLERK_PROXY_URL || (key.startsWith('pk_live_') ? '/.__clerk' : undefined);
+
+  return <ClerkProvider publishableKey={key} proxyUrl={proxyUrl} signInUrl="/login" signUpUrl="/register"
     signInForceRedirectUrl="/auth/complete" signUpForceRedirectUrl="/auth/complete">
     <ClerkSessionBoundary>{children}</ClerkSessionBoundary>
   </ClerkProvider>;

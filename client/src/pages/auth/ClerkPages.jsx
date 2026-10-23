@@ -116,7 +116,7 @@ const clerkAppearance = {
 };
 
 function IdentityPage({ register = false }) {
-  const { identityAuthenticated } = useAuth();
+  const { identityAuthenticated, initFailed, authError } = useAuth();
   const location = useLocation();
 
   if (identityAuthenticated) return <Navigate to="/auth/complete" state={location.state} replace />;
@@ -201,7 +201,22 @@ function IdentityPage({ register = false }) {
             </p>
           </div>
 
-          {register ? (
+          {initFailed || authError === 'CLERK_INIT_FAILED' ? (
+            <div style={{ textAlign: 'center', padding: '24px 12px' }}>
+              <div style={{ color: '#ff6b6b', fontSize: '32px', marginBottom: '12px' }}>⚠</div>
+              <p role="alert" style={{ color: '#ff8595', background: 'rgba(255, 75, 75, 0.12)', border: '1px solid rgba(255, 75, 75, 0.35)', borderRadius: '6px', padding: '12px 16px', fontSize: '13px', marginBottom: '16px', lineHeight: 1.5 }}>
+                Authentication service initialization timed out. This may occur if network connectivity was interrupted or proxy requests were blocked.
+              </p>
+              <button
+                type="button"
+                className="login-submit"
+                onClick={() => window.location.reload()}
+                style={{ width: 'auto', padding: '10px 24px', cursor: 'pointer' }}
+              >
+                Reload Authentication Service
+              </button>
+            </div>
+          ) : register ? (
             <SignUp routing="hash" appearance={clerkAppearance} />
           ) : (
             <SignIn routing="hash" appearance={clerkAppearance} />
@@ -244,9 +259,37 @@ export function LoginPage() {
 
 export function RegisterPage() {
   const isClerk = isClerkMode();
-  const { identityAuthenticated, isAuthenticated, user, loading } = useAuth();
+  const { identityAuthenticated, isAuthenticated, user, loading, initFailed, authError } = useAuth();
 
   if (isClerk) {
+    if (initFailed || authError === 'CLERK_INIT_FAILED') {
+      return (
+        <PageTransition className="htg-login">
+          <div className="htg-login-bg" />
+          <div className="htg-login-overlay" />
+          <div className="htg-login-grid" />
+          <Navbar />
+          <main className="htg-login-main" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div className="htg-login-card" style={{ maxWidth: 480, textAlign: 'center', padding: '32px 24px' }}>
+              <div style={{ color: '#ff6b6b', fontSize: '36px', marginBottom: '12px' }}>⚠</div>
+              <h3 style={{ color: '#fff', fontSize: '20px', marginBottom: '8px' }}>Security Service Offline</h3>
+              <p style={{ color: '#b2b7b3', fontSize: '13.5px', lineHeight: 1.5, marginBottom: '24px' }}>
+                The operative authentication service could not be initialized within the expected timeframe.
+              </p>
+              <button
+                type="button"
+                className="login-submit"
+                onClick={() => window.location.reload()}
+                style={{ width: 'auto', padding: '10px 24px', cursor: 'pointer' }}
+              >
+                Retry Initialization
+              </button>
+            </div>
+          </main>
+        </PageTransition>
+      );
+    }
+
     if (loading) {
       return (
         <PageTransition className="htg-login">

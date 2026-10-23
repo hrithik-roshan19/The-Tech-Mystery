@@ -2,9 +2,9 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-const fixture = vi.hoisted(() => ({ auth: {}, sdk: {}, signOut: vi.fn(), openUserProfile: vi.fn(), get: vi.fn(), post: vi.fn() }));
+const fixture = vi.hoisted(() => ({ auth: {}, sdk: {}, signOut: vi.fn(), openUserProfile: vi.fn(), get: vi.fn(), post: vi.fn(), providerProps: {} }));
 vi.mock('@clerk/react', () => ({
-  ClerkProvider: ({ children }) => <>{children}</>,
+  ClerkProvider: ({ children, ...props }) => { fixture.providerProps = props; return <>{children}</>; },
   useAuth: () => fixture.sdk,
   useClerk: () => ({ signOut: fixture.signOut, openUserProfile: fixture.openUserProfile }),
   SignIn: () => <div>Official sign-in component</div>, SignUp: () => <div>Official sign-up component</div>
@@ -108,5 +108,29 @@ describe('Clerk frontend contracts (SDK UI mocked; no real login claim)', () => 
     fireEvent.click(screen.getByText('Register participant'));
     await waitFor(() => expect(fixture.post).toHaveBeenCalledWith('/auth/clerk/register', { username: 'fixture_new', fullName: 'Synthetic Fixture' }));
     expect(fixture.auth.refreshUser).toHaveBeenCalled();
+  });
+
+  it('configures proxyUrl automatically for production publishable key', () => {
+    vi.stubEnv('VITE_CLERK_PUBLISHABLE_KEY', 'pk_live_Y2xlcmsudGhlLXRlY2gtbXlzdGVyeS52ZXJjZWwuYXBwJA');
+    render(<AuthProvider><p>Production Child</p></AuthProvider>);
+    expect(fixture.providerProps.proxyUrl).toBe('/.__clerk');
+  });
+
+  it('honors custom VITE_CLERK_PROXY_URL if provided', () => {
+    vi.stubEnv('VITE_CLERK_PUBLISHABLE_KEY', 'pk_live_custom');
+    vi.stubEnv('VITE_CLERK_PROXY_URL', 'https://the-tech-mystery.vercel.app/.__clerk');
+    render(<AuthProvider><p>Custom Proxy Child</p></AuthProvider>);
+    expect(fixture.providerProps.proxyUrl).toBe('https://the-tech-mystery.vercel.app/.__clerk');
+  });
+
+  it('renders recovery screen when authentication initialization fails or times out', () => {
+    fixture.auth = { loading: false, initFailed: true, authError: 'CLERK_INIT_FAILED' };
+    const view = render(<MemoryRouter><RegisterPage /></MemoryRouter>);
+    expect(screen.getByText('Security Service Offline')).toBeTruthy();
+    expect(screen.getByText('Retry Initialization')).toBeTruthy();
+
+    view.rerender(<MemoryRouter><LoginPage /></MemoryRouter>);
+    expect(screen.getByText(/Authentication service initialization timed out/i)).toBeTruthy();
+    expect(screen.getByText('Reload Authentication Service')).toBeTruthy();
   });
 });

@@ -3,9 +3,28 @@
   "outputDirectory": "client/dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/\\.__clerk/:path*",
+      "destination": "/api/__clerk?path=:path*"
+    },
+    {
+      "source": "/__clerk/:path*",
+      "destination": "/api/__clerk?path=:path*"
+    },
+    {
+      "source": "/\\.__clerk",
+      "destination": "/api/__clerk"
+    },
+    {
+      "source": "/__clerk",
+      "destination": "/api/__clerk"
+    },
+    {
+      "source": "/api/:match*",
+      "destination": "/api/:match*"
+    },
+    {
+      "source": "/((?!api/|\\.__clerk|__clerk).*)",
       "destination": "/index.html"
     }
   ]
 }
-
