@@ -135,7 +135,7 @@ export default async function handler(req, res) {
     // 8. Forward response headers
     for (const [key, val] of clerkRes.headers.entries()) {
       const lower = key.toLowerCase();
-      if (lower === 'content-encoding' || lower === 'content-length' || lower === 'transfer-encoding') {
+      if (HOP_BY_HOP.has(lower) || lower === 'content-encoding' || lower === 'content-length') {
         continue;
       }
       if (lower === 'location') {
@@ -158,7 +158,11 @@ export default async function handler(req, res) {
     }
 
     const resBuffer = Buffer.from(await clerkRes.arrayBuffer());
-    res.send(resBuffer);
+    if (resBuffer.length === 0) {
+      res.end();
+    } else {
+      res.send(resBuffer);
+    }
   } catch (error) {
     console.error('[Clerk Proxy Error]:', error);
     res.status(502).json({

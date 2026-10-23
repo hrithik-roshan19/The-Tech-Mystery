@@ -1,9 +1,24 @@
 {
   "rewrites": [
     {
+      "source": "/.__clerk/:path*",
+      "destination": "/api/clerk?path=:path*"
+    },
+    {
+      "source": "/__clerk/:path*",
+      "destination": "/api/clerk?path=:path*"
+    },
+    {
+      "source": "/.__clerk",
+      "destination": "/api/clerk"
+    },
+    {
+      "source": "/__clerk",
+      "destination": "/api/clerk"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
 }
-
