@@ -107,7 +107,7 @@
 /* Divider ("or") */
 .htg-clerk-card-container .cl-dividerRow,
 .htg-clerk-card-container .htg-clerk-divider-row {
-  margin: 20px 0 !important;
+  margin: 16px 0 !important;
   display: flex !important;
   align-items: center !important;
   gap: 12px !important;
@@ -260,13 +260,13 @@
 .htg-clerk-card-container .htg-clerk-footer {
   background: transparent !important;
   border: none !important;
-  padding: 18px 0 0 !important;
-  margin-top: 16px !important;
+  padding: 14px 0 0 !important;
+  margin-top: 14px !important;
   border-top: 1px solid rgba(245, 245, 240, 0.1) !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 10px !important;
 }
 
 .htg-clerk-card-container .cl-footerAction,

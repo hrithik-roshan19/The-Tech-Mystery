@@ -217,9 +217,9 @@ function IdentityPage({ register = false }) {
               </button>
             </div>
           ) : register ? (
-            <SignUp routing="hash" appearance={clerkAppearance} />
+            <SignUp routing="hash" appearance={clerkAppearance} fallbackRedirectUrl="/auth/complete" forceRedirectUrl="/auth/complete" />
           ) : (
-            <SignIn routing="hash" appearance={clerkAppearance} />
+            <SignIn routing="hash" appearance={clerkAppearance} fallbackRedirectUrl="/auth/complete" forceRedirectUrl="/auth/complete" />
           )}
         </motion.section>
 
