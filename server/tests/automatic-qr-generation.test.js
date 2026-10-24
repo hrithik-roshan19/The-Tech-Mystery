@@ -410,10 +410,26 @@ it('Automatic QR code generation and scan verification test suite', async (t) =>
     assert.equal(submitResponse.success, true);
     assert.equal(submitResponse.data.pointsAwarded, 100);
     assert.equal(submitResponse.data.newTotalScore, 100);
+
+    // Solve remaining sequential questions in Level 1 to complete level
+    await submissionController.submitFlag({
+      body: { levelNumber: 1, flag: 'HTG{bulk_flag_a}' },
+      user: { userId: participantUser._id, teamId: testTeam._id },
+      ip: '127.0.0.1',
+      headers: { 'user-agent': 'test-runner' }
+    }, res1);
+
+    await submissionController.submitFlag({
+      body: { levelNumber: 1, flag: 'HTG{bulk_flag_b}' },
+      user: { userId: participantUser._id, teamId: testTeam._id },
+      ip: '127.0.0.1',
+      headers: { 'user-agent': 'test-runner' }
+    }, res1);
+
     assert.equal(submitResponse.data.nextLevel, 2);
 
     const teamAfterSolve = await Team.findById(testTeam._id);
-    assert.equal(teamAfterSolve.totalScore, 100);
+    assert.equal(teamAfterSolve.totalScore, 300);
     assert.equal(teamAfterSolve.currentLevel, 2);
 
     // 2. Duplicate submission for solved level must be strictly rejected
@@ -444,6 +460,6 @@ it('Automatic QR code generation and scan verification test suite', async (t) =>
     assert.ok(dupResponse.message.includes('locked or already solved') || dupResponse.message.includes('already been solved'));
 
     const teamAfterDup = await Team.findById(testTeam._id);
-    assert.equal(teamAfterDup.totalScore, 100, 'Score must remain 100 after duplicate submission attempt');
+    assert.equal(teamAfterDup.totalScore, 300, 'Score must remain 300 after duplicate submission attempt');
   });
 });

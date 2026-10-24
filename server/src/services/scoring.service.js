@@ -1,8 +1,9 @@
-const { Team, Score, TeamChallenge, Submission, Challenge, Question, SecurityLog } = require('../models');
+const { Team, Score, TeamChallenge, Submission, Challenge, Question, Checkpoint, SecurityLog } = require('../models');
 const transaction = require('../utils/transaction');
 const { eventFor, teamFor } = require('./eligibility.service');
 const assignment = require('./questionAssignment.service');
 const { safeFlagCompare } = require('../utils/crypto');
+const { participantQuestion } = require('../utils/participantData');
 const crypto = require('crypto');
 
 /**
@@ -87,7 +88,7 @@ async function applyDecision(tc, submission, correct, points, actor) {
     tc.pointsAwarded = after;
     if (!wasSolved) team.currentLevel = tc.levelNumber + 1;
 
-    // Atomically mark question permanently completed by this team
+    // Atomically mark question completed
     if (tc.assignedQuestionId) {
       await Question.updateOne(
         { _id: tc.assignedQuestionId },
@@ -108,7 +109,6 @@ async function applyDecision(tc, submission, correct, points, actor) {
     tc.pointsAwarded = 0;
     team.currentLevel = tc.levelNumber;
 
-    // Revert question completion status if solve is reversed
     if (tc.assignedQuestionId) {
       await Question.updateOne(
         { _id: tc.assignedQuestionId },
@@ -170,31 +170,38 @@ async function applyDecision(tc, submission, correct, points, actor) {
 module.exports = {
   verifyAnswer,
 
-  submit({ teamId, userId, levelNumber, flag, ipAddress, userAgent }) {
+  submit({ teamId, userId, levelNumber, flag, questionId, ipAddress, userAgent }) {
     return transaction(async () => {
       const config = await eventFor('submission');
       const team = await teamFor(teamId, userId, config);
       if (team.currentLevel !== levelNumber) throw new Error('Cannot submit for a locked or already solved level');
       const challenge = await Challenge.findOne({ levelNumber, isActive: true, status: 'Published' });
       if (!challenge) throw new Error('Challenge is not published or active');
-      const { teamChallenge: tc } = await assignment.getOrAssignQuestion(teamId, levelNumber);
+
+      const progression = await assignment.getOrAssignQuestion(teamId, levelNumber);
+      const tc = progression.teamChallenge;
+      if (!tc) throw new Error('No active challenge for the current level');
       if (tc.status === 'SOLVED') throw new Error('Level has already been solved');
-      if (challenge.requiresCheckpointScan && !tc.checkpointScanned) throw new Error('Physical checkpoint verification required');
+      if (challenge.requiresCheckpointScan && !tc.checkpointScanned) {
+        throw new Error('Physical checkpoint verification required');
+      }
+
+      // If questionId is supplied, ensure it matches current assigned question
+      const targetQuestionId = questionId && /^[0-9a-fA-F]{24}$/.test(String(questionId))
+        ? questionId
+        : tc.assignedQuestionId;
+
+      if (tc.assignedQuestionId && String(targetQuestionId) !== String(tc.assignedQuestionId)) {
+        throw new Error('Submitted question does not match your team current assigned question');
+      }
 
       const question = await Question.findOne({
-        _id: tc.assignedQuestionId,
+        _id: targetQuestionId,
         challengeId: challenge._id,
         isActive: true,
         status: 'Published'
       }).select('+flag');
       if (!question) throw new Error('Assigned question is not published or active');
-
-      if (question.isCompleted && String(question.completedByTeamId) !== String(teamId)) {
-        throw new Error('This question has already been completed by another team.');
-      }
-      if (question.isClaimed && String(question.claimedByTeamId) !== String(teamId)) {
-        throw new Error('Claim on this question has expired and was claimed by another team.');
-      }
 
       const claimed = await TeamChallenge.findOneAndUpdate(
         { _id: tc._id, status: { $ne: 'SOLVED' }, attemptsCount: { $lt: question.attempts } },
@@ -221,21 +228,136 @@ module.exports = {
 
       const attempts = {
         attemptsCount: claimed.attemptsCount,
-        attemptsRemaining: question.attempts - claimed.attemptsCount,
+        attemptsRemaining: Math.max(0, question.attempts - claimed.attemptsCount),
         maxAttempts: question.attempts,
         isCorrect
       };
 
-      if (!isCorrect) return attempts; // Commit incorrect attempts and audit record.
+      if (!isCorrect) {
+        return {
+          ...attempts,
+          message: 'Incorrect answer. Try again.',
+          isLevelComplete: false
+        };
+      }
 
-      const decision = await applyDecision(
-        claimed,
-        submission,
-        true,
-        Math.max(0, challenge.points - (claimed.penaltyIncurred || 0)),
-        userId
+      // Answer is correct!
+      const now = new Date();
+      const pointsAwarded = Math.max(0, question.points - (claimed.penaltyIncurred || 0));
+
+      const alreadySolvedThisQuestion = (claimed.solvedQuestionIds || []).some(
+        (id) => String(id) === String(question._id)
       );
-      return { ...attempts, ...decision, pointsAwarded: decision.netPoints, levelCleared: levelNumber };
+
+      if (!alreadySolvedThisQuestion) {
+        if (!claimed.solvedQuestionIds) claimed.solvedQuestionIds = [];
+        claimed.solvedQuestionIds.push(question._id);
+        team.totalScore = (team.totalScore || 0) + pointsAwarded;
+        team.lastSolveTimestamp = now;
+        claimed.pointsAwarded = (claimed.pointsAwarded || 0) + pointsAwarded;
+        claimed.attemptsCount = 0; // reset attempts for next question
+      }
+
+      submission.status = 'CORRECT';
+      submission.pointsDelta = pointsAwarded;
+      await submission.save();
+
+      // Check remaining questions in this level
+      const allLevelQuestions = await Question.find({
+        challengeId: challenge._id,
+        levelNumber,
+        status: 'Published',
+        isActive: true
+      }).sort({ order: 1, createdAt: 1 });
+
+      const solvedIds = (claimed.solvedQuestionIds || []).map((id) => String(id));
+      const remainingQuestions = allLevelQuestions.filter((q) => !solvedIds.includes(String(q._id)));
+
+      let isLevelComplete = false;
+      let nextQuestion = null;
+      let nextCheckpoint = null;
+
+      if (remainingQuestions.length > 0) {
+        // More questions remain in this level!
+        const nextQ = remainingQuestions[0];
+        claimed.assignedQuestionId = nextQ._id;
+        claimed.currentSequenceNumber = allLevelQuestions.findIndex((q) => String(q._id) === String(nextQ._id)) + 1;
+        await claimed.save();
+        await team.save();
+
+        nextCheckpoint = await Checkpoint.findOne({ levelNumber: levelNumber + 1, isActive: true });
+        nextQuestion = await participantQuestion(nextQ);
+      } else {
+        // All questions in this level solved!
+        isLevelComplete = true;
+        claimed.status = 'SOLVED';
+        claimed.solvedAt = now;
+        claimed.scoringSubmissionId = submission._id;
+        team.currentLevel = levelNumber + 1;
+        await claimed.save();
+        await team.save();
+
+        nextCheckpoint = await Checkpoint.findOne({ levelNumber: team.currentLevel, isActive: true });
+      }
+
+      const isEventComplete = team.currentLevel > 10;
+
+      // Update Score collection
+      await Score.findOneAndUpdate(
+        { teamId: team._id },
+        {
+          $inc: { currentScore: pointsAwarded, solvedLevelsCount: isLevelComplete ? 1 : 0 },
+          $set: { lastSolveTimestamp: team.lastSolveTimestamp },
+          $push: {
+            history: {
+              levelNumber,
+              challengeId: challenge._id,
+              questionId: question._id,
+              pointsAwarded,
+              solvedAt: now,
+              submissionId: submission._id
+            }
+          }
+        },
+        { upsert: true }
+      );
+
+      await audit(userId, claimed._id, `Question solve recorded: ${question._id}; Level ${levelNumber}; Points ${pointsAwarded}`);
+
+      // Broadcast real-time leaderboard update via Server-Sent Events (SSE)
+      try {
+        const leaderboardController = require('../controllers/leaderboard.controller');
+        leaderboardController.broadcastLeaderboardUpdate();
+      } catch (broadCastErr) {
+        // Non-blocking telemetry broadcast
+      }
+
+      return {
+        ...attempts,
+        isCorrect: true,
+        message: isLevelComplete
+          ? 'Level completed! All questions conquered.'
+          : 'Correct answer!',
+        pointsAwarded,
+        newTotalScore: team.totalScore,
+        isLevelComplete,
+        isEventComplete,
+        levelCleared: isLevelComplete ? levelNumber : null,
+        nextLevel: isLevelComplete ? team.currentLevel : levelNumber,
+        nextQuestion,
+        sequenceNumber: claimed.currentSequenceNumber,
+        totalQuestionsInLevel: allLevelQuestions.length,
+        solvedQuestionsCount: claimed.solvedQuestionIds.length,
+        nextCheckpointLocation: nextCheckpoint ? nextCheckpoint.name : null,
+        nextCheckpoint: nextCheckpoint
+          ? {
+              name: nextCheckpoint.name,
+              locationDescription: nextCheckpoint.locationDescription,
+              levelNumber: nextCheckpoint.levelNumber,
+              code: nextCheckpoint.checkpointCode
+            }
+          : null
+      };
     });
   },
 

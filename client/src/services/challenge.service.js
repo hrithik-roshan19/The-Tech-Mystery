@@ -11,12 +11,17 @@ export const challengeService = {
     return res.data;
   },
 
-  submitFlag: async (levelNumber, flag) => {
-    const res = await api.post('/submissions/submit', { levelNumber, flag });
+  submitFlag: async (levelNumber, flag, questionId) => {
+    const res = await api.post('/submissions/submit', {
+      levelNumber,
+      flag,
+      answer: flag,
+      questionId
+    });
     return res.data;
   },
 
-  submitAnswer: async (levelNumber, answer) => {
-    return challengeService.submitFlag(levelNumber, answer);
+  submitAnswer: async (levelNumber, answer, questionId) => {
+    return challengeService.submitFlag(levelNumber, answer, questionId);
   }
 };

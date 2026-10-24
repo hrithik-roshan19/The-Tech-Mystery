@@ -1,13 +1,13 @@
 const transaction = require('../utils/transaction');
 const { eventFor, teamFor } = require('../services/eligibility.service');
 const { participantQuestion, safeContent, privateAnswers } = require('../utils/participantData');
-const { Challenge, Team, TeamChallenge } = require('../models');
+const { Challenge, Team, TeamChallenge, Checkpoint, Question } = require('../models');
 const questionAssignmentService = require('../services/questionAssignment.service');
 const { success } = require('../utils/apiResponse');
 
 /**
  * Challenge Controller
- * Serves mission map and assigned questions without exposing answers.
+ * Serves mission map and sequential questions without exposing answers.
  */
 class ChallengeController {
   /**
@@ -16,20 +16,24 @@ class ChallengeController {
   async getMissionMap(req, res, next) {
     try {
       const challenges = await Challenge.find({ status: 'Published', isActive: true }).sort({ levelNumber: 1 });
-      const teamId = req.user.teamId;
+      const teamId = req.user?.teamId;
 
-      const teamChallenges = await TeamChallenge.find({ teamId });
+      const teamChallenges = teamId ? await TeamChallenge.find({ teamId }) : [];
       const teamChallengeMap = new Map();
       teamChallenges.forEach((tc) => teamChallengeMap.set(tc.levelNumber, tc));
 
-      const team = await Team.findById(teamId);
+      const team = teamId ? await Team.findById(teamId) : null;
+      const checkpoints = await Checkpoint.find({ status: 'Active', isActive: true });
+      const checkpointMap = new Map();
+      checkpoints.forEach((cp) => checkpointMap.set(cp.levelNumber, cp));
 
       const answers = await privateAnswers();
       const mapData = challenges.map((ch) => {
         const tc = teamChallengeMap.get(ch.levelNumber);
+        const cp = checkpointMap.get(ch.levelNumber);
         const isSolved = tc?.status === 'SOLVED';
-        const isUnlocked = team?.currentLevel >= ch.levelNumber && (!ch.requiresCheckpointScan || tc?.checkpointScanned);
-        const isCurrent = team?.currentLevel === ch.levelNumber;
+        const isUnlocked = team ? team.currentLevel >= ch.levelNumber && (!ch.requiresCheckpointScan || tc?.checkpointScanned) : ch.levelNumber === 1;
+        const isCurrent = team ? team.currentLevel === ch.levelNumber : ch.levelNumber === 1;
 
         return {
           levelNumber: ch.levelNumber,
@@ -37,7 +41,13 @@ class ChallengeController {
           category: ch.category,
           points: ch.points,
           difficulty: ch.difficulty,
+          description: safeContent(ch.description, answers),
           requiresCheckpointScan: ch.requiresCheckpointScan,
+          checkpoint: cp ? {
+            name: safeContent(cp.name, answers),
+            locationDescription: safeContent(cp.locationDescription, answers),
+            code: cp.checkpointCode
+          } : null,
           isSolved,
           isUnlocked,
           isCurrent
@@ -51,23 +61,67 @@ class ChallengeController {
   }
 
   /**
-   * Retrieves active question for current level
+   * Retrieves active sequential question for current level
    */
   async getCurrentChallenge(req, res, next) {
     try {
       const data = await transaction(async () => {
         const config = await eventFor('challenge');
         const team = await teamFor(req.user.teamId, req.user.userId, config);
+
+        if (team.currentLevel > 10) {
+          return {
+            isEventComplete: true,
+            levelNumber: 10,
+            team,
+            message: 'Congratulations! All challenge levels have been conquered.'
+          };
+        }
+
         const challenge = await Challenge.findOne({ levelNumber: team.currentLevel, status: 'Published', isActive: true });
         if (!challenge) throw new Error('No active challenge for the current level');
-        const result = await questionAssignmentService.getOrAssignQuestion(team._id, team.currentLevel);
-        const teamChallenge = result.teamChallenge;
-        if (challenge.requiresCheckpointScan && !teamChallenge.checkpointScanned) throw new Error('Physical checkpoint QR must be scanned to unlock this level challenge');
-        const question = await require('../models').Question.findById(teamChallenge.assignedQuestionId).select('+flag');
-        return { team, challenge, teamChallenge, question };
+
+        const checkpoint = await Checkpoint.findOne({ levelNumber: team.currentLevel });
+        const progression = await questionAssignmentService.getOrAssignQuestion(team._id, team.currentLevel);
+        const teamChallenge = progression.teamChallenge;
+
+        if (challenge.requiresCheckpointScan && !teamChallenge.checkpointScanned) {
+          const lockErr = new Error('Physical checkpoint QR must be scanned to unlock this level challenge');
+          lockErr.statusCode = 403;
+          lockErr.data = {
+            isLocked: true,
+            checkpointScanned: false,
+            levelNumber: team.currentLevel,
+            challengeTitle: challenge.title,
+            checkpoint: checkpoint
+              ? {
+                  name: checkpoint.name,
+                  locationDescription: checkpoint.locationDescription,
+                  code: checkpoint.checkpointCode
+                }
+              : null
+          };
+          throw lockErr;
+        }
+
+        let question = null;
+        if (teamChallenge.assignedQuestionId) {
+          question = await Question.findById(teamChallenge.assignedQuestionId).select('+flag');
+        }
+        if (!question || question.status !== 'Published' || !question.isActive) {
+          throw new Error('Assigned question is unavailable');
+        }
+
+        return { team, challenge, checkpoint, teamChallenge, question, progression };
       });
-      const { team, challenge, teamChallenge, question } = data;
+
+      if (data.isEventComplete) {
+        return success(res, data, data.message);
+      }
+
+      const { team, challenge, checkpoint, teamChallenge, question, progression } = data;
       const answers = await privateAnswers();
+
       return success(res, {
         levelNumber: team.currentLevel,
         challenge: {
@@ -77,19 +131,39 @@ class ChallengeController {
           difficulty: challenge.difficulty,
           description: safeContent(challenge.description, answers)
         },
-        question: await participantQuestion(question),
+        checkpoint: checkpoint
+          ? {
+              name: safeContent(checkpoint.name, answers),
+              locationDescription: safeContent(checkpoint.locationDescription, answers),
+              code: safeContent(checkpoint.checkpointCode, answers)
+            }
+          : null,
+        question: question ? await participantQuestion(question) : null,
+        sequenceNumber: progression.sequenceNumber,
+        totalQuestions: progression.totalQuestions,
+        solvedCount: progression.solvedCount,
+        isLevelComplete: progression.isLevelComplete,
+        nextCheckpoint: progression.nextCheckpoint,
+        emptyReason: progression.emptyReason,
         teamChallenge: {
           status: teamChallenge.status,
-          unlockedHints: teamChallenge.unlockedHints,
-          penaltyIncurred: teamChallenge.penaltyIncurred,
-          attemptsCount: teamChallenge.attemptsCount
+          currentSequenceNumber: teamChallenge.currentSequenceNumber,
+          attemptsCount: teamChallenge.attemptsCount,
+          checkpointScanned: teamChallenge.checkpointScanned,
+          unlockedAt: teamChallenge.unlockedAt
         }
       });
     } catch (error) {
+      if (error.data) {
+        return res.status(error.statusCode || 400).json({
+          success: false,
+          message: error.message,
+          data: error.data
+        });
+      }
       return res.status(error.statusCode || 400).json({ success: false, message: error.message });
     }
   }
 }
 
 module.exports = new ChallengeController();
-

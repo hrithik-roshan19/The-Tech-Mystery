@@ -22,6 +22,7 @@ import { LoginPage, RegisterPage, AuthCompletePage } from '../pages/auth/ClerkPa
 
 // Participant Pages
 import ParticipantDashboard from '../pages/participant/ParticipantDashboard';
+import ChallengeViewPage from '../pages/participant/ChallengeViewPage';
 import QRCheckpointPage from '../pages/participant/QRCheckpointPage';
 import LeaderboardPage from '../pages/public/LeaderboardPage';
 import UserProfilePage from '../pages/participant/UserProfilePage';
@@ -55,6 +56,8 @@ export const AppRoutes = () => {
       <Route path="/checkpoint/:checkpointId" element={<QRCheckpointPage />} />
       <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
       <Route path={ROUTES.FINAL_FLAG} element={<FinalFlagPage />} />
+      <Route path="/challenge" element={<ProtectedRoute><ChallengeViewPage /></ProtectedRoute>} />
+      <Route path="/challenges/:levelNumber" element={<ProtectedRoute><ChallengeViewPage /></ProtectedRoute>} />
       <Route path={ROUTES.PORTAL_DASHBOARD} element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/auth/complete" element={<AuthCompletePage />} />
@@ -80,7 +83,7 @@ export const AppRoutes = () => {
       <Route path="/portal" element={<Navigate to={ROUTES.PORTAL_DASHBOARD} replace />} />
       <Route path="/portal/dashboard" element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/portal/missions" element={<Navigate to={ROUTES.CHALLENGES} replace />} />
-      <Route path="/portal/challenge" element={<Navigate to={ROUTES.CHALLENGES} replace />} />
+      <Route path="/portal/challenge" element={<ProtectedRoute><ChallengeViewPage /></ProtectedRoute>} />
       <Route path="/portal/checkpoint" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
       <Route path="/portal/team" element={<Navigate to={ROUTES.PORTAL_DASHBOARD} replace />} />
       <Route path="/portal/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />

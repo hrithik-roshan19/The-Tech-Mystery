@@ -82,6 +82,8 @@ export default function QRCheckpointPage() {
   const [submittingFlag, setSubmittingFlag] = useState(false);
   const [solveResult, setSolveResult] = useState(null);
 
+  const [missionMap, setMissionMap] = useState([]);
+
   useEffect(() => {
     let isMounted = true;
     async function fetchTeamData() {
@@ -94,6 +96,15 @@ export default function QRCheckpointPage() {
         } catch {
           // ignore error
         }
+
+        try {
+          const mapRes = await challengeService.getMissionMap();
+          if (isMounted && mapRes.success && Array.isArray(mapRes.data?.missionMap)) {
+            setMissionMap(mapRes.data.missionMap);
+          }
+        } catch {
+          // non-blocking
+        }
       }
     }
     fetchTeamData();
@@ -102,27 +113,40 @@ export default function QRCheckpointPage() {
 
   const checkpointItems = useMemo(() => {
     const curLevel = team?.currentLevel || 1;
-    const defaultStations = [
-      { id: "CP-01", name: "Main Gate", level: 1 },
-      { id: "CP-02", name: "Central Lawn", level: 2 },
-      { id: "CP-03", name: "Library Block", level: 3 },
-      { id: "CP-04", name: "CSE Block", level: 4 },
-    ];
+    if (missionMap.length > 0) {
+      return missionMap.map((m) => {
+        const isCompleted = m.isSolved || curLevel > m.levelNumber;
+        const isCurrent = m.isCurrent || curLevel === m.levelNumber;
+        const status = isCompleted ? "completed" : isCurrent ? "pending" : "locked";
+        const time = isCompleted ? "Completed" : isCurrent ? "Active Station" : "Locked";
+        const points = isCompleted ? "Cleared" : `${m.points || 100} PTS`;
+        return {
+          id: m.checkpoint?.code || `CP-${String(m.levelNumber).padStart(2, '0')}`,
+          name: m.checkpoint?.name || `Checkpoint Level ${m.levelNumber}`,
+          location: m.checkpoint?.locationDescription || `Campus Station Level ${m.levelNumber}`,
+          level: m.levelNumber,
+          status,
+          time,
+          points
+        };
+      });
+    }
 
-    return defaultStations.map((st) => {
-      const isCompleted = Boolean(team && curLevel > st.level);
-      const isCurrent = Boolean(team && curLevel === st.level);
-      const status = isCompleted ? "completed" : isCurrent ? "pending" : "locked";
-      const time = isCompleted ? "Completed" : isCurrent ? "Active Station" : "Locked";
-      const points = isCompleted ? "Cleared" : "—";
+    return Array.from({ length: 10 }, (_, i) => {
+      const lvl = i + 1;
+      const isCompleted = curLevel > lvl;
+      const isCurrent = curLevel === lvl;
       return {
-        ...st,
-        status,
-        time,
-        points
+        id: `CP-${String(lvl).padStart(2, '0')}`,
+        name: `Checkpoint Level ${lvl}`,
+        location: `Campus Station Level ${lvl}`,
+        level: lvl,
+        status: isCompleted ? "completed" : isCurrent ? "pending" : "locked",
+        time: isCompleted ? "Completed" : isCurrent ? "Active Station" : "Locked",
+        points: isCompleted ? "Cleared" : "—"
       };
     });
-  }, [team]);
+  }, [team, missionMap]);
 
   // Server verification state
   const [verifying, setVerifying] = useState(false);
@@ -448,20 +472,43 @@ export default function QRCheckpointPage() {
     if (e) e.preventDefault();
     const cleanFlag = String(submissionFlag).trim();
     const targetLevel = verifyResult?.data?.checkpoint?.levelNumber || team?.currentLevel || 1;
+    const qid = verifyResult?.data?.question?._id || null;
     if (!cleanFlag) return;
 
     setSubmittingFlag(true);
     setSolveResult(null);
 
     try {
-      const res = await challengeService.submitFlag(targetLevel, cleanFlag);
+      const res = await challengeService.submitFlag(targetLevel, cleanFlag, qid);
+      const isComplete = Boolean(res.data?.isLevelComplete);
+      const nextQ = res.data?.nextQuestion;
+      const nextCpLoc = res.data?.nextCheckpointLocation || res.data?.nextCheckpoint?.name;
+
       setSolveResult({
         success: true,
-        message: res.message || "ANSWER ACCEPTED! Level cleared and points awarded to your team!",
+        message: res.message || (isComplete ? "Level completed! All questions conquered." : "Correct answer!"),
+        pointsAwarded: res.data?.pointsAwarded,
+        isLevelComplete: isComplete,
+        isEventComplete: Boolean(res.data?.isEventComplete),
+        nextCheckpointLocation: nextCpLoc,
         attemptsRemaining: res.data?.attemptsRemaining,
         maxAttempts: res.data?.maxAttempts
       });
       setSubmissionFlag("");
+
+      // If more questions exist in this level, update verifyResult to show next question
+      if (nextQ && verifyResult?.data) {
+        setVerifyResult((prev) => ({
+          ...prev,
+          data: {
+            ...prev.data,
+            question: nextQ,
+            sequenceNumber: res.data?.sequenceNumber || ((prev.data.sequenceNumber || 1) + 1),
+            solvedCount: res.data?.solvedQuestionsCount || ((prev.data.solvedCount || 0) + 1)
+          }
+        }));
+      }
+
       // Refresh team data to update currentLevel and score
       const teamRes = await teamService.getMyTeam();
       if (teamRes.success && teamRes.data?.team) {
@@ -471,7 +518,7 @@ export default function QRCheckpointPage() {
       const errData = err.response?.data;
       setSolveResult({
         success: false,
-        message: errData?.message || err.message || "Incorrect answer. Verification failed.",
+        message: errData?.message || err.message || "Incorrect answer. Try again.",
         attemptsRemaining: errData?.data?.attemptsRemaining,
         maxAttempts: errData?.data?.maxAttempts
       });
@@ -842,6 +889,20 @@ export default function QRCheckpointPage() {
                         {solveResult.attemptsRemaining !== undefined && !solveResult.success && (
                           <div style={{ marginTop: "4px", fontSize: "11px", opacity: 0.9 }}>
                             Attempts Remaining: {solveResult.attemptsRemaining} of {solveResult.maxAttempts || 3}
+                          </div>
+                        )}
+                        {solveResult.isLevelComplete && solveResult.nextCheckpointLocation && (
+                          <div style={{
+                            marginTop: "8px",
+                            padding: "8px 10px",
+                            borderRadius: "4px",
+                            background: "rgba(6, 182, 212, 0.2)",
+                            border: "1px solid #06b6d4",
+                            color: "#67e8f9",
+                            fontSize: "12px",
+                            fontWeight: 700
+                          }}>
+                            📍 NEXT CHECKPOINT: {solveResult.nextCheckpointLocation}
                           </div>
                         )}
                       </div>

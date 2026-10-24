@@ -21,6 +21,12 @@ const questionSchema = new mongoose.Schema(
       required: [true, 'Associated level number is required'],
       index: true
     },
+    order: {
+      type: Number,
+      default: 1,
+      min: 1,
+      index: true
+    },
     checkpointId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Checkpoint',
@@ -180,6 +186,7 @@ const questionSchema = new mongoose.Schema(
 // Compound index to quickly pull active question pool for a level
 questionSchema.index({ challengeId: 1, isActive: 1 });
 questionSchema.index({ levelNumber: 1, isActive: 1 });
+questionSchema.index({ levelNumber: 1, order: 1, isActive: 1 });
 questionSchema.index({ isClaimed: 1, isCompleted: 1 });
 questionSchema.index({ levelNumber: 1, isClaimed: 1, isCompleted: 1 });
 

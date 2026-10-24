@@ -507,7 +507,7 @@ class AdminController {
         .populate('checkpointId', 'checkpointCode name locationDescription status mode')
         .populate('claimedByTeamId', 'name teamCode')
         .populate('completedByTeamId', 'name teamCode')
-        .sort({ levelNumber: 1, createdAt: -1 });
+        .sort({ levelNumber: 1, order: 1, createdAt: 1 });
 
       if (req.query.includeFlag === 'true' || req.query.withFlag === 'true') {
         query.select('+flag');
@@ -651,7 +651,15 @@ class AdminController {
 
       const resolvedCheckpointId = checkpoint._id;
 
+      const maxOrderQuestion = await Question.findOne({ levelNumber: targetChallenge.levelNumber })
+        .sort({ order: -1 })
+        .select('order');
+      const calculatedOrder = req.body.order !== undefined && !Number.isNaN(Number(req.body.order))
+        ? Math.max(1, Math.floor(Number(req.body.order)))
+        : (maxOrderQuestion?.order ? maxOrderQuestion.order + 1 : 1);
+
       const question = await Question.create({
+        order: calculatedOrder,
         challengeId: targetChallenge._id,
         levelNumber: targetChallenge.levelNumber,
         checkpointId: resolvedCheckpointId,
@@ -911,6 +919,12 @@ class AdminController {
       if (required !== undefined) {
         existing.required = Boolean(required);
       }
+      if (req.body.order !== undefined) {
+        const ord = Number(req.body.order);
+        if (!Number.isNaN(ord) && ord >= 1) {
+          existing.order = Math.floor(ord);
+        }
+      }
 
       const validStatuses = ['Published', 'Draft', 'Paused', 'Archived'];
       if (status !== undefined && validStatuses.includes(status)) {
@@ -972,6 +986,34 @@ class AdminController {
         .populate('checkpointId', 'checkpointCode name locationDescription status mode');
 
       return success(res, { question: populated }, `Question "${existing.title}" updated`);
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async reorderQuestions(req, res, next) {
+    try {
+      const { questionIds, questions } = req.body;
+      if (Array.isArray(questionIds) && questionIds.length > 0) {
+        const updateOps = questionIds.map((id, index) => ({
+          updateOne: {
+            filter: { _id: id },
+            update: { $set: { order: index + 1 } }
+          }
+        }));
+        await Question.bulkWrite(updateOps);
+        return success(res, { reorderedCount: questionIds.length }, 'Questions reordered successfully');
+      } else if (Array.isArray(questions) && questions.length > 0) {
+        const updateOps = questions.map((item, index) => ({
+          updateOne: {
+            filter: { _id: item.id || item._id },
+            update: { $set: { order: item.order !== undefined ? Number(item.order) : index + 1 } }
+          }
+        }));
+        await Question.bulkWrite(updateOps);
+        return success(res, { reorderedCount: questions.length }, 'Questions reordered successfully');
+      }
+      return badRequest(res, 'questionIds array or questions array is required');
     } catch (error) {
       return badRequest(res, error.message);
     }

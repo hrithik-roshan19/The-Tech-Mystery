@@ -33,7 +33,19 @@ module.exports = {
       if (team.currentLevel < checkpoint.levelNumber) throw new Error('Checkpoint locked. Solve prior levels first.');
       if (team.currentLevel > checkpoint.levelNumber) throw new Error('This level has already been cleared by your team.');
 
-      const { teamChallenge, question, isNewAssignment } = await assignment.getOrAssignQuestion(teamId, checkpoint.levelNumber, questionId);
+      const progression = await assignment.getOrAssignQuestion(teamId, checkpoint.levelNumber);
+      const {
+        teamChallenge,
+        question,
+        isNewAssignment,
+        sequenceNumber,
+        totalQuestions,
+        solvedCount,
+        isLevelComplete,
+        nextCheckpoint,
+        emptyReason
+      } = progression;
+
       const alreadyScanned = teamChallenge.checkpointScanned;
       if (!alreadyScanned) {
         teamChallenge.checkpointScanned = true;
@@ -43,6 +55,7 @@ module.exports = {
         await teamChallenge.save();
         await Checkpoint.updateOne({ _id: checkpoint._id }, { $inc: { scanCount: 1 }, $set: { lastScanAt: new Date() } });
       }
+
       const answers = await privateAnswers();
       return {
         checkpoint: {
@@ -56,9 +69,19 @@ module.exports = {
           status: teamChallenge.status,
           levelNumber: teamChallenge.levelNumber,
           checkpointScanned: true,
+          currentSequenceNumber: sequenceNumber,
+          totalQuestions,
+          solvedCount,
+          isLevelComplete,
           unlockedAt: teamChallenge.unlockedAt
         },
         question,
+        sequenceNumber,
+        totalQuestions,
+        solvedCount,
+        isLevelComplete,
+        nextCheckpoint,
+        emptyReason,
         alreadyScanned,
         isNewAssignment
       };

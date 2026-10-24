@@ -30,6 +30,8 @@ router.post('/challenges', adminController.createChallenge);
 router.patch('/challenges/:challengeId', adminController.updateChallenge);
 router.delete('/challenges/:challengeId', adminController.deleteChallenge);
 router.get('/questions', adminController.getQuestions);
+router.put('/questions/reorder', adminController.reorderQuestions);
+router.post('/questions/reorder', adminController.reorderQuestions);
 router.post('/questions', adminController.createQuestion);
 router.post('/questions/upload', adminController.uploadQuestions);
 router.post('/questions/bulk', adminController.uploadQuestions);

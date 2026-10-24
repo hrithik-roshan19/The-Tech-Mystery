@@ -455,7 +455,7 @@ export default function ParticipantDashboard() {
                 </span>
               </div>
               <div className="pd-current-actions">
-                <Link to={ROUTES.CHALLENGES} className="pd-primary-button">Continue Challenge <span>→</span></Link>
+                <Link to="/portal/challenge" className="pd-primary-button">Continue Challenge <span>→</span></Link>
                 <Link to={ROUTES.QR_CHECKPOINT} className="pd-secondary-button">Scan QR Station</Link>
               </div>
             </section>

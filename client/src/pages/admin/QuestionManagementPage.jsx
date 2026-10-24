@@ -94,6 +94,7 @@ const blankQuestion = {
   title: "",
   challenge: "The Starting Point",
   level: 1,
+  order: 1,
   type: "Flag",
   category: "Cryptography",
   difficulty: "Easy",
@@ -187,6 +188,8 @@ export default function QuestionManagementPage() {
 
     return {
       _mongoId: q._id,
+      _id: q._id,
+      order: q.order !== undefined ? q.order : (index + 1),
       id: questionCode,
       title: q.title || "Untitled Question",
       challenge: challengeName,
@@ -375,6 +378,7 @@ export default function QuestionManagementPage() {
           challenge: draft.challenge,
           levelNumber: Number(draft.level),
           checkpointId: draft.checkpointId || null,
+          order: draft.order !== undefined && !Number.isNaN(Number(draft.order)) ? Number(draft.order) : 1,
           type: draft.type,
           category: draft.category,
           difficulty: draft.difficulty.toUpperCase(),
@@ -535,6 +539,26 @@ export default function QuestionManagementPage() {
       )
     );
     setNotice(`Claim released for ${item.id} in local demo state.`);
+  };
+
+  const handleMoveQuestion = async (item, direction) => {
+    const currentIndex = filtered.findIndex((q) => (q._mongoId && q._mongoId === item._mongoId) || q.id === item.id);
+    if (currentIndex < 0) return;
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= filtered.length) return;
+
+    const reordered = [...filtered];
+    const [moved] = reordered.splice(currentIndex, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    try {
+      const qIds = reordered.map((q) => q._mongoId || q.id);
+      await adminService.reorderQuestions(qIds);
+      setNotice("Questions reordered successfully.");
+      await fetchQuestions();
+    } catch (err) {
+      setNotice(`Reorder failed: ${err.response?.data?.message || err.message}`);
+    }
   };
 
   const handleDownloadQr = (item) => {
@@ -1120,6 +1144,7 @@ export default function QuestionManagementPage() {
                   <thead>
                     <tr>
                       <th>ID</th>
+                      <th>Seq</th>
                       <th>Question</th>
                       <th>Challenge / Level</th>
                       <th>Type</th>
@@ -1145,6 +1170,63 @@ export default function QuestionManagementPage() {
                       >
                         <td>
                           <span className="q-id">{item.id}</span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{
+                              fontWeight: 700,
+                              fontSize: '11px',
+                              color: '#b8ff3d',
+                              background: 'rgba(184, 255, 61, 0.1)',
+                              padding: '2px 5px',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(184, 255, 61, 0.3)'
+                            }}>
+                              #{item.order || (filtered.indexOf(item) + 1)}
+                            </span>
+                            <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                              <button
+                                type="button"
+                                disabled={filtered.indexOf(item) === 0}
+                                title="Move up in sequence"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveQuestion(item, -1);
+                                }}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: filtered.indexOf(item) === 0 ? 'rgba(255,255,255,0.2)' : '#b8ff3d',
+                                  cursor: filtered.indexOf(item) === 0 ? 'default' : 'pointer',
+                                  fontSize: '9px',
+                                  lineHeight: '1',
+                                  padding: '0 1px'
+                                }}
+                              >
+                                ▲
+                              </button>
+                              <button
+                                type="button"
+                                disabled={filtered.indexOf(item) === filtered.length - 1}
+                                title="Move down in sequence"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveQuestion(item, 1);
+                                }}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: filtered.indexOf(item) === filtered.length - 1 ? 'rgba(255,255,255,0.2)' : '#b8ff3d',
+                                  cursor: filtered.indexOf(item) === filtered.length - 1 ? 'default' : 'pointer',
+                                  fontSize: '9px',
+                                  lineHeight: '1',
+                                  padding: '0 1px'
+                                }}
+                              >
+                                ▼
+                              </button>
+                            </div>
+                          </div>
                         </td>
                         <td>
                           <div className="q-title-cell">
@@ -1262,7 +1344,7 @@ export default function QuestionManagementPage() {
                     ))}
                     {filtered.length === 0 && (
                       <tr>
-                        <td colSpan="10" className="q-empty">
+                        <td colSpan="11" className="q-empty">
                           No questions match these filters.
                         </td>
                       </tr>
@@ -1892,6 +1974,18 @@ Crypto Decode,"Decode: ...",HTG{flag},1,100,Cryptography`}
                   onChange={(event) =>
                     setDraft({ ...draft, level: event.target.value })
                   }
+                />
+              </label>
+              <label>
+                Sequence Order #
+                <input
+                  type="number"
+                  min="1"
+                  value={draft.order || 1}
+                  onChange={(event) =>
+                    setDraft({ ...draft, order: Number(event.target.value) })
+                  }
+                  placeholder="1"
                 />
               </label>
               <label>

@@ -2,12 +2,11 @@ const mongoose = require('mongoose');
 
 /**
  * TeamChallenge Schema
- * Pivot model bridging Teams to their assigned Challenge and specific Question variation.
+ * Pivot model bridging Teams to their assigned Challenge and sequential question progression.
  *
  * GUARANTEES PERSISTENCE:
  * A compound unique index on { teamId, challengeId } and { teamId, levelNumber }
- * ensures that once a question from the pool is assigned to a team, reloads or
- * re-scans retrieve the exact same assignedQuestionId.
+ * ensures that each team tracks independent, continuous question progression per level.
  */
 const teamChallengeSchema = new mongoose.Schema(
   {
@@ -32,9 +31,19 @@ const teamChallengeSchema = new mongoose.Schema(
     assignedQuestionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Question',
-      required: [true, 'Assigned Question variation is required'],
+      default: null,
       index: true
     },
+    currentSequenceNumber: {
+      type: Number,
+      default: 1
+    },
+    solvedQuestionIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Question'
+      }
+    ],
     status: {
       type: String,
       enum: ['LOCKED', 'UNLOCKED', 'SOLVED'],
@@ -92,4 +101,3 @@ teamChallengeSchema.index({ teamId: 1, levelNumber: 1 }, { unique: true });
 
 const TeamChallenge = mongoose.model('TeamChallenge', teamChallengeSchema);
 module.exports = TeamChallenge;
-

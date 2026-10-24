@@ -134,6 +134,11 @@ export const adminService = {
     return res.data;
   },
 
+  reorderQuestions: async (questionIds) => {
+    const res = await api.put('/admin/questions/reorder', { questionIds });
+    return res.data;
+  },
+
   updateEventConfig: async (payload) => {
     const res = await api.patch('/admin/event-config', payload);
     return res.data;
