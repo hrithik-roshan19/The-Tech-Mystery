@@ -7,6 +7,7 @@ import { challengeService } from "../../services/challenge.service";
 import { teamService } from "../../services/team.service";
 import { ROUTES } from "../../constants/routes";
 import Navbar from "../../components/navigation/Navbar";
+import { ErrorBoundary } from "../../components/common/ErrorBoundary";
 import "../../styles/QRCheckpointPage.css";
 
 
@@ -56,7 +57,7 @@ function parseCheckpointPayload(raw) {
   return { code: raw.trim(), token: "", questionId: "" };
 }
 
-export default function QRCheckpointPage() {
+export function QRCheckpointPage() {
   const { isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const { checkpointId: routeCheckpointId } = useParams();
@@ -1106,5 +1107,13 @@ export default function QRCheckpointPage() {
         </aside>
       </div>
     </main>
+  );
+}
+
+export default function QRCheckpointPageWrapper(props) {
+  return (
+    <ErrorBoundary title="CHECKPOINT SCANNER EXCEPTION // CONTAINED">
+      <QRCheckpointPage {...props} />
+    </ErrorBoundary>
   );
 }

@@ -27,7 +27,8 @@ export const CyberButton = ({
     green: 'bg-cyber-green/10 text-cyber-green border border-cyber-green hover:bg-cyber-green hover:text-cyber-bg hover:shadow-neon-green',
     orange: 'bg-cyber-orange/10 text-cyber-orange border border-cyber-orange hover:bg-cyber-orange hover:text-cyber-bg hover:shadow-neon-orange',
     danger: 'bg-cyber-danger/10 text-cyber-danger border border-cyber-danger hover:bg-cyber-danger hover:text-cyber-text',
-    ghost: 'bg-transparent text-cyber-muted border border-cyber-border hover:border-cyber-cyan hover:text-cyber-cyan'
+    ghost: 'bg-transparent text-cyber-muted border border-cyber-border hover:border-cyber-cyan hover:text-cyber-cyan',
+    secondary: 'bg-cyber-panel text-cyber-text border border-cyber-border hover:border-cyber-cyan hover:text-cyber-cyan hover:bg-cyber-secondary'
   };
 
   return (
@@ -35,7 +36,7 @@ export const CyberButton = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+      className={`${baseStyles} ${sizeStyles[size] || sizeStyles.md} ${variantStyles[variant] || variantStyles.cyan} ${className}`}
     >
       {/* Corner Tech Marks */}
       <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-current opacity-70" />

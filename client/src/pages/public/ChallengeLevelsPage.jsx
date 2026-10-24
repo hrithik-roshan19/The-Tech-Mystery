@@ -11,6 +11,7 @@ import {
   StaggerItem,
 } from "../../components/common/Motion";
 import { buttonHoverTap } from "../../utils/motion";
+import { ErrorBoundary } from "../../components/common/ErrorBoundary";
 import "../../styles/ChallengeLevelsPage.css";
 
 const baseLevels = [
@@ -26,7 +27,7 @@ const baseLevels = [
   { number: "10", title: "Final Challenge", description: "The ultimate climax. Synthesize keys and capture the Master Flag.", difficulty: "Expert", icon: "♜", detail: "Assemble the cryptographic fragments from prior levels and breach the final citadel." },
 ];
 
-export default function ChallengeLevelsPage() {
+export function ChallengeLevelsPage() {
   const [selectedLevel, setSelectedLevel] = useState(null);
   const { isAuthenticated } = useAuth();
   const [missionMap, setMissionMap] = useState([]);
@@ -225,5 +226,13 @@ export default function ChallengeLevelsPage() {
         </motion.aside>
       </section>
     </PageTransition>
+  );
+}
+
+export default function ChallengeLevelsPageWrapper(props) {
+  return (
+    <ErrorBoundary title="MISSION MAP ANOMALY // CONTAINED">
+      <ChallengeLevelsPage {...props} />
+    </ErrorBoundary>
   );
 }

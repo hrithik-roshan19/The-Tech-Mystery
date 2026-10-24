@@ -5,6 +5,7 @@ import { ROUTES } from "../../constants/routes";
 import { teamService } from "../../services/team.service";
 import { challengeService } from "../../services/challenge.service";
 import { leaderboardService } from "../../services/leaderboard.service";
+import { ErrorBoundary } from "../../components/common/ErrorBoundary";
 import "../../styles/ParticipantDashboard.css";
 
 function StatCard({ icon, value, label, children }) {
@@ -20,7 +21,7 @@ function StatCard({ icon, value, label, children }) {
   );
 }
 
-export default function ParticipantDashboard() {
+export function ParticipantDashboard() {
   const { user, updateTeamMembership, refreshUser } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -528,5 +529,13 @@ export default function ParticipantDashboard() {
         <p className="pd-footer-note">THE TECH MYSTERY 2026 <span>•</span> CODESPHERE × UTKRISHT</p>
       </section>
     </main>
+  );
+}
+
+export default function ParticipantDashboardWrapper(props) {
+  return (
+    <ErrorBoundary title="DASHBOARD ANOMALY // CONTAINED">
+      <ParticipantDashboard {...props} />
+    </ErrorBoundary>
   );
 }

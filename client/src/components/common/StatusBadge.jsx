@@ -11,7 +11,8 @@ export const StatusBadge = ({ status, variant = 'cyan', size = 'sm' }) => {
     orange: 'bg-cyber-orange/15 text-cyber-orange border-cyber-orange/40',
     danger: 'bg-cyber-danger/15 text-cyber-danger border-cyber-danger/40',
     warning: 'bg-cyber-warning/15 text-cyber-warning border-cyber-warning/40',
-    muted: 'bg-cyber-secondary text-cyber-muted border-cyber-border'
+    muted: 'bg-cyber-secondary text-cyber-muted border-cyber-border',
+    secondary: 'bg-cyber-panel text-cyber-muted border-cyber-border'
   };
 
   const sizeMap = {

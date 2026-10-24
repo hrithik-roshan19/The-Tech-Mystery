@@ -18,7 +18,11 @@ export const ProtectedRoute = ({ children, requiredRole, requireTeam }) => {
   const location = useLocation();
 
   if (loading) {
-    return <LoadingSpinner text="VERIFYING SECURITY CREDENTIALS..." />;
+    return (
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col items-center justify-center p-6 font-mono">
+        <LoadingSpinner text="VERIFYING SECURITY CREDENTIALS..." />
+      </div>
+    );
   }
 
   if (!isAuthenticated && identityAuthenticated) return <Navigate to="/auth/complete" state={{ from: location }} replace />;

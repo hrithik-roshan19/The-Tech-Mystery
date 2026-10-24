@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { challengeService } from '../../services/challenge.service';
 import { ROUTES } from '../../constants/routes';
+import { useAuth } from '../../hooks/useAuth';
 import Navbar from '../../components/navigation/Navbar';
 import { CyberCard } from '../../components/common/CyberCard';
 import { CyberButton } from '../../components/common/CyberButton';
 import { TerminalWindow } from '../../components/common/TerminalWindow';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { StatusBadge } from '../../components/common/StatusBadge';
+import { ErrorBoundary } from '../../components/common/ErrorBoundary';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -20,11 +22,20 @@ import {
   Sparkles,
   QrCode,
   Send,
-  HelpCircle
+  HelpCircle,
+  RefreshCw,
+  Users,
+  Radio,
+  FileQuestion,
+  RotateCcw,
+  Clock
 } from 'lucide-react';
 
 export const ChallengeViewPage = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const params = useParams();
+
   const [data, setData] = useState(null);
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(true);
@@ -32,28 +43,52 @@ export const ChallengeViewPage = () => {
   const [resultMsg, setResultMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [lockedInfo, setLockedInfo] = useState(null);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   const fetchChallenge = useCallback(async () => {
+    // If the participant has no squad, avoid firing backend request that triggers 403
+    if (user && !user.teamId && user.role !== 'ADMIN') {
+      setLoading(false);
+      setData(null);
+      setErrorMsg(null);
+      setLockedInfo(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setErrorMsg(null);
       setLockedInfo(null);
+      setLoadingTimeout(false);
       const res = await challengeService.getCurrentChallenge();
-      setData(res.data);
+      const payload = res?.data || res;
+      setData(payload);
     } catch (err) {
       const errData = err.response?.data?.data;
       if (errData?.isLocked) {
         setLockedInfo(errData);
       }
-      setErrorMsg(err.response?.data?.message || 'Failed to load active challenge.');
+      const message = err.response?.data?.message || err.message || 'Failed to load active challenge.';
+      setErrorMsg(message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchChallenge();
   }, [fetchChallenge]);
+
+  // Loading safety fallback: after 10s, offer forced reload option
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 10000);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   const handleSubmitAnswer = async (e) => {
     if (e) e.preventDefault();
@@ -101,7 +136,7 @@ export const ChallengeViewPage = () => {
         }));
       } else if (isLevelComplete) {
         // Refresh full challenge data to load next level state
-        setTimeout(() => fetchChallenge(), 3000);
+        setTimeout(() => fetchChallenge(), 2500);
       }
     } catch (err) {
       const errData = err.response?.data?.data;
@@ -116,26 +151,78 @@ export const ChallengeViewPage = () => {
     }
   };
 
+  // 1. Loading State (Full viewport, cyber styling, high-contrast)
   if (loading) {
     return (
-      <div className="min-h-screen bg-cyber-bg text-cyber-text">
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col">
         <Navbar />
-        <div className="max-w-4xl mx-auto px-4 py-20 flex flex-col items-center justify-center">
+        <div className="max-w-4xl w-full mx-auto px-4 py-24 flex-grow flex flex-col items-center justify-center">
           <LoadingSpinner text="DECRYPTING CHALLENGE NODE..." />
+          {loadingTimeout && (
+            <div className="mt-8 text-center space-y-3 font-mono text-xs max-w-sm">
+              <p className="text-cyber-muted">
+                Decryption handshake taking longer than expected. The core engine may be sleeping or calibrating.
+              </p>
+              <CyberButton variant="cyan" size="sm" icon={RefreshCw} onClick={fetchChallenge}>
+                FORCE RECONNECT
+              </CyberButton>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // 1. Physical QR Checkpoint Required / Locked State
-  if (lockedInfo || (errorMsg && !data)) {
+  // 2. Unaffiliated Participant / Squad Required State
+  if (user && !user.teamId && user.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
+        <Navbar />
+        <div className="max-w-3xl w-full mx-auto px-4 py-12 flex-grow flex items-center justify-center">
+          <CyberCard title="SQUAD FORMATION REQUIRED // SECTOR ACCESS LOCKED" glowColor="orange" className="w-full">
+            <div className="space-y-6 font-mono text-sm">
+              <div className="bg-cyber-warning/10 border border-cyber-warning p-5 text-cyber-warning flex items-start gap-4 rounded">
+                <Users className="w-6 h-6 shrink-0 mt-0.5 text-cyber-warning" />
+                <div className="space-y-1">
+                  <p className="font-bold uppercase tracking-wider text-base">Squad Affiliation Required</p>
+                  <p className="text-xs text-cyber-warning/90 leading-relaxed">
+                    Challenge terminals require authenticated squad telemetry. You must create or join a squad before attempting level decryption.
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-cyber-muted text-xs leading-relaxed">
+                Form a squad with 2–4 campus operators or join an existing squad using their team join code from the participant command console.
+              </p>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <Link to={ROUTES.PORTAL_DASHBOARD} className="flex-1">
+                  <CyberButton variant="cyan" size="lg" icon={Users} className="w-full justify-center">
+                    INITIALIZE / JOIN SQUAD →
+                  </CyberButton>
+                </Link>
+                <Link to={ROUTES.RULES} className="flex-1">
+                  <CyberButton variant="secondary" size="lg" className="w-full justify-center">
+                    VIEW COMPETITION RULES
+                  </CyberButton>
+                </Link>
+              </div>
+            </div>
+          </CyberCard>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Physical QR Checkpoint Required / Locked State
+  if (lockedInfo?.isLocked) {
     const cp = lockedInfo?.checkpoint;
     const lvl = lockedInfo?.levelNumber || data?.levelNumber || 1;
 
     return (
-      <div className="min-h-screen bg-cyber-bg text-cyber-text">
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
         <Navbar />
-        <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
+        <div className="max-w-3xl w-full mx-auto px-4 py-12 space-y-6 flex-grow">
           <CyberCard title={`SECURITY LOCK ACTIVE // LEVEL ${lvl}`} glowColor="orange">
             <div className="space-y-6 font-mono text-sm">
               <div className="bg-cyber-warning/10 border border-cyber-warning p-5 text-cyber-warning flex items-start gap-4 rounded">
@@ -143,7 +230,7 @@ export const ChallengeViewPage = () => {
                 <div className="space-y-1">
                   <p className="font-bold uppercase tracking-wider text-base">Checkpoint Scan Required</p>
                   <p className="text-xs text-cyber-warning/90 leading-relaxed">
-                    Physical checkpoint QR must be scanned to unlock this level challenge.
+                    Physical checkpoint QR beacon must be authenticated to decrypt this level node.
                   </p>
                 </div>
               </div>
@@ -193,13 +280,171 @@ export const ChallengeViewPage = () => {
     );
   }
 
-  // 2. Victory / Event Conquered State
+  // 4. Event Lifecycle Standby / Not Live Error State
+  const isEventNotLive =
+    errorMsg &&
+    (/live|maintenance|not started|concluded|closed/i.test(errorMsg));
+
+  if (isEventNotLive && !data) {
+    return (
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
+        <Navbar />
+        <div className="max-w-3xl w-full mx-auto px-4 py-12 flex-grow flex items-center justify-center">
+          <CyberCard title="SYSTEM STANDBY // EVENT LIFECYCLE NOTICE" glowColor="orange" className="w-full">
+            <div className="space-y-6 font-mono text-sm">
+              <div className="bg-cyber-warning/10 border border-cyber-warning p-5 text-cyber-warning flex items-start gap-4 rounded">
+                <Clock className="w-6 h-6 shrink-0 mt-0.5 text-cyber-warning" />
+                <div className="space-y-1">
+                  <p className="font-bold uppercase tracking-wider text-base">Event Awaiting Official Commencement</p>
+                  <p className="text-xs text-cyber-warning/90 leading-relaxed">
+                    {errorMsg}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-cyber-panel/60 border border-cyber-border p-4 rounded space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-cyber-muted">OPERATIONAL STATUS:</span>
+                  <StatusBadge status="REGISTRATION OPEN" variant="orange" size="xs" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-cyber-muted">REQUIRED FOR GAMEPLAY:</span>
+                  <StatusBadge status="EVENT LIVE" variant="green" size="xs" />
+                </div>
+                <p className="text-cyber-muted text-[11px] leading-relaxed pt-1">
+                  The challenge network and decryption nodes will activate as soon as event administrators transition the system to LIVE. Monitor campus announcements for the kickoff signal.
+                </p>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <CyberButton
+                  variant="cyan"
+                  size="lg"
+                  icon={RefreshCw}
+                  onClick={fetchChallenge}
+                  className="flex-1 justify-center"
+                >
+                  CHECK LIVE STATUS
+                </CyberButton>
+                <Link to={ROUTES.CHALLENGES} className="flex-1">
+                  <CyberButton variant="secondary" size="lg" className="w-full justify-center">
+                    VIEW MISSION MAP
+                  </CyberButton>
+                </Link>
+                <Link to={ROUTES.PORTAL_DASHBOARD} className="flex-1">
+                  <CyberButton variant="secondary" size="lg" className="w-full justify-center">
+                    DASHBOARD
+                  </CyberButton>
+                </Link>
+              </div>
+            </div>
+          </CyberCard>
+        </div>
+      </div>
+    );
+  }
+
+  // 5. Squad Size Requirements Error State
+  const isTeamSizeError =
+    errorMsg &&
+    (/team-size|minimum|size requirement|members/i.test(errorMsg));
+
+  if (isTeamSizeError && !data) {
+    return (
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
+        <Navbar />
+        <div className="max-w-3xl w-full mx-auto px-4 py-12 flex-grow flex items-center justify-center">
+          <CyberCard title="SQUAD VERIFICATION // TEAM SIZE NOTICE" glowColor="orange" className="w-full">
+            <div className="space-y-6 font-mono text-sm">
+              <div className="bg-cyber-warning/10 border border-cyber-warning p-5 text-cyber-warning flex items-start gap-4 rounded">
+                <Users className="w-6 h-6 shrink-0 mt-0.5 text-cyber-warning" />
+                <div className="space-y-1">
+                  <p className="font-bold uppercase tracking-wider text-base">Minimum Squad Size Not Met</p>
+                  <p className="text-xs text-cyber-warning/90 leading-relaxed">
+                    {errorMsg}. Each squad must have between 2 and 4 verified team members to begin challenge infiltration.
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-cyber-muted text-xs leading-relaxed">
+                Share your squad join code from your squad dashboard with teammates to add them to your roster.
+              </p>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <Link to={ROUTES.PORTAL_DASHBOARD} className="flex-1">
+                  <CyberButton variant="cyan" size="lg" icon={Users} className="w-full justify-center">
+                    MANAGE SQUAD ROSTER →
+                  </CyberButton>
+                </Link>
+                <CyberButton
+                  variant="secondary"
+                  size="lg"
+                  icon={RefreshCw}
+                  onClick={fetchChallenge}
+                  className="flex-1 justify-center"
+                >
+                  RETRY VERIFICATION
+                </CyberButton>
+              </div>
+            </div>
+          </CyberCard>
+        </div>
+      </div>
+    );
+  }
+
+  // 6. Generic API / Connection Error State
+  if (errorMsg && !data) {
+    return (
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
+        <Navbar />
+        <div className="max-w-3xl w-full mx-auto px-4 py-12 flex-grow flex items-center justify-center">
+          <CyberCard title="TERMINAL LINK EXCEPTION // ACCESS BLOCKED" glowColor="danger" className="w-full">
+            <div className="space-y-6 font-mono text-sm">
+              <div className="bg-cyber-danger/10 border border-cyber-danger p-5 text-cyber-danger flex items-start gap-4 rounded">
+                <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5 text-cyber-danger" />
+                <div className="space-y-1">
+                  <p className="font-bold uppercase tracking-wider text-base">Decryption Handshake Failed</p>
+                  <p className="text-xs text-cyber-danger/90 leading-relaxed break-words font-mono">
+                    {errorMsg}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-cyber-muted text-xs leading-relaxed">
+                The terminal could not retrieve the active challenge telemetry. Ensure your squad credentials and network connection are active.
+              </p>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <CyberButton
+                  variant="cyan"
+                  size="lg"
+                  icon={RotateCcw}
+                  onClick={fetchChallenge}
+                  className="flex-1 justify-center"
+                >
+                  RETRY CONNECTION
+                </CyberButton>
+                <Link to={ROUTES.PORTAL_DASHBOARD} className="flex-1">
+                  <CyberButton variant="secondary" size="lg" className="w-full justify-center">
+                    RETURN TO DASHBOARD
+                  </CyberButton>
+                </Link>
+              </div>
+            </div>
+          </CyberCard>
+        </div>
+      </div>
+    );
+  }
+
+  // 7. Victory / Event Conquered State
   if (data?.isEventComplete || (data?.levelNumber && data.levelNumber > 10)) {
     return (
-      <div className="min-h-screen bg-cyber-bg text-cyber-text">
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
         <Navbar />
-        <div className="max-w-3xl mx-auto px-4 py-12">
-          <CyberCard title="OPERATION SUCCESS // GRID CONQUERED" glowColor="cyan">
+        <div className="max-w-3xl w-full mx-auto px-4 py-12 flex-grow flex items-center justify-center">
+          <CyberCard title="OPERATION SUCCESS // GRID CONQUERED" glowColor="cyan" className="w-full">
             <div className="text-center py-8 space-y-6">
               <div className="inline-flex p-4 rounded-full bg-cyber-cyan/10 border border-cyber-cyan text-cyber-cyan animate-pulse">
                 <Trophy className="w-16 h-16" />
@@ -212,7 +457,7 @@ export const ChallengeViewPage = () => {
                   Your squad has infiltrated all 10 defense sectors of The Grid.
                 </p>
               </div>
-              <p className="text-cyber-muted text-xs max-w-md mx-auto leading-relaxed">
+              <p className="text-cyber-muted text-xs max-w-md mx-auto leading-relaxed font-mono">
                 Congratulations on completing the sequential grid trials! Verify your final standings on the live leaderboard and retrieve your victory token.
               </p>
               <div className="pt-4 flex flex-col sm:flex-row justify-center gap-4">
@@ -236,31 +481,31 @@ export const ChallengeViewPage = () => {
 
   const { challenge, question, teamChallenge, levelNumber, sequenceNumber, totalQuestions, solvedCount, emptyReason } = data || {};
 
-  // 3. No Questions Configured State
+  // 8. No Questions Configured State
   if (!question || emptyReason) {
     return (
-      <div className="min-h-screen bg-cyber-bg text-cyber-text">
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
         <Navbar />
-        <div className="max-w-3xl mx-auto px-4 py-12">
-          <CyberCard title={`SECTOR NODE // LEVEL ${levelNumber || 1}`} glowColor="orange">
+        <div className="max-w-3xl w-full mx-auto px-4 py-12 flex-grow flex items-center justify-center">
+          <CyberCard title={`SECTOR NODE // LEVEL ${levelNumber || 1}`} glowColor="orange" className="w-full">
             <div className="space-y-4 font-mono text-sm py-4">
               <div className="bg-cyber-warning/10 border border-cyber-warning p-5 text-cyber-warning flex items-start gap-3 rounded">
-                <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5" />
+                <FileQuestion className="w-6 h-6 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <p className="font-bold text-base">No questions are configured for this level</p>
-                  <p className="text-xs text-cyber-warning/90">
-                    Organizer question bank is awaiting deployment for this level node. Contact event administrators or monitor announcements.
+                  <p className="font-bold text-base">No Questions Configured For This Level</p>
+                  <p className="text-xs text-cyber-warning/90 leading-relaxed">
+                    {emptyReason || 'Organizer question bank is awaiting deployment for this level node. Contact event administrators or monitor campus broadcasts.'}
                   </p>
                 </div>
               </div>
-              <div className="pt-4 flex gap-3">
-                <Link to={ROUTES.PORTAL_DASHBOARD}>
-                  <CyberButton variant="secondary" size="md">
+              <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                <Link to={ROUTES.PORTAL_DASHBOARD} className="flex-1">
+                  <CyberButton variant="secondary" size="md" className="w-full justify-center">
                     ← BACK TO DASHBOARD
                   </CyberButton>
                 </Link>
-                <Link to={ROUTES.QR_CHECKPOINT}>
-                  <CyberButton variant="cyan" size="md">
+                <Link to={ROUTES.QR_CHECKPOINT} className="flex-1">
+                  <CyberButton variant="cyan" size="md" className="w-full justify-center">
                     VIEW QR STATIONS
                   </CyberButton>
                 </Link>
@@ -276,11 +521,12 @@ export const ChallengeViewPage = () => {
   const maxAttemptsAllowed = question?.attempts || 3;
   const attemptsRemaining = Math.max(0, maxAttemptsAllowed - attemptsLogged);
 
+  // 9. Active Question & Submission Interface State
   return (
-    <div className="min-h-screen bg-cyber-bg text-cyber-text pb-16">
+    <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <main className="max-w-4xl w-full mx-auto px-4 py-8 space-y-6 flex-grow">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between text-xs font-mono text-cyber-muted">
           <div className="flex items-center gap-2">
@@ -297,7 +543,7 @@ export const ChallengeViewPage = () => {
         </div>
 
         {/* Level & Question Header Bar */}
-        <div className="bg-cyber-panel border border-cyber-border p-5 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-cyber-panel border border-cyber-border p-5 rounded-none flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-panel-glow">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status={`LEVEL ${levelNumber}`} variant="orange" size="xs" />
@@ -307,21 +553,21 @@ export const ChallengeViewPage = () => {
               {question?.difficulty && (
                 <StatusBadge status={question.difficulty} variant="secondary" size="xs" />
               )}
-              <span className="bg-cyber-bg border border-cyber-border text-cyber-muted px-2 py-0.5 text-[11px] font-mono rounded">
+              <span className="bg-cyber-bg border border-cyber-border text-cyber-muted px-2 py-0.5 text-[11px] font-mono rounded-none">
                 QUESTION {sequenceNumber || 1} OF {totalQuestions || 1}
               </span>
               {solvedCount !== undefined && solvedCount > 0 && (
-                <span className="bg-cyber-green/10 text-cyber-green border border-cyber-green/40 px-2 py-0.5 text-[11px] font-mono rounded">
+                <span className="bg-cyber-green/10 text-cyber-green border border-cyber-green/40 px-2 py-0.5 text-[11px] font-mono rounded-none">
                   {solvedCount} SOLVED
                 </span>
               )}
             </div>
             <h1 className="text-xl md:text-2xl font-heading font-black text-white uppercase tracking-wide">
-              {question.title}
+              {question.title || `Challenge ${levelNumber}`}
             </h1>
           </div>
 
-          <div className="text-right font-mono bg-cyber-bg/60 border border-cyber-border px-4 py-2.5 rounded shrink-0">
+          <div className="text-right font-mono bg-cyber-bg/60 border border-cyber-border px-4 py-2.5 rounded-none shrink-0">
             <span className="text-[10px] text-cyber-muted uppercase block">BOUNTY REWARD</span>
             <span className="text-xl md:text-2xl font-bold text-cyber-cyan">
               +{question.points || challenge?.points || 100} PTS
@@ -331,7 +577,7 @@ export const ChallengeViewPage = () => {
 
         {/* Level Complete / Next Checkpoint Banner */}
         {resultMsg?.isLevelComplete && resultMsg?.nextCheckpointLocation && (
-          <div className="bg-cyber-cyan/10 border-2 border-cyber-cyan p-5 rounded-lg font-mono space-y-2 animate-pulse">
+          <div className="bg-cyber-cyan/10 border-2 border-cyber-cyan p-5 rounded-none font-mono space-y-2 animate-pulse">
             <div className="flex items-center gap-2 text-cyber-cyan font-bold text-sm uppercase tracking-wider">
               <MapPin className="w-5 h-5 shrink-0" />
               <span>LEVEL CONQUERED — NEXT CHECKPOINT UNLOCKED</span>
@@ -359,8 +605,8 @@ export const ChallengeViewPage = () => {
               <p className="text-[11px] uppercase tracking-wider text-cyber-muted mb-2 font-bold">
                 PROBLEM STATEMENT:
               </p>
-              <div className="text-cyber-text whitespace-pre-wrap leading-relaxed bg-black/40 p-4 border border-cyber-border rounded">
-                {question.prompt}
+              <div className="text-cyber-text whitespace-pre-wrap leading-relaxed bg-black/40 p-4 border border-cyber-border rounded-none">
+                {question.prompt || 'No question prompt available.'}
               </div>
             </div>
 
@@ -383,7 +629,7 @@ export const ChallengeViewPage = () => {
                       href={url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 bg-cyber-secondary border border-cyber-border px-3 py-1.5 text-xs text-cyber-cyan hover:border-cyber-cyan font-mono rounded transition-colors"
+                      className="inline-flex items-center gap-1.5 bg-cyber-secondary border border-cyber-border px-3 py-1.5 text-xs text-cyber-cyan hover:border-cyber-cyan font-mono rounded-none transition-colors"
                     >
                       <span>ATTACHMENT_{i + 1}</span>
                       <ArrowRight className="w-3 h-3" />
@@ -401,7 +647,7 @@ export const ChallengeViewPage = () => {
             {/* Feedback Alert */}
             {resultMsg && (
               <div
-                className={`p-4 border rounded flex items-start gap-3 ${
+                className={`p-4 border rounded-none flex items-start gap-3 ${
                   resultMsg.success
                     ? 'bg-cyber-green/10 border-cyber-green text-cyber-green'
                     : 'bg-cyber-danger/10 border-cyber-danger text-cyber-danger'
@@ -444,14 +690,14 @@ export const ChallengeViewPage = () => {
                         key={optIdx}
                         type="button"
                         onClick={() => setAnswer(opt)}
-                        className={`flex items-center gap-3 p-3 rounded border text-left transition-all ${
+                        className={`flex items-center gap-3 p-3 rounded-none border text-left transition-all ${
                           isSelected
                             ? 'bg-cyber-cyan/20 border-cyber-cyan text-white shadow-sm'
-                            : 'bg-cyber-bg/70 border-cyber-border text-cyber-muted hover:border-cyber-border/80 hover:text-white'
+                            : 'bg-cyber-bg/70 border-cyber-border text-cyber-muted hover:border-cyber-cyan/50 hover:text-white'
                         }`}
                       >
                         <span
-                          className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0 ${
+                          className={`inline-flex items-center justify-center w-6 h-6 rounded-none text-xs font-bold shrink-0 ${
                             isSelected
                               ? 'bg-cyber-cyan text-black'
                               : 'bg-cyber-panel border border-cyber-border text-cyber-muted'
@@ -488,7 +734,7 @@ export const ChallengeViewPage = () => {
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}
                     placeholder="e.g. 42"
-                    className="flex-grow bg-cyber-bg border border-cyber-border focus:border-cyber-cyan text-cyber-text px-4 py-2.5 outline-none font-mono text-sm rounded"
+                    className="flex-grow bg-cyber-bg border border-cyber-border focus:border-cyber-cyan text-cyber-text px-4 py-2.5 outline-none font-mono text-sm rounded-none"
                   />
                 ) : (
                   <input
@@ -505,7 +751,7 @@ export const ChallengeViewPage = () => {
                         ? 'Enter exact answer (case-sensitive)'
                         : 'Enter answer (case-insensitive)'
                     }
-                    className="flex-grow bg-cyber-bg border border-cyber-border focus:border-cyber-cyan text-cyber-text px-4 py-2.5 outline-none font-mono text-sm rounded"
+                    className="flex-grow bg-cyber-bg border border-cyber-border focus:border-cyber-cyan text-cyber-text px-4 py-2.5 outline-none font-mono text-sm rounded-none"
                   />
                 )}
 
@@ -533,9 +779,15 @@ export const ChallengeViewPage = () => {
             </div>
           </form>
         </CyberCard>
-      </div>
+      </main>
     </div>
   );
 };
 
-export default ChallengeViewPage;
+export default function ChallengeViewPageWrapper(props) {
+  return (
+    <ErrorBoundary title="CHALLENGE TERMINAL EXCEPTION // CONTAINED">
+      <ChallengeViewPage {...props} />
+    </ErrorBoundary>
+  );
+}

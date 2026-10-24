@@ -84,11 +84,19 @@ export const AppRoutes = () => {
       <Route path="/portal/dashboard" element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/portal/missions" element={<Navigate to={ROUTES.CHALLENGES} replace />} />
       <Route path="/portal/challenge" element={<ProtectedRoute><ChallengeViewPage /></ProtectedRoute>} />
+      <Route path="/portal/challenges/:levelNumber" element={<ProtectedRoute><ChallengeViewPage /></ProtectedRoute>} />
       <Route path="/portal/checkpoint" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
       <Route path="/portal/team" element={<Navigate to={ROUTES.PORTAL_DASHBOARD} replace />} />
       <Route path="/portal/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       <Route path="/portal/master-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
       <Route path="/portal/final-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
+      <Route path="/question" element={<Navigate to="/portal/challenge" replace />} />
+      <Route path="/portal/question" element={<Navigate to="/portal/challenge" replace />} />
+      <Route path="/questions" element={<Navigate to={ROUTES.CHALLENGES} replace />} />
+      <Route path="/submission" element={<Navigate to="/portal/challenge" replace />} />
+      <Route path="/portal/submission" element={<Navigate to="/portal/challenge" replace />} />
+      <Route path="/challenges/current" element={<Navigate to="/portal/challenge" replace />} />
+      <Route path="/portal/challenge/current" element={<Navigate to="/portal/challenge" replace />} />
 
       {/* 4. Admin Command SOC Protected Routes (AdminLayout strictly guarded by ADMIN role) */}
       <Route
