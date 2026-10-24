@@ -14,6 +14,9 @@ export const challengeService = {
   submitFlag: async (levelNumber, flag) => {
     const res = await api.post('/submissions/submit', { levelNumber, flag });
     return res.data;
+  },
+
+  submitAnswer: async (levelNumber, answer) => {
+    return challengeService.submitFlag(levelNumber, answer);
   }
 };
-

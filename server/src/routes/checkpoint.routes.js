@@ -9,9 +9,10 @@ const router = express.Router();
 router.use(authenticate);
 router.use(requireTeamMembership);
 
-router.post('/scan', qrScanLimiter, checkpointController.scanCheckpoint);
-router.post('/claim', qrScanLimiter, checkpointController.scanCheckpoint);
-router.post('/claim/:questionId', qrScanLimiter, checkpointController.scanCheckpoint);
+router.post('/scan', qrScanLimiter, (req, res, next) => checkpointController.scanCheckpoint(req, res, next));
+router.post('/scan/:checkpointId', qrScanLimiter, (req, res, next) => checkpointController.scanCheckpoint(req, res, next));
+router.post('/claim', qrScanLimiter, (req, res, next) => checkpointController.scanCheckpoint(req, res, next));
+router.post('/claim/:questionId', qrScanLimiter, (req, res, next) => checkpointController.scanCheckpoint(req, res, next));
+router.get('/:checkpointId', (req, res, next) => checkpointController.getCheckpointDetails(req, res, next));
 
 module.exports = router;
-

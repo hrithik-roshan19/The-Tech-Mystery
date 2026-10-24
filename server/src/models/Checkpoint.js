@@ -50,7 +50,7 @@ const checkpointSchema = new mongoose.Schema(
     mode: {
       type: String,
       enum: ['Public QR', 'Team-bound QR'],
-      default: 'Team-bound QR'
+      default: 'Public QR'
     },
     isActive: {
       type: Boolean,

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useParams, useNavigate } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { useAuth } from "../../hooks/useAuth";
 import { checkpointService } from "../../services/checkpoint.service";
@@ -59,6 +59,8 @@ function parseCheckpointPayload(raw) {
 export default function QRCheckpointPage() {
   const { isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
+  const { checkpointId: routeCheckpointId } = useParams();
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const scannerRef = useRef(null);
   const hasScannedRef = useRef(false);
@@ -126,23 +128,48 @@ export default function QRCheckpointPage() {
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState(null);
 
-  // Pre-fill from URL parameters (e.g. direct mobile QR scan: /checkpoint/scan?code=HTG-CP01&token=...)
+  // Pre-fill and auto-verify from URL parameters or route params (e.g. /qr-checkpoint/:checkpointId or /checkpoint/scan?code=HTG-CP01&token=...)
   useEffect(() => {
     const codeParam = searchParams.get("code") || searchParams.get("checkpointCode");
     const tokenParam = searchParams.get("token");
-    if (codeParam) {
-      const cleanCode = codeParam.trim().toUpperCase();
+    const qidParam = searchParams.get("qid") || searchParams.get("questionId");
+
+    if (routeCheckpointId || codeParam) {
+      const codeOrId = routeCheckpointId || (codeParam ? codeParam.trim().toUpperCase() : "");
       const cleanToken = tokenParam ? tokenParam.trim() : "";
-      setManualCode(cleanCode);
+      if (codeParam) setManualCode(codeParam.trim().toUpperCase());
       if (cleanToken) setManualToken(cleanToken);
 
       const raw = cleanToken
-        ? `${window.location.origin}/checkpoint/scan?code=${encodeURIComponent(cleanCode)}&token=${encodeURIComponent(cleanToken)}`
-        : cleanCode;
+        ? `${window.location.origin}/checkpoint/scan?code=${encodeURIComponent(codeOrId)}&token=${encodeURIComponent(cleanToken)}`
+        : codeOrId;
       setDecodedValue(raw);
-      setScanMessage(`Checkpoint Station ${cleanCode} detected from scan URL. Click "Verify with Server" below.`);
+
+      if (isAuthenticated) {
+        setVerifying(true);
+        checkpointService.scanCheckpoint(codeOrId, cleanToken, qidParam)
+          .then((res) => {
+            setVerifyResult({
+              success: true,
+              message: res.message || `Checkpoint verified: ${res.data?.checkpoint?.name || codeOrId}. Level unlocked!`,
+              data: res.data
+            });
+            setScanMessage(`Checkpoint Station ${res.data?.checkpoint?.name || codeOrId} verified!`);
+          })
+          .catch((err) => {
+            setVerifyResult({
+              success: false,
+              message: err.response?.data?.message || err.message || "Checkpoint verification rejected by server."
+            });
+          })
+          .finally(() => {
+            setVerifying(false);
+          });
+      } else {
+        setScanMessage(`Checkpoint Station detected. Log in to authenticate and access your level question.`);
+      }
     }
-  }, [searchParams]);
+  }, [routeCheckpointId, searchParams, isAuthenticated]);
 
   // Stop live scanner and safely release camera resources
   const stopLiveScan = useCallback(async () => {
@@ -416,10 +443,10 @@ export default function QRCheckpointPage() {
     }
   }
 
-  // Handle inline flag submission for the unlocked question
+  // Handle inline answer submission for the unlocked question
   async function handleSubmitFlagInline(e) {
     if (e) e.preventDefault();
-    const cleanFlag = submissionFlag.trim();
+    const cleanFlag = String(submissionFlag).trim();
     const targetLevel = verifyResult?.data?.checkpoint?.levelNumber || team?.currentLevel || 1;
     if (!cleanFlag) return;
 
@@ -430,7 +457,9 @@ export default function QRCheckpointPage() {
       const res = await challengeService.submitFlag(targetLevel, cleanFlag);
       setSolveResult({
         success: true,
-        message: res.message || "FLAG ACCEPTED! Level cleared and points awarded to your team!"
+        message: res.message || "ANSWER ACCEPTED! Level cleared and points awarded to your team!",
+        attemptsRemaining: res.data?.attemptsRemaining,
+        maxAttempts: res.data?.maxAttempts
       });
       setSubmissionFlag("");
       // Refresh team data to update currentLevel and score
@@ -439,9 +468,12 @@ export default function QRCheckpointPage() {
         setTeam(teamRes.data.team);
       }
     } catch (err) {
+      const errData = err.response?.data;
       setSolveResult({
         success: false,
-        message: err.response?.data?.message || err.message || "Incorrect flag. Access denied."
+        message: errData?.message || err.message || "Incorrect answer. Verification failed.",
+        attemptsRemaining: errData?.data?.attemptsRemaining,
+        maxAttempts: errData?.data?.maxAttempts
       });
     } finally {
       setSubmittingFlag(false);
@@ -713,24 +745,78 @@ export default function QRCheckpointPage() {
                 </div>
 
                 {verifyResult.data.question && (
-                  <div className="htg-qr-question-preview" style={{ marginTop: "12px", border: "1px solid rgba(184, 255, 61, 0.25)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <strong style={{ fontSize: "14px", margin: 0 }}>
+                  <div className="htg-qr-question-preview" style={{ marginTop: "12px", border: "1px solid rgba(184, 255, 61, 0.25)", borderRadius: "6px", padding: "14px", background: "rgba(10, 18, 10, 0.6)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
+                      <strong style={{ fontSize: "15px", margin: 0, color: "#fff" }}>
                         {verifyResult.data.question.title}
                       </strong>
-                      <span style={{ fontSize: "11px", color: "var(--qr-lime)", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
-                        {verifyResult.data.question.points || 100} PTS · {verifyResult.data.question.difficulty || "MEDIUM"}
-                      </span>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", background: "rgba(184, 255, 61, 0.15)", color: "var(--qr-lime)", fontWeight: 700 }}>
+                          {verifyResult.data.question.type || "Flag"}
+                        </span>
+                        <span style={{ fontSize: "11px", color: "var(--qr-lime)", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
+                          {verifyResult.data.question.points || 100} PTS · {verifyResult.data.question.difficulty || "MEDIUM"}
+                        </span>
+                      </div>
                     </div>
 
-                    <p style={{ margin: "0 0 12px 0", opacity: 0.95, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                    <p style={{ margin: "0 0 12px 0", opacity: 0.95, lineHeight: 1.6, whiteSpace: "pre-wrap", color: "#e2e8f0", fontSize: "13.5px" }}>
                       {verifyResult.data.question.prompt}
                     </p>
+
+                    {verifyResult.data.question.instructions && (
+                      <div style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.3)", padding: "8px 12px", borderRadius: "4px", fontSize: "12px", marginBottom: "12px", color: "#93c5fd" }}>
+                        <strong style={{ color: "#60a5fa" }}>INSTRUCTIONS: </strong>
+                        {verifyResult.data.question.instructions}
+                      </div>
+                    )}
 
                     {verifyResult.data.question.hints?.[0]?.content && (
                       <div style={{ background: "rgba(255,255,255,0.03)", padding: "8px 10px", borderRadius: "4px", fontSize: "11px", marginBottom: "12px", borderLeft: "2px solid var(--qr-lime)" }}>
                         <span style={{ color: "var(--qr-lime)", fontWeight: 700 }}>HINT: </span>
                         {verifyResult.data.question.hints[0].content}
+                      </div>
+                    )}
+
+                    {/* Multiple Choice Options Display */}
+                    {verifyResult.data.question.type === "Multiple Choice" && Array.isArray(verifyResult.data.question.options) && verifyResult.data.question.options.length > 0 && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px", marginBottom: "14px" }}>
+                        {verifyResult.data.question.options.map((option, optIdx) => (
+                          <button
+                            key={optIdx}
+                            type="button"
+                            onClick={() => setSubmissionFlag(option)}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                              padding: "10px 14px",
+                              background: submissionFlag === option ? "rgba(184, 255, 61, 0.15)" : "rgba(0, 0, 0, 0.4)",
+                              border: submissionFlag === option ? "1px solid var(--qr-lime)" : "1px solid rgba(255, 255, 255, 0.12)",
+                              borderRadius: "4px",
+                              color: submissionFlag === option ? "var(--qr-lime)" : "#e2e8f0",
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "all 0.15s ease"
+                            }}
+                          >
+                            <span style={{
+                              display: "inline-flex",
+                              width: "22px",
+                              height: "22px",
+                              borderRadius: "50%",
+                              background: submissionFlag === option ? "var(--qr-lime)" : "rgba(255, 255, 255, 0.1)",
+                              color: submissionFlag === option ? "#051105" : "#fff",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "11px",
+                              fontWeight: 700
+                            }}>
+                              {String.fromCharCode(65 + optIdx)}
+                            </span>
+                            <span style={{ fontSize: "13px" }}>{option}</span>
+                          </button>
+                        ))}
                       </div>
                     )}
 
@@ -749,49 +835,85 @@ export default function QRCheckpointPage() {
                         }}
                         role="alert"
                       >
-                        {solveResult.success ? "✓ " : "⚠ "}
-                        {solveResult.message}
+                        <div>
+                          {solveResult.success ? "✓ " : "⚠ "}
+                          {solveResult.message}
+                        </div>
+                        {solveResult.attemptsRemaining !== undefined && !solveResult.success && (
+                          <div style={{ marginTop: "4px", fontSize: "11px", opacity: 0.9 }}>
+                            Attempts Remaining: {solveResult.attemptsRemaining} of {solveResult.maxAttempts || 3}
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {/* Inline Flag Submission */}
+                    {/* Answer Submission Form */}
                     {isAuthenticated ? (
-                      <form onSubmit={handleSubmitFlagInline} style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-                        <input
-                          type="text"
-                          required
-                          value={submissionFlag}
-                          onChange={(e) => setSubmissionFlag(e.target.value)}
-                          placeholder="HTG{flag_here}"
-                          style={{
-                            flex: 1,
-                            background: "rgba(0,0,0,0.5)",
-                            border: "1px solid rgba(255,255,255,0.2)",
-                            borderRadius: "4px",
-                            padding: "8px 12px",
-                            color: "#fff",
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "12px"
-                          }}
-                        />
-                        <button
-                          type="submit"
-                          disabled={submittingFlag || !submissionFlag.trim()}
-                          style={{
-                            background: "var(--qr-lime)",
-                            color: "#051105",
-                            border: "none",
-                            borderRadius: "4px",
-                            padding: "8px 16px",
-                            fontWeight: 700,
-                            fontSize: "11px",
-                            cursor: "pointer",
-                            letterSpacing: "0.05em",
-                            whiteSpace: "nowrap"
-                          }}
-                        >
-                          {submittingFlag ? "VERIFYING..." : "SUBMIT FLAG →"}
-                        </button>
+                      <form onSubmit={handleSubmitFlagInline} style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          {verifyResult.data.question.type === "Numeric Answer" ? (
+                            <input
+                              type="number"
+                              step="any"
+                              required
+                              value={submissionFlag}
+                              onChange={(e) => setSubmissionFlag(e.target.value)}
+                              placeholder="Enter numeric answer (e.g. 42)"
+                              style={{
+                                flex: 1,
+                                background: "rgba(0,0,0,0.5)",
+                                border: "1px solid rgba(255,255,255,0.2)",
+                                borderRadius: "4px",
+                                padding: "10px 12px",
+                                color: "#fff",
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "13px"
+                              }}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              required
+                              value={submissionFlag}
+                              onChange={(e) => setSubmissionFlag(e.target.value)}
+                              placeholder={
+                                verifyResult.data.question.type === "Multiple Choice"
+                                  ? "Select an option above or type answer"
+                                  : verifyResult.data.question.type === "Text Answer" || verifyResult.data.question.type === "Short Text"
+                                  ? (verifyResult.data.question.isCaseSensitive ? "Enter text answer (case-sensitive)" : "Enter text answer (case-insensitive)")
+                                  : "HTG{flag_here}"
+                              }
+                              style={{
+                                flex: 1,
+                                background: "rgba(0,0,0,0.5)",
+                                border: "1px solid rgba(255,255,255,0.2)",
+                                borderRadius: "4px",
+                                padding: "10px 12px",
+                                color: "#fff",
+                                fontFamily: verifyResult.data.question.type === "Flag" ? "var(--font-mono)" : "inherit",
+                                fontSize: "13px"
+                              }}
+                            />
+                          )}
+                          <button
+                            type="submit"
+                            disabled={submittingFlag || !submissionFlag.trim() || solveResult?.success}
+                            style={{
+                              background: solveResult?.success ? "rgba(16, 185, 129, 0.4)" : "var(--qr-lime)",
+                              color: solveResult?.success ? "#fff" : "#051105",
+                              border: "none",
+                              borderRadius: "4px",
+                              padding: "10px 18px",
+                              fontWeight: 700,
+                              fontSize: "12px",
+                              cursor: solveResult?.success ? "default" : "pointer",
+                              letterSpacing: "0.05em",
+                              whiteSpace: "nowrap"
+                            }}
+                          >
+                            {submittingFlag ? "VERIFYING..." : solveResult?.success ? "SOLVED ✓" : "SUBMIT ANSWER →"}
+                          </button>
+                        </div>
                       </form>
                     ) : (
                       <Link
@@ -799,11 +921,12 @@ export default function QRCheckpointPage() {
                         style={{
                           display: "inline-block",
                           color: "var(--qr-lime)",
-                          fontSize: "11px",
-                          textDecoration: "underline"
+                          fontSize: "12px",
+                          textDecoration: "underline",
+                          marginTop: "8px"
                         }}
                       >
-                        Log in with team account to submit captured flag
+                        Log in with team account to submit your answer
                       </Link>
                     )}
                   </div>

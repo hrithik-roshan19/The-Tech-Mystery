@@ -66,10 +66,33 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     fetchLiveLeaderboard(false);
-    const timer = setInterval(() => fetchLiveLeaderboard(false), 15000);
+
+    let eventSource = null;
+    try {
+      const streamUrl = leaderboardService.getStreamUrl();
+      eventSource = new EventSource(streamUrl);
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload && Array.isArray(payload.leaderboard)) {
+            setLiveTeams(payload.leaderboard);
+            setIsVisible(payload.isVisible !== false);
+            setIsFrozen(Boolean(payload.isFrozen));
+            setLastUpdated(payload.lastUpdated ? new Date(payload.lastUpdated).toLocaleTimeString() : new Date().toLocaleTimeString());
+          }
+        } catch {
+          // ignore parsing error
+        }
+      };
+    } catch {
+      // EventSource fallback to polling
+    }
+
+    const timer = setInterval(() => fetchLiveLeaderboard(false), 12000);
 
     return () => {
       clearInterval(timer);
+      if (eventSource) eventSource.close();
     };
   }, []);
 
@@ -83,7 +106,7 @@ export default function LeaderboardPage() {
         name: t.teamName || `Team ${idx + 1}`,
         members: `${t.membersCount || 3} Operatives`,
         points: Number(t.totalScore || 0),
-        solved: t.solvedCount !== undefined ? t.solvedCount : Math.max(0, (t.currentLevel || 1) - 1),
+        solved: t.solvedCount !== undefined ? t.solvedCount : (t.completedChallenges || 0),
         last: formatTimeAgo(t.lastSolveTimestamp),
         trend: "same",
         own: Boolean(user?.teamId && user.teamId === t.teamId)

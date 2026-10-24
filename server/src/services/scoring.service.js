@@ -5,6 +5,49 @@ const assignment = require('./questionAssignment.service');
 const { safeFlagCompare } = require('../utils/crypto');
 const crypto = require('crypto');
 
+/**
+ * Normalizes and verifies answers across various question types:
+ * - Numeric Answer: Numeric tolerance / float or integer equivalence
+ * - Multiple Choice: Trimmed letter or string comparison (case-insensitive by default)
+ * - Text Answer / Short Text: Trimmed string comparison respecting configured case sensitivity
+ * - Flag: Secure constant-time CTF flag comparison
+ */
+function verifyAnswer(submitted, question) {
+  if (submitted === undefined || submitted === null || !question?.flag) return false;
+  const strSubmitted = String(submitted);
+  if (!strSubmitted.trim()) return false;
+  const expected = String(question.flag);
+  const isCaseSensitive = Boolean(question.isCaseSensitive);
+  const qType = String(question.type || 'Flag').trim();
+
+  if (qType === 'Numeric Answer') {
+    const numSub = Number(strSubmitted.trim());
+    const numExp = Number(expected.trim());
+    if (!Number.isNaN(numSub) && !Number.isNaN(numExp)) {
+      return numSub === numExp;
+    }
+    return strSubmitted.trim() === expected.trim();
+  }
+
+  if (qType === 'Multiple Choice') {
+    if (!isCaseSensitive) {
+      return strSubmitted.trim().toLowerCase() === expected.trim().toLowerCase();
+    }
+    return strSubmitted.trim() === expected.trim();
+  }
+
+  if (qType === 'Text Answer' || qType === 'Short Text') {
+    const s = strSubmitted.trim();
+    const e = expected.trim();
+    if (!isCaseSensitive) {
+      return s.toLowerCase() === e.toLowerCase();
+    }
+    return s === e;
+  }
+
+  return safeFlagCompare(strSubmitted, expected, isCaseSensitive);
+}
+
 async function audit(actor, target, detail) {
   await SecurityLog.create({
     eventId: `EVT-${crypto.randomUUID()}`,
@@ -112,10 +155,21 @@ async function applyDecision(tc, submission, correct, points, actor) {
   await submission.save();
 
   await audit(actor, tc._id, `Score delta ${delta}; solve delta ${solvedDelta}; submission ${submission._id}`);
+
+  // Broadcast real-time leaderboard update via Server-Sent Events (SSE)
+  try {
+    const leaderboardController = require('../controllers/leaderboard.controller');
+    leaderboardController.broadcastLeaderboardUpdate();
+  } catch (broadCastErr) {
+    // Non-blocking telemetry broadcast
+  }
+
   return { netPoints: after, newTotalScore: team.totalScore, nextLevel: team.currentLevel, alreadySolved: false };
 }
 
 module.exports = {
+  verifyAnswer,
+
   submit({ teamId, userId, levelNumber, flag, ipAddress, userAgent }) {
     return transaction(async () => {
       const config = await eventFor('submission');
@@ -149,7 +203,7 @@ module.exports = {
       );
       if (!claimed) throw new Error('Maximum submission attempts reached');
 
-      const isCorrect = safeFlagCompare(flag, question.flag, question.isCaseSensitive);
+      const isCorrect = verifyAnswer(flag, question);
       const submission = await Submission.create({
         teamId,
         userId,

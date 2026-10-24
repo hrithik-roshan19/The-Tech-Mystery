@@ -50,7 +50,9 @@ export const AppRoutes = () => {
       <Route path={ROUTES.MISSION} element={<MissionPage />} />
       <Route path={ROUTES.CHALLENGES} element={<ChallengeLevelsPage />} />
       <Route path={ROUTES.QR_CHECKPOINT} element={<QRCheckpointPage />} />
+      <Route path="/qr-checkpoint/:checkpointId" element={<QRCheckpointPage />} />
       <Route path="/checkpoint/scan" element={<QRCheckpointPage />} />
+      <Route path="/checkpoint/:checkpointId" element={<QRCheckpointPage />} />
       <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
       <Route path={ROUTES.FINAL_FLAG} element={<FinalFlagPage />} />
       <Route path={ROUTES.PORTAL_DASHBOARD} element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />

@@ -71,7 +71,14 @@ const fallbackChallenges = [
   "The Final Grid",
 ];
 
-const types = ["Text Answer", "Flag", "Multiple Choice", "File Upload"];
+const types = [
+  "Flag",
+  "Short Text",
+  "Numeric Answer",
+  "Multiple Choice",
+  "Text Answer",
+  "File Upload",
+];
 const categories = [
   "Cryptography",
   "OSINT",
@@ -85,16 +92,19 @@ const difficulties = ["Easy", "Medium", "Hard", "Expert"];
 
 const blankQuestion = {
   title: "",
-  challenge: "Lost Transmission",
+  challenge: "The Starting Point",
   level: 1,
-  type: "Text Answer",
+  type: "Flag",
   category: "Cryptography",
   difficulty: "Easy",
-  points: 50,
-  status: "Draft",
+  points: 100,
+  status: "Published",
   attempts: 3,
   hint: "",
   prompt: "",
+  instructions: "",
+  options: ["Option A", "Option B", "Option C", "Option D"],
+  isCaseSensitive: true,
   answer: "",
   checkpointId: "",
   updated: "Just now",
@@ -128,6 +138,32 @@ export default function QuestionManagementPage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadText, setUploadText] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [inspectingTeamsQuestion, setInspectingTeamsQuestion] = useState(null);
+
+  const handleDownloadCheckpointQr = (cp) => {
+    if (!cp) return;
+    const code = cp.checkpointCode || cp.code || `HTG-CP${String(cp.levelNumber || 1).padStart(2, "0")}`;
+    if (cp.qrCodeDataUrl) {
+      const link = document.createElement("a");
+      link.href = cp.qrCodeDataUrl;
+      link.download = `HTG-Level-${cp.levelNumber}-QR.png`;
+      link.click();
+      setNotice(`Downloaded official level QR code for Level ${cp.levelNumber} (${code}).`);
+    } else {
+      QRCode.toDataURL(cp.qrScanUrl || `${window.location.origin}/checkpoint/scan?code=${code}`, {
+        width: 600,
+        margin: 2
+      }).then((url) => {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `HTG-Level-${cp.levelNumber}-QR.png`;
+        link.click();
+        setNotice(`Downloaded official level QR code for Level ${cp.levelNumber}.`);
+      }).catch((err) => {
+        setNotice(`Failed to generate QR download: ${err.message}`);
+      });
+    }
+  };
   const uploadFileInputRef = useRef(null);
 
   // Normalize server question to UI question format
@@ -164,7 +200,13 @@ export default function QuestionManagementPage() {
       attempts: Number(q.attempts ?? 3),
       hint: q.hints?.[0]?.content || "",
       prompt: q.prompt || "",
+      instructions: q.instructions || "",
+      options: Array.isArray(q.options) ? q.options : [],
+      isCaseSensitive: q.isCaseSensitive !== false,
       answer: q.flag || "••••••••••••••••••",
+      assignedTeams: Array.isArray(q.assignedTeams) ? q.assignedTeams : [],
+      assignedCount: Number(q.assignedCount || 0),
+      solvedCount: Number(q.solvedCount || 0),
       checkpointId: q.checkpointId?._id || q.checkpointId || "",
       checkpointCode: q.checkpointCode || q.checkpointId?.checkpointCode || null,
       qrCodeDataUrl: q.qrCodeDataUrl || null,
@@ -311,6 +353,9 @@ export default function QuestionManagementPage() {
     setEditingId(question.id);
     setDraft({
       ...question,
+      instructions: question.instructions || "",
+      options: Array.isArray(question.options) && question.options.length > 0 ? question.options : ["Option A", "Option B", "Option C", "Option D"],
+      isCaseSensitive: question.isCaseSensitive !== false,
       checkpointId: question.checkpointId || "",
     });
     setShowEditor(true);
@@ -336,6 +381,9 @@ export default function QuestionManagementPage() {
           points: Number(draft.points),
           attempts: Number(draft.attempts),
           prompt: draft.prompt.trim(),
+          instructions: draft.instructions ? draft.instructions.trim() : "",
+          options: Array.isArray(draft.options) ? draft.options.filter(Boolean) : [],
+          isCaseSensitive: Boolean(draft.isCaseSensitive),
           hint: draft.hint ? draft.hint.trim() : "",
           answer: draft.answer ? draft.answer.trim() : "",
           status: draft.status,
@@ -805,6 +853,192 @@ export default function QuestionManagementPage() {
           </article>
         </section>
 
+        {/* Level Navigation Hub & QR Station (One Permanent QR Code Per Level) */}
+        <section className="q-level-hub-section" style={{ marginBottom: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "10px" }}>
+            <div>
+              <small style={{ color: "var(--qr-lime)", fontWeight: 700, letterSpacing: "0.1em", fontSize: "10px" }}>
+                COMPETITION LEVEL SELECTOR
+              </small>
+              <h3 style={{ margin: "2px 0 0", fontSize: "18px", color: "#fff" }}>
+                Level-Based Challenge Stations &amp; Question Pool
+              </h3>
+            </div>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => setLevelFilter("All Levels")}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  border: levelFilter === "All Levels" ? "1px solid var(--qr-lime)" : "1px solid rgba(255,255,255,0.12)",
+                  background: levelFilter === "All Levels" ? "rgba(184, 255, 61, 0.2)" : "rgba(0,0,0,0.4)",
+                  color: levelFilter === "All Levels" ? "var(--qr-lime)" : "#a5b0a7"
+                }}
+              >
+                All Levels
+              </button>
+              {Array.from({ length: 10 }, (_, idx) => {
+                const lvl = idx + 1;
+                const isSelected = levelFilter === String(lvl);
+                const count = questions.filter(q => q.level === lvl).length;
+                return (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setLevelFilter(String(lvl))}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      border: isSelected ? "1px solid var(--qr-lime)" : "1px solid rgba(255,255,255,0.12)",
+                      background: isSelected ? "rgba(184, 255, 61, 0.2)" : "rgba(0,0,0,0.4)",
+                      color: isSelected ? "var(--qr-lime)" : "#a5b0a7"
+                    }}
+                  >
+                    Level {lvl} <span style={{ opacity: 0.7, fontSize: "10px" }}>({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Level QR Station Card (One Permanent QR Code Per Level) */}
+          {(() => {
+            const activeLevelNum = levelFilter === "All Levels" ? 1 : Number(levelFilter);
+            const cp = checkpoints.find(c => c.levelNumber === activeLevelNum) || null;
+            const lvlQuestions = questions.filter(q => q.level === activeLevelNum);
+            const assignedCount = lvlQuestions.reduce((sum, q) => sum + (q.assignedCount || 0), 0);
+            const solvedCount = lvlQuestions.reduce((sum, q) => sum + (q.solvedCount || 0), 0);
+            const unassignedCount = lvlQuestions.filter(q => !q.isCompleted && (!q.assignedCount || q.assignedCount === 0)).length;
+            const qrUrl = cp?.qrScanUrl || (cp?.checkpointCode ? `${window.location.origin}/checkpoint/scan?code=${cp.checkpointCode}` : null);
+
+            return (
+              <div style={{
+                background: "linear-gradient(135deg, rgba(16, 26, 18, 0.85) 0%, rgba(8, 14, 10, 0.95) 100%)",
+                border: "1px solid rgba(184, 255, 61, 0.3)",
+                borderRadius: "8px",
+                padding: "16px 20px",
+                display: "grid",
+                gridTemplateColumns: "auto 1fr auto",
+                gap: "20px",
+                alignItems: "center"
+              }}>
+                {/* QR Code Preview */}
+                <div style={{ background: "#fff", padding: "8px", borderRadius: "6px", display: "inline-block" }}>
+                  <ScannableQrImage
+                    value={qrUrl || `${window.location.origin}/qr-checkpoint?level=${activeLevelNum}`}
+                    size={110}
+                  />
+                  <small style={{ display: "block", textAlign: "center", color: "#000", fontWeight: 700, fontSize: "9px", marginTop: "2px" }}>
+                    LEVEL {activeLevelNum} QR
+                  </small>
+                </div>
+
+                {/* Level Details & Station Info */}
+                <div>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" }}>
+                    <span style={{ background: "var(--qr-lime)", color: "#051105", fontWeight: 800, fontSize: "11px", padding: "2px 8px", borderRadius: "3px" }}>
+                      LEVEL {activeLevelNum} OFFICIAL QR
+                    </span>
+                    <span style={{ fontSize: "11px", color: "#a5b0a7" }}>
+                      {cp?.checkpointCode || `HTG-CP${String(activeLevelNum).padStart(2, "0")}`}
+                    </span>
+                    <span style={{ fontSize: "11px", color: cp?.status === "Active" ? "#10b981" : "#f59e0b", fontWeight: 600 }}>
+                      ● {cp?.status || "Active"}
+                    </span>
+                  </div>
+                  <h4 style={{ margin: "0 0 6px", fontSize: "16px", color: "#fff" }}>
+                    {cp?.name || `Checkpoint Station — Level ${activeLevelNum}`}
+                  </h4>
+                  <p style={{ margin: "0 0 10px", fontSize: "12px", color: "#a5b0a7" }}>
+                    📍 {cp?.locationDescription || `Campus Physical Placement — Station ${activeLevelNum}`}
+                  </p>
+
+                  {/* Question Bank Pool Metrics */}
+                  <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "12px" }}>
+                    <div>
+                      <span style={{ color: "#a5b0a7" }}>Question Bank: </span>
+                      <strong style={{ color: "#fff" }}>{lvlQuestions.length} variations</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: "#a5b0a7" }}>Teams Assigned: </span>
+                      <strong style={{ color: "var(--qr-lime)" }}>{assignedCount}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: "#a5b0a7" }}>Teams Solved: </span>
+                      <strong style={{ color: "#10b981" }}>{solvedCount}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: "#a5b0a7" }}>Available Unassigned: </span>
+                      <strong style={{ color: unassignedCount > 0 ? "var(--qr-lime)" : "#ef4444" }}>
+                        {unassignedCount} ready
+                      </strong>
+                    </div>
+                  </div>
+
+                  {unassignedCount === 0 && lvlQuestions.length > 0 && (
+                    <div style={{ marginTop: "8px", fontSize: "11px", color: "#fca5a5", background: "rgba(239, 68, 68, 0.15)", border: "1px solid #ef4444", padding: "4px 8px", borderRadius: "4px" }}>
+                      ⚠ QUESTION POOL EXHAUSTED: Add more questions to Level {activeLevelNum} so newly arrived teams receive unique challenges.
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions: Download & Print */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadCheckpointQr(cp || { levelNumber: activeLevelNum, checkpointCode: `HTG-CP${String(activeLevelNum).padStart(2, "0")}`, qrScanUrl: qrUrl })}
+                    className="htg-primary-button"
+                    style={{ whiteSpace: "nowrap", padding: "8px 14px", fontSize: "11px" }}
+                  >
+                    ⬇ Download Level QR (PNG)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrintTarget(cp || { levelNumber: activeLevelNum, name: `Level ${activeLevelNum} Checkpoint`, checkpointCode: `HTG-CP${String(activeLevelNum).padStart(2, "0")}`, qrScanUrl: qrUrl });
+                    }}
+                    className="htg-outline-button"
+                    style={{ whiteSpace: "nowrap", padding: "8px 14px", fontSize: "11px" }}
+                  >
+                    🖨 Print QR Sticker
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraft({
+                        ...blankQuestion,
+                        level: activeLevelNum,
+                        challenge: challenges[activeLevelNum - 1] || `Level ${activeLevelNum}`
+                      });
+                      setShowEditor(true);
+                    }}
+                    style={{
+                      background: "rgba(184, 255, 61, 0.15)",
+                      border: "1px solid var(--qr-lime)",
+                      color: "var(--qr-lime)",
+                      borderRadius: "4px",
+                      padding: "8px 14px",
+                      fontWeight: 700,
+                      fontSize: "11px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    + Add Question to Level {activeLevelNum}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </section>
+
         {/* Toolbar: Filters, Search, View Mode */}
         <section className="htg-question-toolbar">
           <label className="htg-question-search">
@@ -892,7 +1126,7 @@ export default function QuestionManagementPage() {
                       <th>Difficulty</th>
                       <th>Points</th>
                       <th>Status</th>
-                      <th>FCFS Claim</th>
+                      <th>Assigned Teams</th>
                       <th>Attempts</th>
                       <th>Actions</th>
                     </tr>
@@ -948,33 +1182,34 @@ export default function QuestionManagementPage() {
                           </span>
                         </td>
                         <td>
-                          {item.isCompleted ? (
-                            <span className="q-claim-badge completed" title={`Solved by ${item.completedByTeamName || 'Team'}`}>
-                              ✓ Solved {item.completedByTeamName ? `(${item.completedByTeamName})` : ''}
-                            </span>
-                          ) : item.isClaimed ? (
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                              <span className="q-claim-badge claimed" title={`Claimed by ${item.claimedByTeamName || 'Team'}`}>
-                                🔒 {item.claimedByTeamName ? item.claimedByTeamName : 'Claimed'}
-                              </span>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            {item.assignedCount > 0 || (item.assignedTeams && item.assignedTeams.length > 0) ? (
                               <button
                                 type="button"
-                                className="q-row-action"
-                                title="Release claim"
-                                style={{ color: '#f59e0b', borderColor: '#f59e0b', fontSize: '10px', padding: '1px 5px', height: 'auto' }}
+                                className="htg-outline-button"
+                                style={{ fontSize: '11px', padding: '2px 8px', color: '#b8ff3d', borderColor: '#28442c' }}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleReleaseClaim(item);
+                                  setInspectingTeamsQuestion(item);
                                 }}
                               >
-                                Release
+                                👥 {item.assignedCount || item.assignedTeams.length} {item.assignedCount === 1 ? 'team' : 'teams'}
                               </button>
-                            </div>
-                          ) : (
-                            <span className="q-claim-badge available" title="Available for any team to claim">
-                              ● Available
-                            </span>
-                          )}
+                            ) : item.isClaimed ? (
+                              <span className="q-claim-badge claimed">
+                                🔒 {item.claimedByTeamName || 'Claimed'}
+                              </span>
+                            ) : (
+                              <span className="q-claim-badge available" title="Available for assignment">
+                                ● Available
+                              </span>
+                            )}
+                            {(item.solvedCount > 0 || item.isCompleted) && (
+                              <span className="q-claim-badge completed" title={`${item.solvedCount || 1} team(s) solved this`}>
+                                ✓ {item.solvedCount || 1}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td>{item.attempts}</td>
                         <td>
@@ -1061,13 +1296,24 @@ export default function QuestionManagementPage() {
                         {item.status}
                       </span>
                     </div>
-                    <div style={{ marginTop: '6px', fontSize: '10px' }}>
-                      {item.isCompleted ? (
-                        <span className="q-claim-badge completed">✓ Solved</span>
-                      ) : item.isClaimed ? (
-                        <span className="q-claim-badge claimed">🔒 Claimed</span>
+                    <div style={{ marginTop: '6px', fontSize: '10px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      {item.assignedCount > 0 || (item.assignedTeams && item.assignedTeams.length > 0) ? (
+                        <button
+                          type="button"
+                          className="htg-outline-button"
+                          style={{ fontSize: "10px", padding: "1px 6px", color: "#b8ff3d" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setInspectingTeamsQuestion(item);
+                          }}
+                        >
+                          👥 {item.assignedCount || item.assignedTeams.length} assigned
+                        </button>
                       ) : (
                         <span className="q-claim-badge available">● Available</span>
+                      )}
+                      {(item.solvedCount > 0 || item.isCompleted) && (
+                        <span className="q-claim-badge completed">✓ {item.solvedCount || 1}</span>
                       )}
                     </div>
                   </button>
@@ -1741,6 +1987,74 @@ Crypto Decode,"Decode: ...",HTG{flag},1,100,Cryptography`}
                 />
               </label>
               <label className="q-full">
+                Instructions & Constraints
+                <textarea
+                  rows="2"
+                  value={draft.instructions || ""}
+                  onChange={(event) =>
+                    setDraft({ ...draft, instructions: event.target.value })
+                  }
+                  placeholder="Optional format instructions (e.g. 'Round to 2 decimal places', 'Case-insensitive', etc.)"
+                />
+              </label>
+              {draft.type === "Multiple Choice" && (
+                <div className="q-full" style={{ background: "#0a140d", padding: "12px", borderRadius: "6px", border: "1px solid #1c2e22" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <label style={{ margin: 0, fontWeight: "600", fontSize: "12px", color: "#b8ff3d" }}>
+                      Options / Choices *
+                    </label>
+                    <button
+                      type="button"
+                      className="htg-outline-button"
+                      style={{ fontSize: "11px", padding: "2px 8px" }}
+                      onClick={() => {
+                        const currentOpts = Array.isArray(draft.options) ? [...draft.options] : [];
+                        currentOpts.push(`Option ${String.fromCharCode(65 + currentOpts.length)}`);
+                        setDraft({ ...draft, options: currentOpts });
+                      }}
+                    >
+                      + Add Option
+                    </button>
+                  </div>
+                  <div style={{ display: "grid", gap: "6px" }}>
+                    {(Array.isArray(draft.options) && draft.options.length > 0 ? draft.options : ["Option A", "Option B", "Option C", "Option D"]).map((opt, optIdx) => (
+                      <div key={optIdx} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <span style={{ fontSize: "11px", color: "#8e9a90", width: "20px" }}>
+                          {String.fromCharCode(65 + optIdx)}.
+                        </span>
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => {
+                            const newOpts = Array.isArray(draft.options) ? [...draft.options] : [];
+                            newOpts[optIdx] = e.target.value;
+                            setDraft({ ...draft, options: newOpts });
+                          }}
+                          placeholder={`Option ${String.fromCharCode(65 + optIdx)} text`}
+                          style={{ flex: 1, padding: "6px 10px", fontSize: "12px" }}
+                        />
+                        {(draft.options?.length || 0) > 2 && (
+                          <button
+                            type="button"
+                            className="q-delete-button"
+                            style={{ padding: "4px 8px", fontSize: "11px" }}
+                            onClick={() => {
+                              const newOpts = draft.options.filter((_, i) => i !== optIdx);
+                              setDraft({ ...draft, options: newOpts });
+                            }}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <small style={{ color: "#7a877c", display: "block", marginTop: "6px", fontSize: "10px" }}>
+                    Set the Correct Answer field below to match the exact option text or letter.
+                  </small>
+                </div>
+              )}
+              <label className="q-full">
                 Hint
                 <textarea
                   rows="2"
@@ -1786,6 +2100,16 @@ Crypto Decode,"Decode: ...",HTG{flag},1,100,Cryptography`}
                 />{" "}
                 Required to complete challenge
               </label>
+              <label className="q-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={draft.isCaseSensitive !== false}
+                  onChange={(event) =>
+                    setDraft({ ...draft, isCaseSensitive: event.target.checked })
+                  }
+                />{" "}
+                Case-sensitive answer verification
+              </label>
             </div>
             <div className="q-modal-actions">
               <button
@@ -1805,6 +2129,89 @@ Crypto Decode,"Decode: ...",HTG{flag},1,100,Cryptography`}
                 : "Demo mode: data stays in local UI state until connected to an authenticated live database session. Secret flags remain server-side in production."}
             </p>
           </form>
+        </div>
+      )}
+
+      {/* Assigned Teams Inspection Modal */}
+      {inspectingTeamsQuestion && (
+        <div
+          className="q-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setInspectingTeamsQuestion(null);
+          }}
+        >
+          <div className="q-modal" style={{ maxWidth: 640 }}>
+            <header>
+              <div>
+                <small>ASSIGNED TEAMS ROSTER · {inspectingTeamsQuestion.id}</small>
+                <h2>{inspectingTeamsQuestion.title}</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInspectingTeamsQuestion(null)}
+                aria-label="Close modal"
+              >
+                ×
+              </button>
+            </header>
+            <div style={{ padding: "16px 0" }}>
+              <div style={{ display: "flex", gap: "12px", marginBottom: "16px", color: "#aeb9b0", fontSize: "12px" }}>
+                <span><strong>Level:</strong> {inspectingTeamsQuestion.level}</span>
+                <span>•</span>
+                <span><strong>Type:</strong> {inspectingTeamsQuestion.type}</span>
+                <span>•</span>
+                <span><strong>Points:</strong> {inspectingTeamsQuestion.points} pts</span>
+              </div>
+
+              {inspectingTeamsQuestion.assignedTeams && inspectingTeamsQuestion.assignedTeams.length > 0 ? (
+                <div className="htg-question-table-wrap">
+                  <table className="htg-question-table" style={{ width: "100%", fontSize: "12px" }}>
+                    <thead>
+                      <tr>
+                        <th>Team Name</th>
+                        <th>Solve Status</th>
+                        <th>Attempts Used</th>
+                        <th>Assigned At</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {inspectingTeamsQuestion.assignedTeams.map((t, idx) => (
+                        <tr key={t.teamId || idx}>
+                          <td><strong>{t.teamName || "Team"}</strong></td>
+                          <td>
+                            {t.isSolved ? (
+                              <span className="q-claim-badge completed">✓ Solved</span>
+                            ) : (
+                              <span className="q-claim-badge claimed">⏳ In Progress</span>
+                            )}
+                          </td>
+                          <td>{t.attemptsUsed ?? 0}</td>
+                          <td>{t.assignedAt ? new Date(t.assignedAt).toLocaleTimeString() : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ padding: "32px 16px", textAlign: "center", color: "#8e9a90", background: "#0a130c", borderRadius: "8px", border: "1px dashed #223827" }}>
+                  <p style={{ margin: 0, fontSize: "13px" }}>No teams have been assigned this question yet.</p>
+                  <small style={{ color: "#5a685c", marginTop: "4px", display: "block" }}>
+                    When a team scans Level {inspectingTeamsQuestion.level}'s QR code, this question will be assigned if available in the pool.
+                  </small>
+                </div>
+              )}
+            </div>
+            <div className="q-modal-actions">
+              <button
+                type="button"
+                className="htg-primary-button"
+                onClick={() => setInspectingTeamsQuestion(null)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

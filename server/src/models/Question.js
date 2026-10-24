@@ -48,9 +48,20 @@ const questionSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['Text Answer', 'Flag', 'Multiple Choice', 'File Upload'],
+      enum: ['Text Answer', 'Numeric Answer', 'Multiple Choice', 'Flag', 'File Upload', 'Short Text'],
       default: 'Flag'
     },
+    instructions: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    options: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
     points: {
       type: Number,
       default: 100,
@@ -124,6 +135,22 @@ const questionSchema = new mongoose.Schema(
       default: null,
       index: true
     },
+    // Dynamic team-level assignment tracking
+    isAssigned: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
+    assignedTeamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+      index: true
+    },
+    assignedAt: {
+      type: Date,
+      default: null
+    },
     isCompleted: {
       type: Boolean,
       default: false,
@@ -158,7 +185,7 @@ questionSchema.index({ levelNumber: 1, isClaimed: 1, isCompleted: 1 });
 
 // New/edited questions cannot publish literal answers in participant text.
 questionSchema.pre('validate', function(next) {
-  if (this.flag && ['title', 'prompt', 'assetUrls'].some(field =>
+  if (this.flag && ['title', 'prompt', 'instructions', 'assetUrls'].some(field =>
     (this.isModified(field) || this.isModified('flag')) &&
     [this[field]].flat().some(value => typeof value === 'string' && safeContent(value, [this.flag]) !== value))) {
     return next(new Error('Participant content contains private answer material'));

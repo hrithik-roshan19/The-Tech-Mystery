@@ -1,16 +1,16 @@
 const checkpointService = require('../services/checkpoint.service');
 const { decodeCheckpointToken } = require('../utils/crypto');
-const { success, badRequest } = require('../utils/apiResponse');
+const { success, badRequest, notFound } = require('../utils/apiResponse');
 
 /**
  * Checkpoint Controller
- * Handles physical QR checkpoint scanning.
+ * Handles physical QR checkpoint scanning and retrieval.
  */
 class CheckpointController {
   async scanCheckpoint(req, res, next) {
     try {
-      let questionId = req.params?.questionId || req.body.questionId || req.body.qid || null;
-      const token = req.body.token;
+      let questionId = req.params?.questionId || req.body?.questionId || req.body?.qid || null;
+      const token = req.body?.token;
       const teamId = req.user.teamId;
 
       if (!questionId && token) {
@@ -20,7 +20,19 @@ class CheckpointController {
         }
       }
 
-      let checkpointCode = req.body.checkpointCode || req.body.code;
+      let checkpointCode = req.body?.checkpointCode || req.body?.code;
+      const cpId = req.params?.checkpointId || req.body?.checkpointId;
+
+      if (!checkpointCode && cpId) {
+        const { Checkpoint } = require('../models');
+        if (/^[0-9a-fA-F]{24}$/.test(cpId)) {
+          const cp = await Checkpoint.findById(cpId);
+          if (cp?.checkpointCode) checkpointCode = cp.checkpointCode;
+        } else {
+          checkpointCode = cpId;
+        }
+      }
+
       if (!checkpointCode && questionId) {
         const { Question } = require('../models');
         const q = await Question.findById(questionId);
@@ -28,7 +40,7 @@ class CheckpointController {
       }
 
       if (!checkpointCode) {
-        return badRequest(res, 'A checkpoint code is required');
+        return badRequest(res, 'A checkpoint code or checkpoint ID is required');
       }
 
       const result = await checkpointService.processScan({
@@ -40,7 +52,7 @@ class CheckpointController {
       });
 
       const message = result.alreadyScanned
-        ? `Checkpoint already verified: ${result.checkpoint.name}. Level ${result.checkpoint.levelNumber} is unlocked!`
+        ? `Checkpoint already verified: ${result.checkpoint.name}. Level ${result.checkpoint.levelNumber} is active!`
         : `Checkpoint Verified: ${result.checkpoint.name}. Level ${result.checkpoint.levelNumber} unlocked!`;
 
       return success(
@@ -50,6 +62,34 @@ class CheckpointController {
       );
     } catch (error) {
       return res.status(error.statusCode || 400).json({ success: false, message: error.message });
+    }
+  }
+
+  async getCheckpointDetails(req, res, next) {
+    try {
+      const cpId = req.params?.checkpointId;
+      const { Checkpoint } = require('../models');
+      let cp = null;
+      if (/^[0-9a-fA-F]{24}$/.test(cpId)) {
+        cp = await Checkpoint.findById(cpId).populate('associatedChallengeId', 'title levelNumber description points status');
+      } else {
+        cp = await Checkpoint.findOne({ checkpointCode: String(cpId).toUpperCase() }).populate('associatedChallengeId', 'title levelNumber description points status');
+      }
+      if (!cp) return notFound(res, 'Checkpoint not found');
+      return success(res, {
+        checkpointId: cp._id,
+        name: cp.name,
+        code: cp.checkpointCode,
+        levelNumber: cp.levelNumber,
+        locationDescription: cp.locationDescription,
+        status: cp.status,
+        mode: cp.mode,
+        token: cp.qrToken,
+        qrScanUrl: cp.qrScanUrl,
+        challenge: cp.associatedChallengeId
+      });
+    } catch (err) {
+      return next(err);
     }
   }
 }

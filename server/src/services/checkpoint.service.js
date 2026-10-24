@@ -17,10 +17,18 @@ module.exports = {
       if (bound && (!checkpoint.boundTeamId || String(checkpoint.boundTeamId) !== String(team._id))) {
         throw new Error('Checkpoint is not assigned to this team');
       }
+
       if (!verifyCheckpointToken(checkpoint.checkpointCode, checkpoint.levelNumber, token,
-        { teamId: bound ? checkpoint.boundTeamId : null, qid: questionId })) throw new Error('A valid, unexpired signed checkpoint token is required');
-      const challenge = await Challenge.findOne({ _id: checkpoint.associatedChallengeId,
-        levelNumber: checkpoint.levelNumber, isActive: true, status: 'Published' });
+        { teamId: bound ? checkpoint.boundTeamId : null, qid: questionId })) {
+        throw new Error('A valid, unexpired signed checkpoint token is required');
+      }
+
+      const challenge = await Challenge.findOne({
+        _id: checkpoint.associatedChallengeId,
+        levelNumber: checkpoint.levelNumber,
+        isActive: true,
+        status: 'Published'
+      });
       if (!challenge) throw new Error('Checkpoint challenge is not published or active');
       if (team.currentLevel < checkpoint.levelNumber) throw new Error('Checkpoint locked. Solve prior levels first.');
       if (team.currentLevel > checkpoint.levelNumber) throw new Error('This level has already been cleared by your team.');
@@ -38,6 +46,7 @@ module.exports = {
       const answers = await privateAnswers();
       return {
         checkpoint: {
+          _id: checkpoint._id,
           name: safeContent(checkpoint.name, answers),
           levelNumber: checkpoint.levelNumber,
           locationDescription: safeContent(checkpoint.locationDescription, answers),

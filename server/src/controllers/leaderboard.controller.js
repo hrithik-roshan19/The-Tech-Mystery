@@ -1,5 +1,6 @@
-const { Team, EventConfig, Submission } = require('../models');
+const { Team, EventConfig } = require('../models');
 const { success } = require('../utils/apiResponse');
+const logger = require('../utils/logger');
 
 /**
  * Deterministically sorts team records according to official CTF competition rules:
@@ -25,65 +26,107 @@ function sortTeamsDeterministically(teams) {
   });
 }
 
+// Active real-time Server-Sent Events (SSE) connections
+const sseClients = new Set();
+
 /**
  * Leaderboard Controller
  * Provides real-time rank ordering, deterministic tie-breaking, freeze support,
  * and visibility gating.
  */
 class LeaderboardController {
+  async buildLiveLeaderboardPayload() {
+    const config = await EventConfig.findOne();
+    const isVisible = config ? config.isLeaderboardVisible !== false : true;
+    const isFrozen = config ? Boolean(config.isLeaderboardFrozen) : false;
+
+    if (!isVisible) {
+      return {
+        leaderboard: [],
+        isVisible: false,
+        isFrozen,
+        message: 'The public leaderboard is currently hidden by event administrators.',
+        totalTeams: 0,
+        lastUpdated: new Date().toISOString()
+      };
+    }
+
+    const teams = await Team.find({ isDisqualified: false })
+      .select('name totalScore lastSolveTimestamp createdAt avatarUrl')
+      .limit(200);
+
+    const sortedTeams = sortTeamsDeterministically(teams);
+
+    // SECURITY & PRIVACY: Do NOT expose currentLevel or assignedQuestion in public leaderboard
+    const ranked = sortedTeams.map((team, index) => ({
+      rank: index + 1,
+      teamId: team._id,
+      teamName: team.name,
+      totalScore: team.totalScore || 0,
+      lastSolveTimestamp: team.lastSolveTimestamp,
+      createdAt: team.createdAt,
+      avatarUrl: team.avatarUrl
+    }));
+
+    return {
+      leaderboard: ranked,
+      isVisible: true,
+      isFrozen,
+      totalTeams: ranked.length,
+      lastUpdated: new Date().toISOString()
+    };
+  }
+
   async getLiveLeaderboard(req, res, next) {
     try {
-      const config = await EventConfig.findOne();
-      const isVisible = config ? config.isLeaderboardVisible !== false : true;
-      const isFrozen = config ? Boolean(config.isLeaderboardFrozen) : false;
-
-      // When the leaderboard is hidden by administrators, suppress public standings
-      if (!isVisible) {
-        return success(
-          res,
-          {
-            leaderboard: [],
-            isVisible: false,
-            isFrozen,
-            message: 'The public leaderboard is currently hidden by event administrators.',
-            totalTeams: 0,
-            lastUpdated: new Date().toISOString()
-          },
-          'Leaderboard is currently hidden'
-        );
-      }
-
-      const teams = await Team.find({ isDisqualified: false })
-        .select('name currentLevel totalScore lastSolveTimestamp createdAt avatarUrl')
-        .limit(200);
-
-      const sortedTeams = sortTeamsDeterministically(teams);
-
-      const ranked = sortedTeams.map((team, index) => ({
-        rank: index + 1,
-        teamId: team._id,
-        teamName: team.name,
-        currentLevel: team.currentLevel,
-        solvedCount: Math.max(0, (team.currentLevel || 1) - 1),
-        totalScore: team.totalScore || 0,
-        lastSolveTimestamp: team.lastSolveTimestamp,
-        createdAt: team.createdAt,
-        avatarUrl: team.avatarUrl
-      }));
-
+      const payload = await this.buildLiveLeaderboardPayload();
       return success(
         res,
-        {
-          leaderboard: ranked,
-          isVisible: true,
-          isFrozen,
-          totalTeams: ranked.length,
-          lastUpdated: new Date().toISOString()
-        },
-        'Leaderboard retrieved'
+        payload,
+        payload.isVisible ? 'Leaderboard retrieved' : 'Leaderboard is currently hidden'
       );
     } catch (error) {
       return next(error);
+    }
+  }
+
+  async getPublicLeaderboard(req, res, next) {
+    return this.getLiveLeaderboard(req, res, next);
+  }
+
+  streamLeaderboard(req, res) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    sseClients.add(res);
+
+    this.buildLiveLeaderboardPayload()
+      .then((payload) => {
+        res.write(`data: ${JSON.stringify(payload)}\n\n`);
+      })
+      .catch(() => {});
+
+    req.on('close', () => {
+      sseClients.delete(res);
+    });
+  }
+
+  async broadcastLeaderboardUpdate() {
+    if (sseClients.size === 0) return;
+    try {
+      const payload = await this.buildLiveLeaderboardPayload();
+      const message = `data: ${JSON.stringify(payload)}\n\n`;
+      for (const client of sseClients) {
+        try {
+          client.write(message);
+        } catch {
+          sseClients.delete(client);
+        }
+      }
+    } catch (err) {
+      logger.warn(`Failed to broadcast leaderboard SSE update: ${err.message}`);
     }
   }
 
@@ -142,4 +185,5 @@ class LeaderboardController {
   }
 }
 
-module.exports = new LeaderboardController();
+const leaderboardController = new LeaderboardController();
+module.exports = leaderboardController;

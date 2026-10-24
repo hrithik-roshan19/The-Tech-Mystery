@@ -16,10 +16,22 @@ async function privateAnswers() {
 async function participantQuestion(question) {
   const answers = await privateAnswers();
   if (!question) throw new Error('Assigned question is unavailable');
-  const fields = ['title', 'prompt', 'category', 'difficulty', 'type'];
-  const result = { _id: question._id, levelNumber: question.levelNumber,
-    points: question.points, attempts: question.attempts };
-  for (const field of fields) result[field] = safeContent(question[field], answers);
+  const fields = ['title', 'prompt', 'category', 'difficulty', 'type', 'instructions'];
+  const result = {
+    _id: question._id,
+    levelNumber: question.levelNumber,
+    points: question.points,
+    attempts: question.attempts,
+    isCaseSensitive: Boolean(question.isCaseSensitive)
+  };
+  for (const field of fields) {
+    if (question[field] !== undefined) {
+      result[field] = safeContent(question[field], answers);
+    }
+  }
+  if (Array.isArray(question.options)) {
+    result.options = question.options.map(opt => String(opt || '').trim()).filter(Boolean);
+  }
   result.assetUrls = (question.assetUrls || []).map(url => safeContent(url, answers)).filter(url => url !== WITHHELD);
   return result;
 }
@@ -36,4 +48,11 @@ function participantTeam(team, user) {
   return result;
 }
 
-module.exports = { participantQuestion, participantTeam, canManageJoinCode, safeContent, privateAnswers };
+module.exports = {
+  participantQuestion,
+  sanitizeParticipantQuestion: participantQuestion,
+  participantTeam,
+  canManageJoinCode,
+  safeContent,
+  privateAnswers
+};

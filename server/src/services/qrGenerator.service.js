@@ -37,7 +37,7 @@ class QrGeneratorService {
     });
 
     const frontendUrl = this.getFrontendUrl();
-    const scanUrl = `${frontendUrl}/checkpoint/scan?code=${encodeURIComponent(code)}&token=${encodeURIComponent(token)}`;
+    const scanUrl = `${frontendUrl}/checkpoint/scan?code=${encodeURIComponent(code)}&token=${encodeURIComponent(token)}${checkpoint._id ? `&checkpointId=${checkpoint._id}` : ''}`;
 
     const [qrCodeDataUrl, qrSvg] = await Promise.all([
       QRCode.toDataURL(scanUrl, {
@@ -65,6 +65,27 @@ class QrGeneratorService {
       scanUrl,
       qrCodeDataUrl,
       qrSvg
+    };
+  }
+
+  /**
+   * Generate QR code for a challenge level.
+   *
+   * @param {number} levelNumber
+   * @param {object} [checkpoint]
+   * @returns {Promise<{ qrDataUrl: string, scanUrl: string, token: string, code: string }>}
+   */
+  async generateLevelQrCode(levelNumber, checkpoint = null) {
+    const cp = checkpoint || {
+      levelNumber,
+      checkpointCode: `HTG-CP${String(levelNumber).padStart(2, '0')}`
+    };
+    const res = await this.generateCheckpointQr(cp);
+    return {
+      qrDataUrl: res.qrCodeDataUrl,
+      scanUrl: res.scanUrl,
+      token: res.token,
+      code: cp.checkpointCode
     };
   }
 

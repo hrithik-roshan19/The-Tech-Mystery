@@ -516,7 +516,7 @@ class AdminController {
       }
 
       const questions = await query;
-      await Promise.all(
+      const questionsWithAssignments = await Promise.all(
         questions.map(async (q) => {
           if (!q.qrCodeDataUrl) {
             try {
@@ -542,10 +542,25 @@ class AdminController {
               logger.warn(`Lazy QR generation error for question ${q._id}: ${err.message}`);
             }
           }
+
+          const assignments = await TeamChallenge.find({ assignedQuestionId: q._id }).populate('teamId', 'name totalScore currentLevel isDisqualified');
+          const qObj = q.toObject();
+          qObj.assignedTeams = assignments.map(a => ({
+            teamId: a.teamId?._id,
+            teamName: a.teamId?.name || 'Unknown Team',
+            status: a.status,
+            attemptsCount: a.attemptsCount,
+            checkpointScanned: a.checkpointScanned,
+            solvedAt: a.solvedAt,
+            pointsAwarded: a.pointsAwarded
+          }));
+          qObj.assignedCount = assignments.length;
+          qObj.solvedCount = assignments.filter(a => a.status === 'SOLVED').length;
+          return qObj;
         })
       );
 
-      return success(res, { questions });
+      return success(res, { questions: questionsWithAssignments });
     } catch (error) {
       return next(error);
     }
@@ -643,7 +658,9 @@ class AdminController {
         checkpointCode: checkpoint.checkpointCode,
         title: String(title).trim(),
         prompt: String(prompt).trim(),
-        type: ['Text Answer', 'Flag', 'Multiple Choice', 'File Upload'].includes(type) ? type : 'Flag',
+        instructions: req.body.instructions ? String(req.body.instructions).trim() : '',
+        options: Array.isArray(req.body.options) ? req.body.options.map(o => String(o).trim()).filter(Boolean) : [],
+        type: ['Text Answer', 'Numeric Answer', 'Multiple Choice', 'Flag', 'File Upload', 'Short Text'].includes(type) ? type : 'Flag',
         category: category || targetChallenge.category,
         difficulty: difficulty
           ? String(difficulty).trim().toUpperCase()
@@ -862,8 +879,14 @@ class AdminController {
       if (checkpointId !== undefined) {
         existing.checkpointId = checkpointId && /^[0-9a-fA-F]{24}$/.test(checkpointId) ? checkpointId : null;
       }
-      if (type !== undefined && ['Text Answer', 'Flag', 'Multiple Choice', 'File Upload'].includes(type)) {
+      if (type !== undefined && ['Text Answer', 'Numeric Answer', 'Multiple Choice', 'Flag', 'File Upload', 'Short Text'].includes(type)) {
         existing.type = type;
+      }
+      if (req.body.instructions !== undefined) {
+        existing.instructions = typeof req.body.instructions === 'string' ? req.body.instructions.trim() : '';
+      }
+      if (req.body.options !== undefined && Array.isArray(req.body.options)) {
+        existing.options = req.body.options.map(o => String(o).trim()).filter(Boolean);
       }
       if (category !== undefined) {
         existing.category = category;
