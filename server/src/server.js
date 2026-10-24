@@ -62,13 +62,30 @@ const startServer = async () => {
       }
     }
 
-    // Ensure baseline singleton EventConfig exists
+    // Ensure baseline singleton EventConfig exists and reconcile state with environment if configured
     try {
       const { EventConfig } = require('./models');
+      const { EVENT_STATES } = require('./constants/eventStates');
       const existingConfig = await EventConfig.findOne();
+      const desiredState = config.eventState;
+
       if (!existingConfig) {
-        await EventConfig.create({});
-        logger.info('[Database] Baseline EventConfig singleton initialized');
+        const initialState = desiredState || EVENT_STATES.DRAFT;
+        await EventConfig.create({
+          state: initialState,
+          registrationOpen: initialState === EVENT_STATES.REGISTRATION_OPEN || initialState === EVENT_STATES.LIVE
+        });
+        logger.info(`[Database] Baseline EventConfig singleton initialized in ${initialState} state`);
+      } else if (desiredState && existingConfig.state !== desiredState) {
+        logger.info(`[Database] Reconciling EventConfig state: ${existingConfig.state} -> ${desiredState} from environment`);
+        existingConfig.state = desiredState;
+        if (desiredState === EVENT_STATES.REGISTRATION_OPEN) {
+          existingConfig.registrationOpen = true;
+        } else if (desiredState === EVENT_STATES.REGISTRATION_CLOSED) {
+          existingConfig.registrationOpen = false;
+        }
+        await existingConfig.save();
+        logger.info(`[Database] EventConfig state reconciled to ${desiredState}`);
       }
     } catch (configError) {
       logger.error(`[Database] EventConfig initialization error: ${configError.message}`);

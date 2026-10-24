@@ -6,6 +6,7 @@ const fixture = vi.hoisted(() => ({ auth: {}, sdk: {}, signOut: vi.fn(), openUse
 vi.mock('@clerk/react', () => ({
   ClerkProvider: ({ children, ...props }) => { fixture.providerProps = props; return <>{children}</>; },
   useAuth: () => fixture.sdk,
+  useUser: () => ({ isLoaded: true, isSignedIn: fixture.sdk?.isSignedIn, user: fixture.clerkUser || null }),
   useClerk: () => ({ signOut: fixture.signOut, openUserProfile: fixture.openUserProfile }),
   SignIn: () => <div>Official sign-in component</div>, SignUp: () => <div>Official sign-up component</div>
 }));

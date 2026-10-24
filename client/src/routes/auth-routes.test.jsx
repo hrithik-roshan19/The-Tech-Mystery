@@ -11,6 +11,7 @@ const fixture = vi.hoisted(() => ({
 vi.mock('@clerk/react', () => ({
   ClerkProvider: ({ children, ...props }) => { fixture.provider(props); return <>{children}</>; },
   useAuth: () => ({ isLoaded: true, isSignedIn: false, getToken: async () => null }),
+  useUser: () => ({ isLoaded: true, isSignedIn: false, user: null }),
   useClerk: () => ({ signOut: vi.fn() }),
   SignIn: props => <div data-testid="clerk-sign-in" data-routing={props.routing}>Clerk sign-in route</div>,
   SignUp: props => <div data-testid="clerk-sign-up" data-routing={props.routing}>Clerk sign-up route</div>,

@@ -78,6 +78,10 @@ export default function EventControlPage() {
                 ? "Paused"
                 : cfg.state === "CONCLUDED"
                 ? "Concluded"
+                : cfg.state === "REGISTRATION_OPEN"
+                ? "Registration Open"
+                : cfg.state === "REGISTRATION_CLOSED"
+                ? "Registration Closed"
                 : "Draft",
             startDate: cfg.startTime
               ? new Date(cfg.startTime).toISOString().slice(0, 16)
@@ -152,6 +156,12 @@ export default function EventControlPage() {
             ? "PAUSED"
             : settings.status === "Concluded"
             ? "CONCLUDED"
+            : settings.status === "Registration Open"
+            ? "REGISTRATION_OPEN"
+            : settings.status === "Registration Closed"
+            ? "REGISTRATION_CLOSED"
+            : Boolean(settings.registrationOpen)
+            ? "REGISTRATION_OPEN"
             : "DRAFT",
         startTime: settings.startDate ? new Date(settings.startDate) : null,
         endTime: settings.endDate ? new Date(settings.endDate) : null,

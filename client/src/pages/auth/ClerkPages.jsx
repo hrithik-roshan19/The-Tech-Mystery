@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SignIn, SignUp } from '@clerk/react';
+import { SignIn, SignUp, useUser } from '@clerk/react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
@@ -346,7 +346,10 @@ export function RegisterPage() {
 export function AuthCompletePage() {
   const location = useLocation();
   const { loading, identityAuthenticated, user, authError, refreshUser, logout } = useAuth();
-  const [mode, setMode] = useState('link');
+  const { user: clerkUser } = useUser();
+  const isFromRegister = location.state?.from?.pathname === '/register' ||
+    sessionStorage.getItem('htg_auth_return') === '/register';
+  const [mode, setMode] = useState(isFromRegister ? 'register' : 'link');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -463,13 +466,26 @@ export function AuthCompletePage() {
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '13.5px', fontWeight: 600 }}>
                       Username
                       <div className="login-input" style={{ marginTop: '6px' }}>
-                        <input name="username" pattern="[A-Za-z0-9_-]{3,30}" required placeholder="Choose handle (3-30 chars)" />
+                        <input
+                          name="username"
+                          pattern="[A-Za-z0-9_-]{3,30}"
+                          required
+                          defaultValue={clerkUser?.username || ''}
+                          placeholder="Choose handle (3-30 chars)"
+                        />
                       </div>
                     </label>
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '13.5px', fontWeight: 600 }}>
                       Full name
                       <div className="login-input" style={{ marginTop: '6px' }}>
-                        <input name="fullName" minLength={2} maxLength={100} required placeholder="Enter full name" />
+                        <input
+                          name="fullName"
+                          minLength={2}
+                          maxLength={100}
+                          required
+                          defaultValue={clerkUser?.fullName || `${clerkUser?.firstName || ''} ${clerkUser?.lastName || ''}`.trim() || ''}
+                          placeholder="Enter full name"
+                        />
                       </div>
                     </label>
                   </>

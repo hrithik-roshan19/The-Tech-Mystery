@@ -62,10 +62,18 @@ const config = {
     defaultPassword: process.env.ADMIN_DEFAULT_PASSWORD || 'ChangeMeOnFirstDeployment#2026'
   },
 
+  // Event Competition Lifecycle State Override
+  eventState: process.env.EVENT_STATE ? process.env.EVENT_STATE.trim().toUpperCase() : null,
+
   // Logging
   logLevel: process.env.LOG_LEVEL || 'debug',
   isProduction: process.env.NODE_ENV === 'production'
 };
+
+const { EVENT_STATES } = require('../constants/eventStates');
+if (config.eventState && !Object.values(EVENT_STATES).includes(config.eventState)) {
+  throw new Error(`Invalid EVENT_STATE '${config.eventState}'. Valid states: ${Object.values(EVENT_STATES).join(', ')}`);
+}
 
 if (!['jwt', 'clerk'].includes(config.authProvider)) throw new Error('Unsupported AUTH_PROVIDER');
 if (config.authProvider === 'clerk') {
