@@ -134,7 +134,8 @@ export default function QuestionManagementPage() {
   const [isLiveDb, setIsLiveDb] = useState(false);
   const [dbBannerDismissed, setDbBannerDismissed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
   const [printTarget, setPrintTarget] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadText, setUploadText] = useState("");
@@ -254,6 +255,7 @@ export default function QuestionManagementPage() {
     }
 
     setLoading(true);
+    setApiError(null);
     try {
       const [questionsRes, challengesRes, checkpointsRes] = await Promise.allSettled([
         adminService.getQuestions({ includeFlag: "true" }),
@@ -290,16 +292,34 @@ export default function QuestionManagementPage() {
           setQuestions(mapped);
           setIsLiveDb(true);
           setSelectedId((prev) =>
-            mapped.some((m) => m.id === prev) ? prev : mapped[0]?.id || "Q-001"
+            mapped.some((m) => m.id === prev) ? prev : mapped[0]?.id || ""
           );
         } else {
-          setIsLiveDb(false);
+          setQuestions([]);
+          setSelectedId("");
+          setIsLiveDb(true);
         }
       } else {
+        setQuestions([]);
+        setSelectedId("");
         setIsLiveDb(false);
+        if (questionsRes.status === "rejected") {
+          setApiError(
+            questionsRes.reason?.response?.data?.message ||
+              questionsRes.reason?.message ||
+              "Failed to load questions from live database."
+          );
+        }
       }
-    } catch {
+    } catch (err) {
+      setQuestions([]);
+      setSelectedId("");
       setIsLiveDb(false);
+      setApiError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "An unexpected error occurred while loading questions."
+      );
     } finally {
       setLoading(false);
     }
@@ -353,6 +373,7 @@ export default function QuestionManagementPage() {
   };
 
   const openEdit = (question) => {
+    if (!question) return;
     setEditingId(question.id);
     setDraft({
       ...question,
@@ -477,14 +498,15 @@ export default function QuestionManagementPage() {
     } else {
       const remaining = questions.filter((q) => q.id !== question.id);
       setQuestions(remaining);
-      if (selectedId === question.id && remaining.length > 0) {
-        setSelectedId(remaining[0].id);
+      if (selectedId === question.id) {
+        setSelectedId(remaining[0]?.id || "");
       }
       setNotice(`Question "${question.title}" removed from local state.`);
     }
   };
 
   const toggleStatus = async (question) => {
+    if (!question) return;
     const nextStatus = question.status === "Published" ? "Paused" : "Published";
 
     if (isLiveDb && question._mongoId) {
@@ -797,6 +819,40 @@ export default function QuestionManagementPage() {
             <span>{notice}</span>
             <button onClick={() => setNotice("")} aria-label="Dismiss notice">
               ×
+            </button>
+          </div>
+        )}
+
+        {apiError && (
+          <div
+            className="htg-notice error"
+            role="alert"
+            style={{
+              background: "rgba(239, 68, 68, 0.15)",
+              border: "1px solid #ef4444",
+              color: "#fca5a5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+            }}
+          >
+            <span>⚠ {apiError}</span>
+            <button
+              type="button"
+              onClick={() => fetchQuestions()}
+              style={{
+                marginLeft: "auto",
+                background: "rgba(239, 68, 68, 0.3)",
+                border: "1px solid #ef4444",
+                color: "#fff",
+                padding: "2px 8px",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px",
+              }}
+            >
+              Retry
             </button>
           </div>
         )}
@@ -1157,7 +1213,22 @@ export default function QuestionManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((item) => (
+                    {loading && questions.length === 0 ? (
+                      <tr>
+                        <td colSpan="11" className="q-empty">
+                          Loading challenge questions...
+                        </td>
+                      </tr>
+                    ) : filtered.length === 0 ? (
+                      <tr>
+                        <td colSpan="11" className="q-empty">
+                          {questions.length === 0
+                            ? "No questions configured yet. Click '+ Add Question' to create one."
+                            : "No questions match these filters."}
+                        </td>
+                      </tr>
+                    ) : (
+                      filtered.map((item) => (
                       <tr
                         key={item.id}
                         onClick={() => {
@@ -1341,20 +1412,24 @@ export default function QuestionManagementPage() {
                           </button>
                         </td>
                       </tr>
-                    ))}
-                    {filtered.length === 0 && (
-                      <tr>
-                        <td colSpan="11" className="q-empty">
-                          No questions match these filters.
-                        </td>
-                      </tr>
-                    )}
+                    )))}
                   </tbody>
                 </table>
               </div>
             ) : (
               <div className="q-cards">
-                {filtered.map((item) => (
+                {loading && questions.length === 0 ? (
+                  <div className="q-empty" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px" }}>
+                    Loading challenge questions...
+                  </div>
+                ) : filtered.length === 0 ? (
+                  <div className="q-empty" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px" }}>
+                    {questions.length === 0
+                      ? "No questions configured yet. Click '+ Add Question' to create one."
+                      : "No questions match these filters."}
+                  </div>
+                ) : (
+                  filtered.map((item) => (
                   <button
                     key={item.id}
                     type="button"
@@ -1399,7 +1474,7 @@ export default function QuestionManagementPage() {
                       )}
                     </div>
                   </button>
-                ))}
+                )))}
               </div>
             )}
             <footer className="htg-question-table-footer">
@@ -1417,7 +1492,30 @@ export default function QuestionManagementPage() {
 
           {/* Right Question Detail Inspector */}
           <aside className="htg-question-detail">
-            <div className="q-detail-banner">
+            {!selected ? (
+              <div className="q-detail-empty">
+                <small style={{ letterSpacing: "1px", textTransform: "uppercase", color: "var(--htg-text-muted, #64748b)" }}>
+                  QUESTION INSPECTOR
+                </small>
+                <div className="q-detail-empty-icon">🎯</div>
+                <h3>No Question Selected</h3>
+                <p>
+                  {questions.length === 0
+                    ? "No questions have been configured yet. Create or upload your first challenge question to get started."
+                    : "Select a question from the table or card grid to preview its prompt, answers, and station QR beacon."}
+                </p>
+                <button
+                  type="button"
+                  className="htg-primary-button"
+                  style={{ margin: "0 auto", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                  onClick={openCreate}
+                >
+                  ＋ Add Question
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="q-detail-banner">
               <div className="q-banner-grid" />
               <span className={`q-status ${statusClass(selected.status)}`}>
                 {selected.status}
@@ -1723,7 +1821,9 @@ export default function QuestionManagementPage() {
                 ✎ Edit Question
               </button>
             </div>
-          </aside>
+          </>
+        )}
+      </aside>
         </section>
 
         {/* Footer */}

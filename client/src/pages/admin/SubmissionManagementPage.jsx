@@ -18,7 +18,7 @@ const statusIcon = (value) =>
 export default function SubmissionManagementPage() {
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState([]);
-  const [selectedId, setSelectedId] = useState("SUB-1046");
+  const [selectedId, setSelectedId] = useState("");
   const [search, setSearch] = useState("");
   const [resultFilter, setResultFilter] = useState("All Results");
   const [levelFilter, setLevelFilter] = useState("All Levels");
@@ -32,43 +32,47 @@ export default function SubmissionManagementPage() {
   const [isLiveDb, setIsLiveDb] = useState(true);
   const [dbBannerDismissed, setDbBannerDismissed] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
 
   // Sync live submissions from backend
-  useEffect(() => {
-    let isMounted = true;
-    async function fetchSubmissions() {
-      try {
-        const res = await adminService.getSubmissionLogs({ limit: 100 });
-        if (isMounted) {
-          const apiSubs = res?.data?.submissions || [];
-          setSubmissions(apiSubs);
-          setIsLiveDb(true);
-          if (apiSubs.length > 0) {
-            const firstPending = apiSubs.find((s) => s.result === "Pending Review");
-            if (firstPending) {
-              setSelectedId(firstPending.id);
-              setReviewPoints(String(firstPending.maxPoints || 100));
-            } else {
-              setSelectedId(apiSubs[0].id);
-              setReviewPoints(String(apiSubs[0].points || apiSubs[0].maxPoints || 100));
-            }
-          } else {
-            setSelectedId(null);
-          }
+  const fetchSubmissions = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setApiError(null);
+      const res = await adminService.getSubmissionLogs({ limit: 100 });
+      const apiSubs = res?.data?.submissions || [];
+      setSubmissions(apiSubs);
+      setIsLiveDb(true);
+      if (apiSubs.length > 0) {
+        const firstPending = apiSubs.find((s) => s.result === "Pending Review");
+        if (firstPending) {
+          setSelectedId(firstPending.id);
+          setReviewPoints(String(firstPending.maxPoints || 100));
+        } else {
+          setSelectedId(apiSubs[0].id);
+          setReviewPoints(String(apiSubs[0].points || apiSubs[0].maxPoints || 100));
         }
-      } catch (err) {
-        if (isMounted) {
-          setSubmissions([]);
-          setSelectedId(null);
-          setIsLiveDb(true);
-        }
+      } else {
+        setSelectedId("");
       }
+    } catch (err) {
+      setSubmissions([]);
+      setSelectedId("");
+      setIsLiveDb(false);
+      setApiError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to load submission logs from backend."
+      );
+    } finally {
+      setLoading(false);
     }
-    fetchSubmissions();
-    return () => {
-      isMounted = false;
-    };
   }, []);
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, [fetchSubmissions]);
 
   const selected =
     submissions.find((item) => item.id === selectedId) ||
@@ -330,6 +334,40 @@ export default function SubmissionManagementPage() {
           </div>
         )}
 
+        {apiError && (
+          <div
+            className="subm-notice error"
+            role="alert"
+            style={{
+              background: "rgba(239, 68, 68, 0.15)",
+              border: "1px solid #ef4444",
+              color: "#fca5a5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+            }}
+          >
+            <span>⚠ {apiError}</span>
+            <button
+              type="button"
+              onClick={() => fetchSubmissions()}
+              style={{
+                marginLeft: "auto",
+                background: "rgba(239, 68, 68, 0.3)",
+                border: "1px solid #ef4444",
+                color: "#fff",
+                padding: "2px 8px",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px",
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* 5 KPI Stat Cards */}
         <section className="subm-stats">
           <article>
@@ -525,7 +563,22 @@ export default function SubmissionManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((item) => (
+                    {loading && submissions.length === 0 ? (
+                      <tr>
+                        <td colSpan="8" className="subm-empty">
+                          Loading participant submissions...
+                        </td>
+                      </tr>
+                    ) : filtered.length === 0 ? (
+                      <tr>
+                        <td colSpan="8" className="subm-empty">
+                          {submissions.length === 0
+                            ? "No submissions recorded yet."
+                            : "No submissions match these filters."}
+                        </td>
+                      </tr>
+                    ) : (
+                      filtered.map((item) => (
                       <tr
                         key={item.id}
                         onClick={() => {
@@ -545,7 +598,7 @@ export default function SubmissionManagementPage() {
                         <td>
                           <div className="subm-team-cell">
                             <span className="subm-team-avatar">
-                              {item.team.slice(0, 1)}
+                              {(item.team || "T").slice(0, 1)}
                             </span>
                             <span>
                               <strong>{item.team}</strong>
@@ -615,20 +668,24 @@ export default function SubmissionManagementPage() {
                           </button>
                         </td>
                       </tr>
-                    ))}
-                    {filtered.length === 0 && (
-                      <tr>
-                        <td colSpan="8" className="subm-empty">
-                          submissions.length === 0 ? "No submissions recorded yet." : "No submissions match these filters."
-                        </td>
-                      </tr>
-                    )}
+                    )))}
                   </tbody>
                 </table>
               </div>
             ) : (
               <div className="subm-cards">
-                {filtered.map((item) => (
+                {loading && submissions.length === 0 ? (
+                  <div className="subm-empty" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px" }}>
+                    Loading participant submissions...
+                  </div>
+                ) : filtered.length === 0 ? (
+                  <div className="subm-empty" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px" }}>
+                    {submissions.length === 0
+                      ? "No submissions recorded yet."
+                      : "No submissions match these filters."}
+                  </div>
+                ) : (
+                  filtered.map((item) => (
                   <button
                     key={item.id}
                     type="button"
@@ -655,7 +712,7 @@ export default function SubmissionManagementPage() {
                       </span>
                     </div>
                   </button>
-                ))}
+                )))}
               </div>
             )}
             <footer className="subm-table-footer">
@@ -673,7 +730,22 @@ export default function SubmissionManagementPage() {
 
           {/* Right Detail Inspector Panel */}
           <aside className="subm-detail">
-            <div className="subm-detail-banner">
+            {!selected ? (
+              <div className="subm-detail-empty">
+                <small style={{ letterSpacing: "1px", textTransform: "uppercase", color: "var(--htg-text-muted, #64748b)" }}>
+                  SUBMISSION AUDIT
+                </small>
+                <div className="subm-detail-empty-icon">📋</div>
+                <h3>No Submission Selected</h3>
+                <p>
+                  {submissions.length === 0
+                    ? "No participant submissions have been recorded yet. Answers submitted by competing teams will appear here in real time."
+                    : "Select a submission from the list to audit participant answers, award points, or finalize manual reviews."}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="subm-detail-banner">
               <div className="subm-banner-grid" />
               <span className={`subm-result ${resultClass(selected.result)}`}>
                 <i>{statusIcon(selected.result)}</i>
@@ -791,7 +863,9 @@ export default function SubmissionManagementPage() {
                 team score and score snapshot atomically with an audit log.
               </p>
             </div>
-          </aside>
+          </>
+        )}
+      </aside>
         </section>
 
         {/* Footer */}

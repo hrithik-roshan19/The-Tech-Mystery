@@ -994,6 +994,38 @@
   flex-direction: column;
 }
 
+.q-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  min-height: 380px;
+}
+
+.q-detail-empty-icon {
+  font-size: 2.8rem;
+  margin: 16px 0 12px;
+  opacity: 0.35;
+  filter: drop-shadow(0 0 12px rgba(184, 255, 61, 0.2));
+}
+
+.q-detail-empty h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0 0 8px 0;
+}
+
+.q-detail-empty p {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+  max-width: 320px;
+}
+
 .q-detail-banner {
   height: 152px;
   position: relative;
