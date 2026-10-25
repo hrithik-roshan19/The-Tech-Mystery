@@ -121,15 +121,18 @@ export const ChallengeViewPage = () => {
       const isLevelComplete = Boolean(res.data?.isLevelComplete);
       const isEventComplete = Boolean(res.data?.isEventComplete);
       const nextQ = res.data?.nextQuestion;
-      const nextCpLocation = res.data?.nextCheckpointLocation || res.data?.nextCheckpoint?.name;
+      const nextCpLocation = res.data?.nextLocationName || res.data?.nextCheckpointLocation || res.data?.nextCheckpoint?.name;
+      const locInstructions = res.data?.locationInstructions || res.data?.nextCheckpoint?.instructions;
 
       setResultMsg({
         success: true,
-        text: res.message || (isLevelComplete ? 'Level completed! All questions conquered.' : 'Correct answer!'),
+        text: res.message || (isLevelComplete ? 'Correct Answer! Checkpoint Completed' : 'Correct answer!'),
         pointsAwarded: res.data?.pointsAwarded,
         isLevelComplete,
         isEventComplete,
         nextCheckpointLocation: nextCpLocation,
+        nextLocationName: nextCpLocation,
+        locationInstructions: locInstructions,
         attemptsRemaining: res.data?.attemptsRemaining,
         maxAttempts: res.data?.maxAttempts
       });
@@ -149,8 +152,16 @@ export const ChallengeViewPage = () => {
           }
         }));
       } else if (isLevelComplete) {
-        // Refresh full challenge data to load next level state
-        setTimeout(() => fetchChallenge(), 2500);
+        // Mark level complete in state so the completion screen stays mounted
+        setData((prev) => ({
+          ...prev,
+          isLevelComplete: true,
+          isEventComplete,
+          nextCheckpointLocation: nextCpLocation,
+          nextLocationName: nextCpLocation,
+          locationInstructions: locInstructions,
+          solvedCount: (prev?.totalQuestions || prev?.solvedCount || 1)
+        }));
       }
     } catch (err) {
       const errData = err.response?.data?.data;
@@ -553,6 +564,108 @@ export const ChallengeViewPage = () => {
             </div>
           </CyberCard>
         </div>
+      </div>
+    );
+  }
+
+  // 8. Level Completed Screen (Reveals admin-controlled next location only after completing current level)
+  const isLevelCompleted =
+    (!data?.isEventComplete && !resultMsg?.isEventComplete) &&
+    (Boolean(resultMsg?.isLevelComplete) || Boolean(data?.isLevelComplete));
+
+  if (isLevelCompleted) {
+    const completedLevel = data?.levelNumber || targetLevel || 1;
+    const nextLoc =
+      resultMsg?.nextLocationName ||
+      resultMsg?.nextCheckpointLocation ||
+      data?.nextLocationName ||
+      data?.nextCheckpointLocation ||
+      data?.nextCheckpoint?.name ||
+      'Next Station Beacon';
+    const instructions =
+      resultMsg?.locationInstructions ||
+      data?.locationInstructions ||
+      data?.nextCheckpoint?.instructions;
+    const pointsWon = resultMsg?.pointsAwarded;
+
+    return (
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
+        <Navbar />
+        <main className="max-w-3xl w-full mx-auto px-4 py-12 flex-grow flex items-center justify-center">
+          <CyberCard
+            title={`LEVEL ${completedLevel} CONQUERED // CHECKPOINT COMPLETED`}
+            glowColor="cyan"
+            className="w-full"
+          >
+            <div className="space-y-6 font-mono text-sm">
+              <div className="bg-cyber-green/10 border-2 border-cyber-green p-5 text-cyber-green flex items-start gap-4 rounded-none">
+                <CheckCircle2 className="w-7 h-7 shrink-0 mt-0.5 text-cyber-green" />
+                <div className="space-y-1.5">
+                  <h2 className="font-heading font-black text-lg md:text-xl text-white tracking-wide uppercase">
+                    Correct Answer! Checkpoint Completed
+                  </h2>
+                  <p className="text-xs text-cyber-green/90 leading-relaxed font-mono">
+                    All challenges and defense nodes in Level {completedLevel} have been successfully solved by your squad.
+                    {pointsWon ? ` +${pointsWon} points awarded to your squad bounty!` : ''}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-cyber-panel/90 border-2 border-cyber-cyan p-6 space-y-4 rounded-none shadow-panel-glow">
+                <div className="flex items-center gap-2 text-cyber-cyan text-xs font-bold uppercase tracking-widest border-b border-cyber-border pb-2">
+                  <MapPin className="w-5 h-5 shrink-0 animate-bounce text-cyber-cyan" />
+                  <span>NEXT PHYSICAL CHECKPOINT OBJECTIVE</span>
+                </div>
+
+                <div className="space-y-2 pl-2">
+                  <span className="text-xs uppercase text-cyber-muted block font-semibold">
+                    YOUR NEXT LOCATION:
+                  </span>
+                  <div className="text-xl md:text-2xl font-heading font-black text-white tracking-wide flex items-center gap-2 text-cyber-cyan">
+                    📍 {nextLoc}
+                  </div>
+                </div>
+
+                {instructions && (
+                  <div className="bg-cyber-bg/80 border-l-2 border-cyber-cyan p-3 text-xs text-cyber-muted font-mono whitespace-pre-wrap ml-2">
+                    <span className="text-[10px] text-cyber-cyan uppercase font-bold block mb-1">
+                      LOCATION INSTRUCTIONS & GUIDANCE:
+                    </span>
+                    {instructions}
+                  </div>
+                )}
+
+                <div className="pt-2 text-xs text-cyber-muted border-t border-cyber-border/70 space-y-1">
+                  <p className="text-white font-semibold flex items-center gap-2">
+                    <Radio className="w-4 h-4 text-cyber-cyan" />
+                    <span>Proceed to this location and scan its QR code to continue to the next level.</span>
+                  </p>
+                  <p className="text-[11px] text-cyber-muted">
+                    Level {completedLevel + 1} remains locked until your squad arrives at this station and authenticates the physical QR beacon.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <Link to={ROUTES.QR_CHECKPOINT} className="flex-1">
+                  <CyberButton variant="cyan" size="lg" icon={QrCode} className="w-full justify-center">
+                    OPEN QR SCANNER →
+                  </CyberButton>
+                </Link>
+                <Link to={ROUTES.PORTAL_DASHBOARD} className="flex-1">
+                  <CyberButton variant="secondary" size="lg" className="w-full justify-center">
+                    RETURN TO DASHBOARD
+                  </CyberButton>
+                </Link>
+                <Link to={ROUTES.LEADERBOARD} className="flex-1">
+                  <CyberButton variant="secondary" size="lg" icon={Trophy} className="w-full justify-center">
+                    LEADERBOARD
+                  </CyberButton>
+                </Link>
+              </div>
+            </div>
+          </CyberCard>
+        </main>
       </div>
     );
   }

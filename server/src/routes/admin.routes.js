@@ -47,6 +47,9 @@ router.post('/checkpoints', adminController.createCheckpoint);
 router.get('/checkpoints/:checkpointId/qr', adminController.getCheckpointQr);
 router.get('/checkpoints/:checkpointId/qr/download', adminController.downloadCheckpointQr);
 router.patch('/checkpoints/:checkpointId', adminController.updateCheckpoint);
+router.get('/checkpoint-locations', adminController.getCheckpointLocations);
+router.patch('/checkpoint-locations/:levelNumber', adminController.updateCheckpointLocation);
+router.post('/checkpoint-locations', adminController.updateCheckpointLocation);
 
 // Audit logs & Submissions Review
 router.get('/submissions', adminController.getSubmissionLogs);

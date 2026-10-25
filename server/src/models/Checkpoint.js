@@ -68,6 +68,16 @@ const checkpointSchema = new mongoose.Schema(
     qrCodeDataUrl: { type: String, default: null },
     qrScanUrl: { type: String, default: null },
     qrToken: { type: String, default: null },
+    nextLocationName: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    locationInstructions: {
+      type: String,
+      trim: true,
+      default: null
+    },
     notes: {
       type: String,
       default: null

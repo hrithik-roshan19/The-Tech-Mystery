@@ -79,6 +79,16 @@ export const adminService = {
     return res.data;
   },
 
+  getCheckpointLocations: async () => {
+    const res = await api.get('/admin/checkpoint-locations');
+    return res.data;
+  },
+
+  updateCheckpointLocation: async (levelNumber, payload) => {
+    const res = await api.patch(`/admin/checkpoint-locations/${levelNumber}`, payload);
+    return res.data;
+  },
+
   getChallenges: async () => {
     const res = await api.get('/admin/challenges');
     return res.data;

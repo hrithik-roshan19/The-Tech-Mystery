@@ -100,7 +100,7 @@ describe('ChallengeViewPage Rendering States', () => {
     await waitFor(() => {
       expect(screen.getByText(/SECURITY LOCK ACTIVE \/\/ LEVEL 1/i)).toBeDefined();
       expect(screen.getByText(/Library Beacon Alpha/i)).toBeDefined();
-      expect(screen.getByText(/OPEN QR SCANNER/i)).toBeDefined();
+      expect(screen.getAllByText(/OPEN QR SCANNER/i).length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -300,6 +300,39 @@ describe('ChallengeViewPage Rendering States', () => {
       expect(screen.getByText(/ALL CHALLENGES CONQUERED/i)).toBeDefined();
       expect(screen.getByText(/SUBMIT FINAL FLAG/i)).toBeDefined();
       expect(screen.getByText(/VIEW LEADERBOARD/i)).toBeDefined();
+    });
+  });
+
+  it('renders Level Completed Screen when level is completed with admin-configured next location', async () => {
+    challengeService.getCurrentChallenge.mockResolvedValue({
+      success: true,
+      data: {
+        isLevelComplete: true,
+        isEventComplete: false,
+        levelNumber: 1,
+        nextLocationName: 'Central Library 2nd Floor',
+        locationInstructions: 'Proceed to reading hall and locate Beacon CP-02.',
+        totalQuestions: 3,
+        solvedCount: 3
+      }
+    });
+
+    render(
+      <MemoryRouter>
+        <ChallengeViewPageWrapper />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/LEVEL 1 CONQUERED \/\/ CHECKPOINT COMPLETED/i)).toBeDefined();
+      expect(screen.getByText(/Correct Answer! Checkpoint Completed/i)).toBeDefined();
+      expect(screen.getByText(/YOUR NEXT LOCATION:/i)).toBeDefined();
+      expect(screen.getByText(/Central Library 2nd Floor/i)).toBeDefined();
+      expect(screen.getByText(/Proceed to reading hall and locate Beacon CP-02/i)).toBeDefined();
+      expect(
+        screen.getByText(/Proceed to this location and scan its QR code to continue to the next level/i)
+      ).toBeDefined();
+      expect(screen.getAllByText(/OPEN QR SCANNER/i).length).toBeGreaterThanOrEqual(1);
     });
   });
 });

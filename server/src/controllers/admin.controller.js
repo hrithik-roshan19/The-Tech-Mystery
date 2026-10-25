@@ -1171,6 +1171,8 @@ class AdminController {
         status,
         mode,
         notes,
+        nextLocationName,
+        locationInstructions,
         boundTeamId
       } = req.body;
 
@@ -1208,6 +1210,8 @@ class AdminController {
         name: nameVal,
         checkpointCode: codeVal,
         locationDescription: locVal,
+        nextLocationName: nextLocationName ? String(nextLocationName).trim() : null,
+        locationInstructions: locationInstructions ? String(locationInstructions).trim() : null,
         levelNumber: targetChallenge ? targetChallenge.levelNumber : lvlVal,
         associatedChallengeId: targetChallenge ? targetChallenge._id : null,
         status: finalStatus,
@@ -1285,7 +1289,9 @@ class AdminController {
         status,
         isActive,
         mode,
-        notes
+        notes,
+        nextLocationName,
+        locationInstructions
       } = req.body;
 
       if (name !== undefined) {
@@ -1345,6 +1351,18 @@ class AdminController {
         existing.notes = typeof notes === 'string' ? notes.trim() : null;
       }
 
+      if (nextLocationName !== undefined) {
+        existing.nextLocationName = typeof nextLocationName === 'string' && nextLocationName.trim()
+          ? nextLocationName.trim()
+          : null;
+      }
+
+      if (locationInstructions !== undefined) {
+        existing.locationInstructions = typeof locationInstructions === 'string' && locationInstructions.trim()
+          ? locationInstructions.trim()
+          : null;
+      }
+
       let targetChallenge = null;
       if (associatedChallengeId && /^[0-9a-fA-F]{24}$/.test(associatedChallengeId)) {
         targetChallenge = await Challenge.findById(associatedChallengeId);
@@ -1388,6 +1406,94 @@ class AdminController {
           }
         },
         `Checkpoint "${existing.name}" updated`
+      );
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async getCheckpointLocations(req, res, next) {
+    try {
+      const checkpoints = await Checkpoint.find().sort({ levelNumber: 1 });
+      const locations = [];
+      for (let lvl = 1; lvl <= 10; lvl++) {
+        const cp = checkpoints.find((c) => c.levelNumber === lvl);
+        const nextCp = checkpoints.find((c) => c.levelNumber === lvl + 1);
+        const isFinalLevel = lvl === 10;
+        const defaultNextName = nextCp ? (nextCp.name || nextCp.locationDescription) : null;
+        locations.push({
+          levelNumber: lvl,
+          checkpointId: cp ? cp._id : null,
+          checkpointCode: cp ? cp.checkpointCode : `HTG-CP${String(lvl).padStart(2, '0')}`,
+          checkpointName: cp ? cp.name : `Level ${lvl} Station`,
+          currentLocation: cp ? (cp.locationDescription || cp.name) : 'Location Not Set',
+          nextLocationName: (cp?.nextLocationName && cp.nextLocationName.trim()) || (isFinalLevel ? null : defaultNextName),
+          configuredNextLocation: cp?.nextLocationName || null,
+          locationInstructions: (cp?.locationInstructions && cp.locationInstructions.trim()) || (isFinalLevel ? null : (nextCp?.notes || null)),
+          leadsToLevel: isFinalLevel ? null : lvl + 1,
+          isFinalLevel,
+          status: cp ? cp.status : 'Draft',
+          updatedAt: cp ? cp.updatedAt : null
+        });
+      }
+      return success(res, { locations }, 'Checkpoint locations retrieved successfully');
+    } catch (error) {
+      return badRequest(res, error.message);
+    }
+  }
+
+  async updateCheckpointLocation(req, res, next) {
+    try {
+      const levelNumber = Number(req.params.levelNumber || req.body.levelNumber);
+      if (!levelNumber || !Number.isInteger(levelNumber) || levelNumber < 1 || levelNumber > 10) {
+        return badRequest(res, 'Valid level number between 1 and 10 is required');
+      }
+
+      const isFinalLevel = levelNumber === 10;
+      const { nextLocationName, locationInstructions } = req.body;
+
+      if (!isFinalLevel && (nextLocationName === undefined || typeof nextLocationName !== 'string' || !nextLocationName.trim())) {
+        return badRequest(res, 'Next location name is required and cannot be empty');
+      }
+
+      const trimmedName = typeof nextLocationName === 'string' ? nextLocationName.trim() : null;
+      const trimmedInstructions = typeof locationInstructions === 'string' ? locationInstructions.trim() : null;
+
+      let checkpoint = await Checkpoint.findOne({ levelNumber });
+      if (!checkpoint) {
+        checkpoint = await Checkpoint.create({
+          levelNumber,
+          name: `Station Beacon Level ${levelNumber}`,
+          checkpointCode: `HTG-CP${String(levelNumber).padStart(2, '0')}`,
+          locationDescription: trimmedName || `Level ${levelNumber} Campus Venue`,
+          nextLocationName: trimmedName,
+          locationInstructions: trimmedInstructions,
+          status: 'Active',
+          isActive: true,
+          mode: 'Public QR'
+        });
+        const qrData = await qrGenerator.generateCheckpointQr(checkpoint);
+        checkpoint.qrCodeDataUrl = qrData.qrCodeDataUrl;
+        checkpoint.qrScanUrl = qrData.scanUrl;
+        checkpoint.qrToken = qrData.token;
+        await checkpoint.save();
+      } else {
+        checkpoint.nextLocationName = trimmedName;
+        if (locationInstructions !== undefined) {
+          checkpoint.locationInstructions = trimmedInstructions;
+        }
+        await checkpoint.save();
+      }
+
+      return success(
+        res,
+        {
+          levelNumber,
+          nextLocationName: checkpoint.nextLocationName,
+          locationInstructions: checkpoint.locationInstructions,
+          updatedAt: checkpoint.updatedAt
+        },
+        `Next checkpoint location for Level ${levelNumber} updated to "${checkpoint.nextLocationName || 'None'}"`
       );
     } catch (error) {
       return badRequest(res, error.message);

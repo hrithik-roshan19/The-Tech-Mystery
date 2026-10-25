@@ -110,10 +110,33 @@ class ChallengeController {
         const requestedLevel = req.params?.levelNumber ? parseInt(req.params.levelNumber, 10) : team.currentLevel;
 
         if (requestedLevel < team.currentLevel) {
+          const currentCheckpoint = await Checkpoint.findOne({ levelNumber: requestedLevel });
+          const nextCheckpoint = (await Checkpoint.findOne({ levelNumber: requestedLevel + 1, isActive: true }))
+            || (await Checkpoint.findOne({ levelNumber: requestedLevel + 1 }));
+          const nextLocName = (currentCheckpoint?.nextLocationName && currentCheckpoint.nextLocationName.trim())
+            || nextCheckpoint?.name
+            || nextCheckpoint?.locationDescription
+            || null;
+          const locInstructions = (currentCheckpoint?.locationInstructions && currentCheckpoint.locationInstructions.trim())
+            || nextCheckpoint?.notes
+            || null;
+
           return {
             isLevelComplete: true,
             levelNumber: requestedLevel,
             team,
+            nextCheckpointLocation: nextLocName,
+            nextLocationName: nextLocName,
+            locationInstructions: locInstructions,
+            nextCheckpoint: nextCheckpoint
+              ? {
+                  name: nextLocName || nextCheckpoint.name,
+                  locationDescription: nextCheckpoint.locationDescription,
+                  code: nextCheckpoint.checkpointCode,
+                  levelNumber: nextCheckpoint.levelNumber,
+                  instructions: locInstructions
+                }
+              : null,
             message: `Level ${requestedLevel} has already been solved by your squad.`
           };
         }
@@ -206,8 +229,11 @@ class ChallengeController {
         sequenceNumber: progression?.sequenceNumber || 1,
         totalQuestions: progression?.totalQuestions || 0,
         solvedCount: progression?.solvedCount || 0,
-        isLevelComplete: progression?.isLevelComplete || false,
-        nextCheckpoint: progression?.nextCheckpoint || null,
+        isLevelComplete: progression?.isLevelComplete || data.isLevelComplete || false,
+        nextCheckpoint: progression?.nextCheckpoint || data.nextCheckpoint || null,
+        nextCheckpointLocation: progression?.nextCheckpointLocation || data.nextCheckpointLocation || null,
+        nextLocationName: progression?.nextLocationName || data.nextLocationName || null,
+        locationInstructions: progression?.locationInstructions || data.locationInstructions || null,
         emptyReason: progression?.emptyReason || null,
         teamChallenge: teamChallenge ? {
           status: teamChallenge.status,

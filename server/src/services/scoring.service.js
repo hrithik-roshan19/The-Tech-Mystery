@@ -237,7 +237,11 @@ module.exports = {
         return {
           ...attempts,
           message: 'Incorrect answer. Try again.',
-          isLevelComplete: false
+          isLevelComplete: false,
+          nextCheckpointLocation: null,
+          nextLocationName: null,
+          locationInstructions: null,
+          nextCheckpoint: null
         };
       }
 
@@ -276,6 +280,8 @@ module.exports = {
       let isLevelComplete = false;
       let nextQuestion = null;
       let nextCheckpoint = null;
+      let nextLocationName = null;
+      let locationInstructions = null;
 
       if (remainingQuestions.length > 0) {
         // More questions remain in this level!
@@ -285,10 +291,13 @@ module.exports = {
         await claimed.save();
         await team.save();
 
-        nextCheckpoint = await Checkpoint.findOne({ levelNumber: levelNumber + 1, isActive: true });
+        // Never reveal next location before the final question is solved
+        nextCheckpoint = null;
+        nextLocationName = null;
+        locationInstructions = null;
         nextQuestion = await participantQuestion(nextQ);
       } else {
-        // All questions in this level solved!
+        // All questions in this level solved! Final question conquered!
         isLevelComplete = true;
         claimed.status = 'SOLVED';
         claimed.solvedAt = now;
@@ -297,7 +306,20 @@ module.exports = {
         await claimed.save();
         await team.save();
 
-        nextCheckpoint = await Checkpoint.findOne({ levelNumber: team.currentLevel, isActive: true });
+        if (team.currentLevel <= 10) {
+          const currentCp = await Checkpoint.findOne({ levelNumber });
+          nextCheckpoint = (await Checkpoint.findOne({ levelNumber: team.currentLevel, isActive: true }))
+            || (await Checkpoint.findOne({ levelNumber: team.currentLevel }));
+
+          nextLocationName = (currentCp?.nextLocationName && currentCp.nextLocationName.trim())
+            || nextCheckpoint?.name
+            || nextCheckpoint?.locationDescription
+            || 'Next Station Venue';
+
+          locationInstructions = (currentCp?.locationInstructions && currentCp.locationInstructions.trim())
+            || nextCheckpoint?.notes
+            || null;
+        }
       }
 
       const isEventComplete = team.currentLevel > 10;
@@ -348,13 +370,16 @@ module.exports = {
         sequenceNumber: claimed.currentSequenceNumber,
         totalQuestionsInLevel: allLevelQuestions.length,
         solvedQuestionsCount: claimed.solvedQuestionIds.length,
-        nextCheckpointLocation: nextCheckpoint ? nextCheckpoint.name : null,
-        nextCheckpoint: nextCheckpoint
+        nextCheckpointLocation: isLevelComplete && !isEventComplete ? nextLocationName : null,
+        nextLocationName: isLevelComplete && !isEventComplete ? nextLocationName : null,
+        locationInstructions: isLevelComplete && !isEventComplete ? locationInstructions : null,
+        nextCheckpoint: isLevelComplete && !isEventComplete && nextCheckpoint
           ? {
-              name: nextCheckpoint.name,
+              name: nextLocationName,
               locationDescription: nextCheckpoint.locationDescription,
               levelNumber: nextCheckpoint.levelNumber,
-              code: nextCheckpoint.checkpointCode
+              code: nextCheckpoint.checkpointCode,
+              instructions: locationInstructions
             }
           : null
       };

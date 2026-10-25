@@ -126,10 +126,20 @@ class QuestionAssignmentService {
       await tc.save();
     }
 
-    const nextCheckpoint = await Checkpoint.findOne({
+    const currentCheckpoint = await Checkpoint.findOne({ levelNumber });
+    const nextCheckpoint = (await Checkpoint.findOne({
       levelNumber: levelNumber + 1,
       isActive: true
-    });
+    })) || (await Checkpoint.findOne({ levelNumber: levelNumber + 1 }));
+
+    const nextLocName = (currentCheckpoint?.nextLocationName && currentCheckpoint.nextLocationName.trim())
+      || nextCheckpoint?.name
+      || nextCheckpoint?.locationDescription
+      || null;
+
+    const locInstructions = (currentCheckpoint?.locationInstructions && currentCheckpoint.locationInstructions.trim())
+      || nextCheckpoint?.notes
+      || null;
 
     return {
       teamChallenge: tc,
@@ -138,12 +148,16 @@ class QuestionAssignmentService {
       totalQuestions: questions.length,
       solvedCount: questions.length,
       isLevelComplete: true,
+      nextCheckpointLocation: nextLocName,
+      nextLocationName: nextLocName,
+      locationInstructions: locInstructions,
       nextCheckpoint: nextCheckpoint
         ? {
-            name: nextCheckpoint.name,
+            name: nextLocName || nextCheckpoint.name,
             locationDescription: nextCheckpoint.locationDescription,
             levelNumber: nextCheckpoint.levelNumber,
-            code: nextCheckpoint.checkpointCode
+            code: nextCheckpoint.checkpointCode,
+            instructions: locInstructions
           }
         : null,
       isNewAssignment: false

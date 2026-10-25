@@ -30,6 +30,8 @@ const blankCheckpoint = {
   level: 1,
   challenge: "The Starting Point",
   location: "",
+  nextLocationName: "",
+  locationInstructions: "",
   status: "Draft",
   mode: "Team-bound QR",
   notes: "",
@@ -150,6 +152,8 @@ export default function QRCheckpointManagementPage() {
       teams: Number(cp.teamsCount ?? cp.teams ?? 0),
       lastScan: lastScanFormatted,
       notes: cp.notes || "",
+      nextLocationName: cp.nextLocationName || "",
+      locationInstructions: cp.locationInstructions || "",
       token: token,
       qrCodeDataUrl: cp.qrCodeDataUrl || null,
       qrScanUrl: cp.qrScanUrl || null,
@@ -210,6 +214,75 @@ export default function QRCheckpointManagementPage() {
   useEffect(() => {
     fetchCheckpoints();
   }, [fetchCheckpoints]);
+
+  // Checkpoint Locations & Routing State
+  const [locations, setLocations] = useState(() =>
+    Array.from({ length: 10 }, (_, i) => ({
+      levelNumber: i + 1,
+      checkpointCode: `HTG-CP${String(i + 1).padStart(2, "0")}`,
+      checkpointName: `Level ${i + 1} Station`,
+      currentLocation: i === 0 ? "Main Campus Entrance" : `Station Level ${i + 1}`,
+      nextLocationName: i === 9 ? "" : `Campus Zone ${i + 2}`,
+      locationInstructions: "",
+      isFinalLevel: i === 9,
+    }))
+  );
+  const [savingLocationLevel, setSavingLocationLevel] = useState(null);
+  const [routingError, setRoutingError] = useState("");
+  const [routingSuccess, setRoutingSuccess] = useState("");
+
+  const fetchLocations = useCallback(async () => {
+    if (!isAuthenticated || user?.role !== "ADMIN") return;
+    try {
+      const res = await adminService.getCheckpointLocations();
+      if (res?.data?.locations && Array.isArray(res.data.locations) && res.data.locations.length > 0) {
+        setLocations(res.data.locations);
+      }
+    } catch (err) {
+      console.error("Failed to load checkpoint locations", err);
+    }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    fetchLocations();
+  }, [fetchLocations]);
+
+  const handleLocationChange = (lvlNum, field, value) => {
+    setLocations((prev) =>
+      prev.map((loc) =>
+        loc.levelNumber === lvlNum ? { ...loc, [field]: value } : loc
+      )
+    );
+  };
+
+  const handleUpdateLocation = async (lvlNum) => {
+    setRoutingError("");
+    setRoutingSuccess("");
+    const target = locations.find((l) => l.levelNumber === lvlNum);
+    const nextName = target?.nextLocationName ? String(target.nextLocationName).trim() : "";
+    const instructions = target?.locationInstructions ? String(target.locationInstructions).trim() : "";
+
+    if (lvlNum < 10 && !nextName) {
+      setRoutingError(`Level ${lvlNum} requires a next location name before saving.`);
+      return;
+    }
+
+    setSavingLocationLevel(lvlNum);
+    try {
+      const res = await adminService.updateCheckpointLocation(lvlNum, {
+        nextLocationName: nextName,
+        locationInstructions: instructions || null,
+      });
+      setRoutingSuccess(
+        `Level ${lvlNum} routing saved: Next location is "${res.data?.nextLocationName || nextName}".`
+      );
+      await Promise.all([fetchLocations(), fetchCheckpoints()]);
+    } catch (err) {
+      setRoutingError(err.response?.data?.message || err.message || "Failed to update routing location.");
+    } finally {
+      setSavingLocationLevel(null);
+    }
+  };
 
   const selected =
     checkpoints.find((item) => item.id === selectedId) || checkpoints[0] || null;
@@ -308,6 +381,8 @@ export default function QRCheckpointManagementPage() {
           levelNumber: Number(draft.level),
           challenge: draft.challenge,
           locationDescription: draft.location.trim(),
+          nextLocationName: draft.nextLocationName ? draft.nextLocationName.trim() : null,
+          locationInstructions: draft.locationInstructions ? draft.locationInstructions.trim() : null,
           status: draft.status,
           mode: draft.mode,
           notes: draft.notes ? draft.notes.trim() : "",
@@ -323,7 +398,7 @@ export default function QRCheckpointManagementPage() {
           await adminService.createCheckpoint(payload);
           setNotice("New checkpoint persisted to live database.");
         }
-        await fetchCheckpoints();
+        await Promise.all([fetchCheckpoints(), fetchLocations()]);
       } catch (err) {
         setNotice(`API Error: ${err.response?.data?.message || err.message}`);
       }
@@ -1052,6 +1127,20 @@ export default function QRCheckpointManagementPage() {
                     {selected.token ? `${selected.token.slice(0, 16)}...${selected.token.slice(-8)}` : "None"}
                   </code>
                 </div>
+                <div className="qrcm-info-row">
+                  <span>Next Location Target</span>
+                  <strong style={{ color: "var(--htg-neon-lime, #b8ff3d)" }}>
+                    {selected.level === 10
+                      ? "Final Level — Concludes Event"
+                      : (selected.nextLocationName || "Auto-routed to Next Checkpoint")}
+                  </strong>
+                </div>
+                {selected.locationInstructions && (
+                  <div className="qrcm-info-row full">
+                    <span>Next Location Instructions</span>
+                    <p>{selected.locationInstructions}</p>
+                  </div>
+                )}
                 {selected.notes && (
                   <div className="qrcm-info-row full">
                     <span>Organizer Notes</span>
@@ -1062,6 +1151,118 @@ export default function QRCheckpointManagementPage() {
             </div>
           )}
         </aside>
+        </section>
+
+        {/* Checkpoint Routing Control Section */}
+        <section className="qrcm-routing-card">
+          <header className="qrcm-routing-header">
+            <div>
+              <h2>◈ Next Location Routing Control (Post-Answer Reveal)</h2>
+              <p>
+                Configure the admin-controlled physical location revealed only after teams correctly solve all questions in each level.
+                Teams must physically travel to this station and scan its QR beacon to continue to the subsequent level.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="qrcm-outline-button small"
+              onClick={fetchLocations}
+            >
+              ↻ Refresh Routes
+            </button>
+          </header>
+
+          {routingError && (
+            <div className="qrcm-routing-alert error" role="alert">
+              ⚠️ {routingError}
+            </div>
+          )}
+
+          {routingSuccess && (
+            <div className="qrcm-routing-alert success" role="status">
+              ✓ {routingSuccess}
+            </div>
+          )}
+
+          <div className="qrcm-routing-table-wrap">
+            <table className="qrcm-routing-table">
+              <thead>
+                <tr>
+                  <th style={{ width: "80px" }}>Level</th>
+                  <th style={{ width: "110px" }}>Beacon Code</th>
+                  <th style={{ width: "180px" }}>Current Station</th>
+                  <th>Destination After Correct Solve</th>
+                  <th>Routing Instructions / Notes</th>
+                  <th style={{ width: "120px", textAlign: "right" }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {locations.map((loc) => {
+                  const isFinal = loc.levelNumber === 10;
+                  const isSaving = savingLocationLevel === loc.levelNumber;
+                  return (
+                    <tr key={loc.levelNumber}>
+                      <td>
+                        <span className="qrcm-tag active" style={{ fontSize: "10px" }}>
+                          LVL {loc.levelNumber}
+                        </span>
+                      </td>
+                      <td>
+                        <code style={{ fontSize: "11px", color: "var(--htg-neon-lime, #b8ff3d)" }}>
+                          {loc.checkpointCode}
+                        </code>
+                      </td>
+                      <td>
+                        <span style={{ color: "#e2e8f0", fontWeight: 600 }}>
+                          {loc.currentLocation}
+                        </span>
+                      </td>
+                      <td>
+                        {isFinal ? (
+                          <span style={{ color: "#a0aec0", fontStyle: "italic", fontSize: "11px" }}>
+                            🏁 Final Level — Concludes Event (Grand Victory Screen)
+                          </span>
+                        ) : (
+                          <input
+                            type="text"
+                            className="qrcm-routing-input"
+                            value={loc.nextLocationName || ""}
+                            onChange={(e) =>
+                              handleLocationChange(loc.levelNumber, "nextLocationName", e.target.value)
+                            }
+                            placeholder="e.g. Central Library 2nd Floor, CSE Dept Lab"
+                            required
+                          />
+                        )}
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="qrcm-routing-input"
+                          value={loc.locationInstructions || ""}
+                          onChange={(e) =>
+                            handleLocationChange(loc.levelNumber, "locationInstructions", e.target.value)
+                          }
+                          placeholder={isFinal ? "N/A — Event Complete" : "e.g. Proceed to east staircase to find Beacon CP-02"}
+                          disabled={isFinal}
+                        />
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <button
+                          type="button"
+                          className="qrcm-save-route-btn"
+                          disabled={isSaving}
+                          onClick={() => handleUpdateLocation(loc.levelNumber)}
+                        >
+                          {isSaving ? "Saving..." : "Save Route"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         {/* Footer */}
@@ -1268,6 +1469,29 @@ export default function QRCheckpointManagementPage() {
                     setDraft({ ...draft, token: event.target.value })
                   }
                   placeholder="Server-issued token reference"
+                />
+              </label>
+              <label>
+                Next Location Target {Number(draft.level) < 10 ? '*' : ''}
+                <input
+                  value={draft.nextLocationName || ""}
+                  onChange={(event) =>
+                    setDraft({ ...draft, nextLocationName: event.target.value })
+                  }
+                  placeholder={Number(draft.level) === 10 ? "None (Final Level)" : "e.g. Central Library 2nd Floor"}
+                  disabled={Number(draft.level) === 10}
+                />
+              </label>
+              <label className="qrcm-full">
+                Next Location Instructions / Guidance
+                <textarea
+                  rows="2"
+                  value={draft.locationInstructions || ""}
+                  onChange={(event) =>
+                    setDraft({ ...draft, locationInstructions: event.target.value })
+                  }
+                  placeholder="Instructions for reaching the next station after this level is solved"
+                  disabled={Number(draft.level) === 10}
                 />
               </label>
               <label className="qrcm-full">
