@@ -56,8 +56,8 @@ export const AppRoutes = () => {
       <Route path="/checkpoint/:checkpointId" element={<QRCheckpointPage />} />
       <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
       <Route path={ROUTES.FINAL_FLAG} element={<FinalFlagPage />} />
-      <Route path="/challenge" element={<ProtectedRoute><ChallengeViewPage /></ProtectedRoute>} />
-      <Route path="/challenges/:levelNumber" element={<ProtectedRoute><ChallengeViewPage /></ProtectedRoute>} />
+      <Route path="/challenge" element={<ChallengeViewPage />} />
+      <Route path="/challenges/:levelNumber" element={<ChallengeViewPage />} />
       <Route path={ROUTES.PORTAL_DASHBOARD} element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/auth/complete" element={<AuthCompletePage />} />
@@ -83,8 +83,8 @@ export const AppRoutes = () => {
       <Route path="/portal" element={<Navigate to={ROUTES.PORTAL_DASHBOARD} replace />} />
       <Route path="/portal/dashboard" element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/portal/missions" element={<Navigate to={ROUTES.CHALLENGES} replace />} />
-      <Route path="/portal/challenge" element={<ProtectedRoute><ChallengeViewPage /></ProtectedRoute>} />
-      <Route path="/portal/challenges/:levelNumber" element={<ProtectedRoute><ChallengeViewPage /></ProtectedRoute>} />
+      <Route path="/portal/challenge" element={<ChallengeViewPage />} />
+      <Route path="/portal/challenges/:levelNumber" element={<ChallengeViewPage />} />
       <Route path="/portal/checkpoint" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
       <Route path="/portal/team" element={<Navigate to={ROUTES.PORTAL_DASHBOARD} replace />} />
       <Route path="/portal/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />

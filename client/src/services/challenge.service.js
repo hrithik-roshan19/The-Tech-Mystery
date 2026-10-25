@@ -6,8 +6,9 @@ export const challengeService = {
     return res.data;
   },
 
-  getCurrentChallenge: async () => {
-    const res = await api.get('/challenges/current');
+  getCurrentChallenge: async (levelNumber) => {
+    const url = levelNumber ? `/challenges/${levelNumber}` : '/challenges/current';
+    const res = await api.get(url);
     return res.data;
   },
 

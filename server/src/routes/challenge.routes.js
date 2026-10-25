@@ -10,6 +10,7 @@ router.use(requireTeamMembership);
 
 router.get('/mission-map', challengeController.getMissionMap);
 router.get('/current', challengeController.getCurrentChallenge);
+router.get('/:levelNumber', challengeController.getCurrentChallenge);
 
 module.exports = router;
 

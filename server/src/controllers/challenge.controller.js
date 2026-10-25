@@ -63,11 +63,72 @@ class ChallengeController {
   /**
    * Retrieves active sequential question for current level
    */
+  /**
+   * Retrieves active sequential question for current level or admin preview / level query
+   */
   async getCurrentChallenge(req, res, next) {
     try {
       const data = await transaction(async () => {
+        // Admin preview bypass when admin has no team
+        if (req.user?.role === 'ADMIN' && !req.user?.teamId) {
+          const targetLevel = parseInt(req.params?.levelNumber || req.query?.level || '1', 10);
+          const challenge = (await Challenge.findOne({ levelNumber: targetLevel, status: 'Published', isActive: true }))
+            || (await Challenge.findOne({ levelNumber: targetLevel }));
+          if (!challenge) throw new Error(`No challenge configured for level ${targetLevel}`);
+
+          const checkpoint = await Checkpoint.findOne({ levelNumber: targetLevel });
+          const questions = await Question.find({ levelNumber: targetLevel, status: 'Published', isActive: true }).sort({ order: 1 });
+          const question = questions.length > 0 ? questions[0] : null;
+
+          return {
+            isAdminPreview: true,
+            team: { currentLevel: targetLevel },
+            challenge,
+            checkpoint,
+            teamChallenge: {
+              status: 'IN_PROGRESS',
+              currentSequenceNumber: 1,
+              attemptsCount: 0,
+              checkpointScanned: true,
+              unlockedAt: new Date()
+            },
+            question,
+            progression: {
+              sequenceNumber: 1,
+              totalQuestions: questions.length,
+              solvedCount: 0,
+              isLevelComplete: false,
+              nextCheckpoint: null,
+              emptyReason: questions.length === 0 ? 'No published questions configured for this level yet.' : null
+            }
+          };
+        }
+
         const config = await eventFor('challenge');
         const team = await teamFor(req.user.teamId, req.user.userId, config);
+
+        const requestedLevel = req.params?.levelNumber ? parseInt(req.params.levelNumber, 10) : team.currentLevel;
+
+        if (requestedLevel < team.currentLevel) {
+          return {
+            isLevelComplete: true,
+            levelNumber: requestedLevel,
+            team,
+            message: `Level ${requestedLevel} has already been solved by your squad.`
+          };
+        }
+
+        if (requestedLevel > team.currentLevel) {
+          const lockErr = new Error(`Level ${requestedLevel} is locked. Your squad must complete Level ${team.currentLevel} first.`);
+          lockErr.statusCode = 403;
+          lockErr.data = {
+            isLocked: true,
+            checkpointScanned: false,
+            levelNumber: requestedLevel,
+            challengeTitle: `Level ${requestedLevel}`
+          };
+          throw lockErr;
+        }
 
         if (team.currentLevel > 10) {
           return {
@@ -108,7 +169,10 @@ class ChallengeController {
         if (teamChallenge.assignedQuestionId) {
           question = await Question.findById(teamChallenge.assignedQuestionId).select('+flag');
         }
-        if (!question || question.status !== 'Published' || !question.isActive) {
+        if (question && (question.status !== 'Published' || !question.isActive)) {
+          throw new Error('Assigned question is unavailable');
+        }
+        if (!question && !progression.emptyReason && !progression.isLevelComplete) {
           throw new Error('Assigned question is unavailable');
         }
 
@@ -123,14 +187,14 @@ class ChallengeController {
       const answers = await privateAnswers();
 
       return success(res, {
-        levelNumber: team.currentLevel,
-        challenge: {
+        levelNumber: team?.currentLevel || data.levelNumber || 1,
+        challenge: challenge ? {
           title: safeContent(challenge.title, answers),
           category: challenge.category,
           points: challenge.points,
           difficulty: challenge.difficulty,
           description: safeContent(challenge.description, answers)
-        },
+        } : null,
         checkpoint: checkpoint
           ? {
               name: safeContent(checkpoint.name, answers),
@@ -139,19 +203,19 @@ class ChallengeController {
             }
           : null,
         question: question ? await participantQuestion(question) : null,
-        sequenceNumber: progression.sequenceNumber,
-        totalQuestions: progression.totalQuestions,
-        solvedCount: progression.solvedCount,
-        isLevelComplete: progression.isLevelComplete,
-        nextCheckpoint: progression.nextCheckpoint,
-        emptyReason: progression.emptyReason,
-        teamChallenge: {
+        sequenceNumber: progression?.sequenceNumber || 1,
+        totalQuestions: progression?.totalQuestions || 0,
+        solvedCount: progression?.solvedCount || 0,
+        isLevelComplete: progression?.isLevelComplete || false,
+        nextCheckpoint: progression?.nextCheckpoint || null,
+        emptyReason: progression?.emptyReason || null,
+        teamChallenge: teamChallenge ? {
           status: teamChallenge.status,
           currentSequenceNumber: teamChallenge.currentSequenceNumber,
           attemptsCount: teamChallenge.attemptsCount,
           checkpointScanned: teamChallenge.checkpointScanned,
           unlockedAt: teamChallenge.unlockedAt
-        }
+        } : null
       });
     } catch (error) {
       if (error.data) {

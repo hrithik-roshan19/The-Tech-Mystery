@@ -14,12 +14,14 @@ vi.mock('../../services/challenge.service', () => ({
 }));
 
 let mockUser = { id: 'user-1', name: 'Agent 47', role: 'TEAM_LEADER', teamId: 'team-1' };
+let mockIsAuthenticated = true;
+let mockLoading = false;
 
 vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => ({
     user: mockUser,
-    isAuthenticated: true,
-    loading: false,
+    isAuthenticated: mockIsAuthenticated,
+    loading: mockLoading,
     logout: vi.fn()
   })
 }));
@@ -28,6 +30,27 @@ describe('ChallengeViewPage Rendering States', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUser = { id: 'user-1', name: 'Agent 47', role: 'TEAM_LEADER', teamId: 'team-1' };
+    mockIsAuthenticated = true;
+    mockLoading = false;
+  });
+
+  it('renders authentication required state when visitor is unauthenticated without black void', async () => {
+    mockUser = null;
+    mockIsAuthenticated = false;
+    mockLoading = false;
+
+    render(
+      <MemoryRouter>
+        <ChallengeViewPageWrapper />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/AUTHENTICATION REQUIRED \/\/ SECTOR ACCESS/i)).toBeDefined();
+    expect(screen.getByText(/Operator Telemetry Unverified/i)).toBeDefined();
+    expect(screen.getByText(/SIGN IN WITH SQUAD ACCOUNT/i)).toBeDefined();
+    expect(screen.getByText(/REGISTER SQUAD/i)).toBeDefined();
+    // Does not fire backend challengeService when unauthenticated
+    expect(challengeService.getCurrentChallenge).not.toHaveBeenCalled();
   });
 
   it('renders loading state initially with cyberpunk spinner', () => {
@@ -280,3 +303,4 @@ describe('ChallengeViewPage Rendering States', () => {
     });
   });
 });
+

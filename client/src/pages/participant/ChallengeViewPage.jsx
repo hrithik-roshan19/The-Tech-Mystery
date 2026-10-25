@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { challengeService } from '../../services/challenge.service';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
@@ -32,9 +32,11 @@ import {
 } from 'lucide-react';
 
 export const ChallengeViewPage = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const params = useParams();
+  const targetLevel = params.levelNumber ? parseInt(params.levelNumber, 10) : undefined;
 
   const [data, setData] = useState(null);
   const [answer, setAnswer] = useState('');
@@ -46,6 +48,18 @@ export const ChallengeViewPage = () => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   const fetchChallenge = useCallback(async () => {
+    // If auth state is still resolving, do not fetch yet
+    if (authLoading) return;
+
+    // If unauthenticated, do not fire backend call (prevents 401 error and renders State 4 immediately)
+    if (!isAuthenticated) {
+      setLoading(false);
+      setData(null);
+      setErrorMsg(null);
+      setLockedInfo(null);
+      return;
+    }
+
     // If the participant has no squad, avoid firing backend request that triggers 403
     if (user && !user.teamId && user.role !== 'ADMIN') {
       setLoading(false);
@@ -60,7 +74,7 @@ export const ChallengeViewPage = () => {
       setErrorMsg(null);
       setLockedInfo(null);
       setLoadingTimeout(false);
-      const res = await challengeService.getCurrentChallenge();
+      const res = await challengeService.getCurrentChallenge(targetLevel);
       const payload = res?.data || res;
       setData(payload);
     } catch (err) {
@@ -73,7 +87,7 @@ export const ChallengeViewPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isAuthenticated, authLoading, targetLevel]);
 
   useEffect(() => {
     fetchChallenge();
@@ -99,7 +113,7 @@ export const ChallengeViewPage = () => {
     setResultMsg(null);
     setErrorMsg(null);
 
-    const levelNumber = data?.levelNumber || 1;
+    const levelNumber = data?.levelNumber || targetLevel || 1;
     const questionId = data?.question?._id || null;
 
     try {
@@ -152,7 +166,7 @@ export const ChallengeViewPage = () => {
   };
 
   // 1. Loading State (Full viewport, cyber styling, high-contrast)
-  if (loading) {
+  if (loading || (authLoading && !user)) {
     return (
       <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col">
         <Navbar />
@@ -163,12 +177,76 @@ export const ChallengeViewPage = () => {
               <p className="text-cyber-muted">
                 Decryption handshake taking longer than expected. The core engine may be sleeping or calibrating.
               </p>
-              <CyberButton variant="cyan" size="sm" icon={RefreshCw} onClick={fetchChallenge}>
-                FORCE RECONNECT
-              </CyberButton>
+              <div className="flex gap-2 justify-center">
+                <CyberButton variant="cyan" size="sm" icon={RefreshCw} onClick={fetchChallenge}>
+                  FORCE RECONNECT
+                </CyberButton>
+                <Link to={ROUTES.LOGIN}>
+                  <CyberButton variant="secondary" size="sm" icon={KeyRound}>
+                    SIGN IN
+                  </CyberButton>
+                </Link>
+              </div>
             </div>
           )}
         </div>
+      </div>
+    );
+  }
+
+  // 2. Authentication Required State (Never silent redirect or hung spinner)
+  if (!isAuthenticated && !authLoading) {
+    const levelDisplay = targetLevel ? `LEVEL ${targetLevel}` : 'SECTOR ACCESS';
+    return (
+      <div className="min-h-screen w-full bg-cyber-bg text-cyber-text flex flex-col pb-16">
+        <Navbar />
+        <main className="max-w-3xl w-full mx-auto px-4 py-12 flex-grow flex items-center justify-center">
+          <CyberCard title={`AUTHENTICATION REQUIRED // ${levelDisplay}`} glowColor="cyan" className="w-full">
+            <div className="space-y-6 font-mono text-sm">
+              <div className="bg-cyber-panel/80 border border-cyber-cyan p-5 text-cyber-text flex items-start gap-4 rounded-none">
+                <KeyRound className="w-6 h-6 shrink-0 mt-0.5 text-cyber-cyan" />
+                <div className="space-y-1.5">
+                  <p className="font-bold uppercase tracking-wider text-base text-white">
+                    Operator Telemetry Unverified
+                  </p>
+                  <p className="text-xs text-cyber-muted leading-relaxed">
+                    Challenge terminal decryption nodes require authenticated operative credentials. Log in with your squad credentials or register a squad to begin infiltrating Sector {targetLevel || 'Challenge'} nodes.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-cyber-bg/70 border border-cyber-border p-4 space-y-2 text-xs">
+                <div className="flex items-center gap-2 text-cyber-cyan font-bold uppercase tracking-wider">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Sequential QR Protocol Overview</span>
+                </div>
+                <ul className="list-disc list-inside space-y-1 text-cyber-muted text-[11px] pl-1">
+                  <li>Each sector node is guarded by a physical checkpoint QR beacon on campus.</li>
+                  <li>Scan the physical beacon with your squad camera scanner to unlock level questions.</li>
+                  <li>Submit flags and problem solutions in sequence to earn bounty points on the live leaderboard.</li>
+                </ul>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <Link to={ROUTES.LOGIN} state={{ from: location }} className="flex-1">
+                  <CyberButton variant="cyan" size="lg" icon={KeyRound} className="w-full justify-center">
+                    SIGN IN WITH SQUAD ACCOUNT →
+                  </CyberButton>
+                </Link>
+                <Link to={ROUTES.REGISTER} className="flex-1">
+                  <CyberButton variant="secondary" size="lg" icon={Users} className="w-full justify-center">
+                    REGISTER SQUAD
+                  </CyberButton>
+                </Link>
+                <Link to={ROUTES.CHALLENGES} className="flex-1">
+                  <CyberButton variant="secondary" size="lg" className="w-full justify-center">
+                    MISSION MAP
+                  </CyberButton>
+                </Link>
+              </div>
+            </div>
+          </CyberCard>
+        </main>
       </div>
     );
   }
