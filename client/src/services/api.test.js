@@ -45,3 +45,9 @@ it('strips duplicate /api/v1 from request path in request interceptor', async ()
   const res2 = await api.get('/teams/create', { adapter: urlAdapter });
   expect(res2.data).toBe('/teams/create');
 });
+
+it('adminService exports both getSubmissions and getSubmissionLogs as functions targeting /admin/submissions', async () => {
+  const { adminService } = await import('./admin.service');
+  expect(typeof adminService.getSubmissions).toBe('function');
+  expect(typeof adminService.getSubmissionLogs).toBe('function');
+});

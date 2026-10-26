@@ -165,6 +165,31 @@ it('Zero-team initial state and dummy data eradication test suite', async (t) =>
     assert.deepEqual(recentActivity, [], 'recentActivity must be empty array');
   });
 
+  await t.test('adminController.getSubmissionLogs returns real submissions list and stats without errors', async () => {
+    let responseData = null;
+    const req = {
+      query: { limit: 5 }
+    };
+    const res = {
+      status: () => res,
+      json: (data) => {
+        responseData = data;
+        return res;
+      }
+    };
+    const next = (err) => { throw err; };
+
+    await adminController.getSubmissionLogs(req, res, next);
+    assert.ok(responseData);
+    assert.equal(responseData.success, true);
+    assert.ok(Array.isArray(responseData.data.submissions));
+    assert.equal(responseData.data.submissions.length, 0);
+    assert.equal(responseData.data.stats.total, 0);
+    assert.equal(responseData.data.stats.correct, 0);
+    assert.equal(responseData.data.stats.incorrect, 0);
+    assert.equal(responseData.data.stats.pending, 0);
+  });
+
   await t.test('leaderboardController.getLiveLeaderboard returns empty rankings', async () => {
     let responseData = null;
     const req = {};

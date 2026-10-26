@@ -50,10 +50,16 @@ export default function AdminDashboard() {
   const loadDashboardData = useCallback(async () => {
     try {
       setError(null);
+      const getSubsPromise = typeof adminService.getSubmissions === "function"
+        ? adminService.getSubmissions({ limit: 5 })
+        : typeof adminService.getSubmissionLogs === "function"
+        ? adminService.getSubmissionLogs({ limit: 5 })
+        : Promise.resolve({ data: { submissions: [] } });
+
       const [statsRes, teamsRes, subsRes] = await Promise.allSettled([
         adminService.getDashboardStats(),
         adminService.getAllTeams(),
-        adminService.getSubmissions({ limit: 5 }),
+        getSubsPromise,
       ]);
 
       if (statsRes.status === "fulfilled" && statsRes.value?.data) {
@@ -69,6 +75,8 @@ export default function AdminDashboard() {
         if (d.eventConfig) {
           setEventConfig(d.eventConfig);
         }
+      } else if (statsRes.status === "rejected") {
+        console.warn("Stats telemetry sync notice:", statsRes.reason);
       }
 
       if (teamsRes.status === "fulfilled" && teamsRes.value?.data?.teams) {
@@ -84,10 +92,23 @@ export default function AdminDashboard() {
             t._id,
           ])
         );
+      } else if (teamsRes.status === "rejected") {
+        console.warn("Teams telemetry sync notice:", teamsRes.reason);
       }
 
       if (subsRes.status === "fulfilled" && subsRes.value?.data?.submissions) {
         setRecentSubmissions(subsRes.value.data.submissions);
+      } else if (subsRes.status === "rejected") {
+        console.warn("Submissions telemetry sync notice:", subsRes.reason);
+      }
+
+      // If all three telemetry calls failed, display actionable error banner
+      if (
+        statsRes.status === "rejected" &&
+        teamsRes.status === "rejected" &&
+        subsRes.status === "rejected"
+      ) {
+        setError("Unable to connect to telemetry service. Backend may be offline or calibrating.");
       }
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || "Failed to synchronize dashboard telemetry.");
@@ -194,11 +215,40 @@ export default function AdminDashboard() {
           )}
 
           {error && (
-            <div className="ad-notice error" style={{ borderColor: "#ff6b6b", color: "#ff8585" }}>
+            <div
+              className="ad-notice error"
+              style={{
+                borderColor: "#ff6b6b",
+                color: "#ff8585",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+              }}
+              role="alert"
+            >
               <span>⚠️ {error}</span>
-              <button onClick={() => setError(null)} aria-label="Dismiss error">
-                ×
-              </button>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => loadDashboardData()}
+                  style={{
+                    background: "rgba(255, 107, 107, 0.2)",
+                    border: "1px solid #ff6b6b",
+                    color: "#ff8585",
+                    borderRadius: "4px",
+                    padding: "2px 8px",
+                    fontSize: "11px",
+                    cursor: "pointer",
+                  }}
+                  aria-label="Retry loading dashboard"
+                >
+                  Retry ↻
+                </button>
+                <button onClick={() => setError(null)} aria-label="Dismiss error">
+                  ×
+                </button>
+              </div>
             </div>
           )}
 

@@ -5,6 +5,7 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import QuestionManagementPage from './QuestionManagementPage';
 import SubmissionManagementPage from './SubmissionManagementPage';
+import AdminDashboard from './AdminDashboard';
 import adminService from '../../services/admin.service';
 
 const { mockAdminService } = vi.hoisted(() => {
@@ -13,10 +14,13 @@ const { mockAdminService } = vi.hoisted(() => {
     getChallenges: vi.fn(),
     getCheckpoints: vi.fn(),
     getSubmissionLogs: vi.fn(),
+    getSubmissions: vi.fn(),
+    getAllTeams: vi.fn().mockResolvedValue({ data: { teams: [] } }),
     deleteQuestion: vi.fn(),
     updateQuestion: vi.fn(),
     createQuestion: vi.fn(),
     reviewSubmission: vi.fn(),
+    updateEventConfig: vi.fn(),
     getDashboardStats: vi.fn().mockResolvedValue({ data: {} }),
   };
   return { mockAdminService: service };
@@ -228,6 +232,154 @@ describe('Admin Questions & Submissions Null-Safety and Resilient Rendering', ()
         expect(screen.getByText(/Backend offline or database unreachable/i)).toBeDefined();
         expect(screen.getByRole('button', { name: /Retry/i })).toBeDefined();
       });
+    });
+  });
+
+  describe('AdminDashboard (/admin)', () => {
+    it('loads without "adminService.getSubmissions is not a function" error and renders real telemetry and submissions', async () => {
+      mockAdminService.getDashboardStats.mockResolvedValue({
+        data: {
+          stats: {
+            totalTeams: 12,
+            totalParticipants: 36,
+            correctSubmissions: 48,
+            activeCheckpoints: 10,
+            accuracyRate: '88.5%',
+            levelProgress: [
+              ['Level 01', 100],
+              ['Level 02', 75],
+            ],
+            recentActivity: [
+              { time: '14:20:00', title: 'Flag accepted', detail: 'Team Alpha on Level 1', type: 'success' },
+            ],
+          },
+          eventConfig: { state: 'LIVE', registrationOpen: true },
+        },
+      });
+
+      mockAdminService.getAllTeams.mockResolvedValue({
+        data: {
+          teams: [
+            {
+              _id: 'team-alpha-id',
+              name: 'Team Alpha',
+              joinCode: 'ALPHA1',
+              members: ['u1', 'u2', 'u3'],
+              totalScore: 500,
+              currentLevel: 3,
+              isDisqualified: false,
+            },
+          ],
+        },
+      });
+
+      mockAdminService.getSubmissions.mockResolvedValue({
+        data: {
+          submissions: [
+            {
+              id: 'SUB-9001',
+              team: 'Team Alpha',
+              level: 2,
+              submittedAt: '14:20:00',
+              result: 'Correct',
+            },
+            {
+              id: 'SUB-9002',
+              team: 'Team Beta',
+              level: 1,
+              submittedAt: '14:22:15',
+              result: 'Incorrect',
+            },
+          ],
+        },
+      });
+
+      render(
+        <MemoryRouter>
+          <AdminDashboard />
+        </MemoryRouter>
+      );
+
+      // Verify dashboard headers & metrics load from real backend
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { level: 1, name: /Admin/i })).toBeDefined();
+        expect(screen.getByText('REGISTERED TEAMS')).toBeDefined();
+        expect(screen.getAllByText('12').length).toBeGreaterThan(0);
+        expect(screen.getByText('TOTAL PARTICIPANTS')).toBeDefined();
+        expect(screen.getAllByText('36').length).toBeGreaterThan(0);
+        expect(screen.getByText('FLAGS CAPTURED')).toBeDefined();
+        expect(screen.getAllByText('48').length).toBeGreaterThan(0);
+        expect(screen.getByText('ACTIVE CHECKPOINTS')).toBeDefined();
+        expect(screen.getAllByText('10').length).toBeGreaterThan(0);
+      });
+
+      // Verify recent submissions populated from adminService.getSubmissions
+      await waitFor(() => {
+        expect(screen.getByText(/Recent submissions/i)).toBeDefined();
+        expect(screen.getAllByText('Team Alpha').length).toBeGreaterThan(0);
+        expect(screen.getByText(/Level 2 · 14:20:00/i)).toBeDefined();
+        expect(screen.getByText('Team Beta')).toBeDefined();
+        expect(screen.getByText(/Level 1 · 14:22:15/i)).toBeDefined();
+      });
+
+      // Crucial: No error banner for "adminService.getSubmissions is not a function"
+      expect(screen.queryByText(/adminService\.getSubmissions is not a function/i)).toBeNull();
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+
+    it('gracefully handles submission API error without crashing dashboard metrics', async () => {
+      mockAdminService.getDashboardStats.mockResolvedValue({
+        data: {
+          stats: {
+            totalTeams: 8,
+            totalParticipants: 24,
+            correctSubmissions: 15,
+            activeCheckpoints: 10,
+            accuracyRate: '90.0%',
+          },
+        },
+      });
+
+      mockAdminService.getAllTeams.mockResolvedValue({
+        data: {
+          teams: [
+            {
+              _id: 'team-gamma',
+              name: 'Team Gamma',
+              joinCode: 'GAMMA1',
+              members: ['u1', 'u2'],
+              totalScore: 200,
+              currentLevel: 2,
+            },
+          ],
+        },
+      });
+
+      // Submissions API fails
+      mockAdminService.getSubmissions.mockRejectedValue(new Error('Submissions service timeout'));
+
+      render(
+        <MemoryRouter>
+          <AdminDashboard />
+        </MemoryRouter>
+      );
+
+      // Dashboard stats still render successfully
+      await waitFor(() => {
+        expect(screen.getByText('REGISTERED TEAMS')).toBeDefined();
+        expect(screen.getAllByText('8').length).toBeGreaterThan(0);
+        expect(screen.getByText('TOTAL PARTICIPANTS')).toBeDefined();
+        expect(screen.getAllByText('24').length).toBeGreaterThan(0);
+        expect(screen.getByText('Team Gamma')).toBeDefined();
+      });
+
+      // Empty submissions state is shown smoothly rather than crashing the page
+      await waitFor(() => {
+        expect(screen.getByText(/No submissions yet/i)).toBeDefined();
+      });
+
+      // Crucial: No crash error banner
+      expect(screen.queryByText(/adminService\.getSubmissions is not a function/i)).toBeNull();
     });
   });
 });

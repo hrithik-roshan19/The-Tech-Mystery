@@ -49,6 +49,11 @@ export const adminService = {
     return res.data;
   },
 
+  getSubmissions: async (params = {}) => {
+    const res = await api.get('/admin/submissions', { params });
+    return res.data;
+  },
+
   getSubmissionLogs: async (params = {}) => {
     const res = await api.get('/admin/submissions', { params });
     return res.data;
