@@ -101,7 +101,7 @@ export const AppRoutes = () => {
       {/* 4. Admin Command SOC Protected Routes (AdminLayout strictly guarded by ADMIN role) */}
       <Route
         element={
-          <ProtectedRoute requiredRole="ADMIN">
+          <ProtectedRoute requiredRole="ADMIN" requireAdmin>
             <AdminLayout />
           </ProtectedRoute>
         }

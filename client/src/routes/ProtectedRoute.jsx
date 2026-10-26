@@ -13,7 +13,7 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
  * - Redirects unauthorized participants back to their dashboard.
  * - Protects participant dashboard: unteamed participants must complete registration at /register.
  */
-export const ProtectedRoute = ({ children, requiredRole, requireTeam }) => {
+export const ProtectedRoute = ({ children, requiredRole, requireAdmin, requireTeam }) => {
   const { isAuthenticated, loading, user, identityAuthenticated } = useAuth();
   const location = useLocation();
 
@@ -27,12 +27,14 @@ export const ProtectedRoute = ({ children, requiredRole, requireTeam }) => {
 
   if (!isAuthenticated && identityAuthenticated) return <Navigate to="/auth/complete" state={{ from: location }} replace />;
 
+  const effectiveRole = requireAdmin ? 'ADMIN' : requiredRole;
+
   if (!isAuthenticated) {
-    const redirectPath = requiredRole === 'ADMIN' ? ROUTES.ADMIN_LOGIN : ROUTES.LOGIN;
+    const redirectPath = effectiveRole === 'ADMIN' ? ROUTES.ADMIN_LOGIN : ROUTES.LOGIN;
     return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
-  if (requiredRole && user?.role !== requiredRole && user?.role !== 'ADMIN') {
+  if (effectiveRole && user?.role !== effectiveRole && user?.role !== 'ADMIN') {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 

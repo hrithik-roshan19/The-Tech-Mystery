@@ -137,6 +137,31 @@ export default function RegisterPage() {
       }
       setStep(2);
     } else if (step === 2) {
+      // Validate any entered members
+      const activeLeaderEmail = (leaderEmail || user?.email || "").trim().toLowerCase();
+      const enteredMembers = (members || []).filter((m) => m && (m.name?.trim() || m.email?.trim()));
+      const seen = new Set();
+      for (let i = 0; i < enteredMembers.length; i++) {
+        const m = enteredMembers[i];
+        const mEmail = (m.email || "").trim().toLowerCase();
+        if (!mEmail) {
+          setError(`Please provide an email address for operative ${i + 2}.`);
+          return;
+        }
+        if (!/^\S+@\S+\.\S+$/.test(mEmail)) {
+          setError(`Please enter a valid email address for operative ${i + 2}.`);
+          return;
+        }
+        if (activeLeaderEmail && mEmail === activeLeaderEmail) {
+          setError(`Operative ${i + 2} cannot use the same email as the team leader.`);
+          return;
+        }
+        if (seen.has(mEmail)) {
+          setError(`Operative email "${mEmail}" is entered more than once.`);
+          return;
+        }
+        seen.add(mEmail);
+      }
       setStep(3);
     } else if (step === 3) {
       handleFinalSubmit();
@@ -149,6 +174,20 @@ export default function RegisterPage() {
 
     try {
       let newTeam = null;
+
+      const validMembers = (members || [])
+        .filter((m) => m && (m.name?.trim() || m.email?.trim()))
+        .map((m) => ({
+          name: (m.name || "").trim(),
+          email: (m.email || "").trim().toLowerCase()
+        }));
+
+      const teamPayload = {
+        name: teamName.trim(),
+        college: college?.trim() || "Tula's University",
+        motto: motto?.trim() || "",
+        members: validMembers
+      };
 
       if (!user) {
         if (isClerkMode()) {
@@ -180,10 +219,7 @@ export default function RegisterPage() {
         }
 
         // 3. Create Team
-        const teamRes = await teamService.createTeam({
-          name: teamName.trim(),
-          college: college?.trim()
-        });
+        const teamRes = await teamService.createTeam(teamPayload);
         newTeam = teamRes.data?.team || teamRes.team;
 
         // Update tokens in context with new team
@@ -192,16 +228,16 @@ export default function RegisterPage() {
         }
       } else {
         // Authenticated user (Clerk or active session): create team directly
-        const teamRes = await teamService.createTeam({
-          name: teamName.trim(),
-          college: college?.trim()
-        });
+        const teamRes = await teamService.createTeam(teamPayload);
         newTeam = teamRes.data?.team || teamRes.team;
+
+        setCreatedTeam(newTeam);
+        setSubmitted(true);
 
         if (newTeam?._id && updateTeamMembership) {
           updateTeamMembership(newTeam._id, "TEAM_LEADER");
         }
-        if (refreshUser) {
+        if (refreshUser && updateTeamMembership !== refreshUser) {
           await refreshUser();
         }
       }
@@ -655,7 +691,16 @@ export default function RegisterPage() {
                     <div><span>TEAM NAME</span><strong>{teamName || "—"}</strong></div>
                     <div><span>LEADER</span><strong>{leaderName || user?.fullName || "—"} ({leaderEmail || user?.email})</strong></div>
                     <div><span>COLLEGE</span><strong>{college}</strong></div>
-                    <div><span>MEMBERS</span><strong>Leader + {members.filter(m => m.name || m.email).length} operative(s)</strong></div>
+                    <div>
+                      <span>MEMBERS</span>
+                      <strong>Leader + {members.filter(m => m.name || m.email).length} operative(s) ({1 + members.filter(m => m.name || m.email).length} total)</strong>
+                    </div>
+                    {members.filter(m => m.name || m.email).map((m, idx) => (
+                      <div key={idx} style={{ paddingLeft: "10px", fontSize: "12px", color: "#aeb4b0" }}>
+                        <span>OPERATIVE {idx + 2}</span>
+                        <strong>{m.name ? `${m.name} (${m.email})` : m.email}</strong>
+                      </div>
+                    ))}
                     <div><span>MOTTO</span><strong>{motto || "—"}</strong></div>
                   </div>
                   <label className="terms">

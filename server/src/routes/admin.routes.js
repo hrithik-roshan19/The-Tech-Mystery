@@ -19,6 +19,7 @@ router.get('/leaderboard', leaderboardController.getAdminLeaderboard);
 router.get('/teams', adminController.getAllTeams);
 router.post('/teams', adminController.createTeam);
 router.patch('/teams/:teamId', adminController.updateTeam);
+router.patch('/teams/:teamId/approve', adminController.approveTeam);
 router.post('/teams/:teamId/members', adminController.addTeamMember);
 router.delete('/teams/:teamId/members/:userId', adminController.removeTeamMember);
 router.delete('/teams/:teamId', adminController.deleteTeam);

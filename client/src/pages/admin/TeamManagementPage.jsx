@@ -359,6 +359,41 @@ export const TeamManagementPage = () => {
     );
   };
 
+  const handleApproveTeam = async (team) => {
+    if (!team || actionBusy) return;
+    if (team.members < 2) {
+      setApiError(
+        `Team "${team.name}" cannot be approved: Event rules require a minimum of 2 verified members (currently ${team.members}). Add another member before approving.`
+      );
+      return;
+    }
+    const confirmed = window.confirm(
+      `Approve team "${team.name}" for live gameplay? This will activate the squad and unlock QR checkpoint scanning.`
+    );
+    if (!confirmed) return;
+    setActionBusy(true);
+    setApiError("");
+    try {
+      if (team.id) {
+        const res = await adminService.approveTeam(team.id);
+        const updatedDoc = res?.data?.team;
+        if (updatedDoc) {
+          const mapped = mapApiTeamToUi(updatedDoc, (team.emblemIndex || 1) - 1);
+          setTeams((prev) => prev.map((t) => (t.id === team.id ? mapped : t)));
+        } else {
+          setTeams((prev) =>
+            prev.map((t) => (t.id === team.id ? { ...t, status: "Active" } : t))
+          );
+        }
+        setNotice(res?.message || `Team "${team.name}" approved and activated!`);
+      }
+    } catch (err) {
+      setApiError(err.response?.data?.message || err.message || "Failed to approve team.");
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
   const handleCreateTeam = async (e) => {
     e.preventDefault();
     if (!teamDraft.name.trim() || !teamDraft.leader.trim()) {
@@ -1175,7 +1210,7 @@ export const TeamManagementPage = () => {
                     </span>
                     <span className="htg-member-name">
                       <strong>{member.name}</strong>
-                      <small>{member.role}</small>
+                      <small>{member.role}{member.email ? ` · ${member.email}` : ""}</small>
                     </span>
                     <span className="htg-verified">
                       {member.verified !== false ? "Verified" : "Pending"}
@@ -1196,6 +1231,17 @@ export const TeamManagementPage = () => {
               </section>
 
               <section className="htg-detail-actions" style={{ flexWrap: "wrap" }}>
+                {selectedTeam.status === "Pending" && !selectedTeam.isDisqualified && (
+                  <button
+                    type="button"
+                    className="htg-primary-button"
+                    style={{ background: "var(--htg-lime, #b8ff3d)", color: "#080b0a", fontWeight: "700" }}
+                    disabled={actionBusy}
+                    onClick={() => handleApproveTeam(selectedTeam)}
+                  >
+                    {actionBusy ? "Approving..." : "✓ Approve Team"}
+                  </button>
+                )}
                 <button
                   type="button"
                   className="htg-outline-button"

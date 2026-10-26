@@ -19,7 +19,23 @@ class TeamService {
   /**
    * Creates a new team with the creating user as TEAM_LEADER
    */
-  async createTeam(userId, teamName, college) {
+  async createTeam(userId, teamNameOrOptions, maybeCollege, maybeMembers) {
+    let teamName = '';
+    let college = '';
+    let motto = '';
+    let members = [];
+
+    if (teamNameOrOptions && typeof teamNameOrOptions === 'object') {
+      teamName = teamNameOrOptions.name;
+      college = teamNameOrOptions.college;
+      motto = teamNameOrOptions.motto;
+      members = teamNameOrOptions.members || [];
+    } else {
+      teamName = teamNameOrOptions;
+      college = maybeCollege;
+      members = maybeMembers || [];
+    }
+
     const user = await User.findById(userId);
     if (!user || !user.isActive || user.role === ROLES.ADMIN) throw new Error('Active participant account required');
     if (user.teamId) throw new Error('User is already registered with a team');
@@ -53,16 +69,93 @@ class TeamService {
       throw new Error(`Team name "${trimmedName}" is already taken`);
     }
 
-    const joinCode = this.generateJoinCode();
     const maxMembers = config?.maxTeamSize || 4;
+
+    // Process and validate additional members
+    const memberEntries = Array.isArray(members) ? members : [];
+    const processedMembers = [];
+    const seenEmails = new Set();
+    if (user.email) {
+      seenEmails.add(user.email.toLowerCase());
+    }
+
+    for (const entry of memberEntries) {
+      if (!entry) continue;
+      const rawEmail = typeof entry === 'string' ? entry : entry.email;
+      const rawName = typeof entry === 'object' ? entry.name : '';
+
+      if (!rawEmail || typeof rawEmail !== 'string' || !rawEmail.trim()) continue;
+      const email = rawEmail.trim().toLowerCase();
+
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        throw new Error(`Invalid email address for team member: ${email}`);
+      }
+
+      if (seenEmails.has(email)) {
+        throw new Error(`Duplicate member email "${email}" is not permitted`);
+      }
+      seenEmails.add(email);
+
+      const memberName = (rawName && typeof rawName === 'string' && rawName.trim())
+        ? rawName.trim()
+        : email.split('@')[0];
+
+      processedMembers.push({ email, name: memberName });
+    }
+
+    if (1 + processedMembers.length > maxMembers) {
+      throw new Error(`Team exceeds maximum size of ${maxMembers} members`);
+    }
+
+    // Resolve or pre-roster member users
+    const resolvedMemberIds = [];
+    const bcrypt = require('bcryptjs');
+
+    for (const member of processedMembers) {
+      let memberUser = await User.findOne({ email: member.email });
+      if (memberUser) {
+        if (memberUser.role === ROLES.ADMIN) {
+          throw new Error(`User with email "${member.email}" is an administrator and cannot join a team`);
+        }
+        if (memberUser.teamId) {
+          throw new Error(`User with email "${member.email}" is already enrolled in another team`);
+        }
+        if (!memberUser.isActive) {
+          throw new Error(`User account for "${member.email}" is deactivated`);
+        }
+        resolvedMemberIds.push(memberUser._id);
+      } else {
+        const cleanPrefix = member.email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 18) || 'operative';
+        const randomSuffix = crypto.randomBytes(3).toString('hex');
+        const memberUsername = `${cleanPrefix}_${randomSuffix}`.slice(0, 30);
+        const randomPass = crypto.randomBytes(32).toString('hex');
+        const passwordHash = await bcrypt.hash(randomPass, 10);
+
+        memberUser = await User.create({
+          username: memberUsername,
+          email: member.email,
+          fullName: member.name || memberUsername,
+          passwordHash,
+          role: ROLES.TEAM_MEMBER,
+          college: college && typeof college === 'string' && college.trim() ? college.trim() : (user.college || "Tula's University"),
+          isActive: true
+        });
+        resolvedMemberIds.push(memberUser._id);
+      }
+    }
+
+    const joinCode = this.generateJoinCode();
+    const allMemberIds = [user._id, ...resolvedMemberIds];
 
     const team = await Team.create({
       name: trimmedName,
       college: college && typeof college === 'string' && college.trim() ? college.trim() : "Tula's University",
+      motto: motto && typeof motto === 'string' ? motto.trim().slice(0, 120) : '',
       joinCode,
       leaderId: user._id,
-      members: [user._id],
+      members: allMemberIds,
       maxMembers,
+      status: 'Pending',
       currentLevel: 1,
       totalScore: 0
     });
@@ -72,6 +165,14 @@ class TeamService {
     user.role = ROLES.TEAM_LEADER;
     await user.save();
 
+    // Link all resolved members to this team
+    for (const mId of resolvedMemberIds) {
+      await User.findByIdAndUpdate(mId, {
+        teamId: team._id,
+        role: ROLES.TEAM_MEMBER
+      });
+    }
+
     // Initialize initial Score tracking record for live leaderboard
     await Score.create({
       teamId: team._id,
@@ -80,7 +181,9 @@ class TeamService {
       lastSolveTimestamp: null
     });
 
-    return team;
+    return Team.findById(team._id)
+      .populate('leaderId', 'username email fullName role collegeRollNo isActive')
+      .populate('members', 'username email fullName role collegeRollNo isActive');
   }
 
   /**

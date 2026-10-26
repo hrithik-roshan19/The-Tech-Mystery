@@ -63,11 +63,51 @@ module.exports = {
       const email = await clerk.verifiedEmail(req.clerkIdentity);
       await transaction(async () => {
         await eventFor('registration');
-        if (await User.exists({ $or: [{ email }, { username }, { clerkUserId: req.clerkIdentity.clerkUserId }] })) {
-          throw clerk.failure(409, 'An account already exists. Link the existing account or contact an organizer.');
+
+        if (await User.exists({ clerkUserId: req.clerkIdentity.clerkUserId })) {
+          throw clerk.failure(409, 'Identity already linked');
         }
-        await User.create({ username, fullName: fullName.trim(), email,
-          clerkUserId: req.clerkIdentity.clerkUserId, clerkLinkedAt: new Date(), role: 'TEAM_MEMBER', teamId: null });
+
+        const existingUserByEmail = await User.findOne({ email }).select('+clerkUserId +tokenVersion');
+        if (existingUserByEmail) {
+          const isPreRosteredTeammate = Boolean(existingUserByEmail.teamId && !existingUserByEmail.clerkUserId);
+          if (!isPreRosteredTeammate) {
+            throw clerk.failure(409, 'An account already exists. Link the existing account or contact an organizer.');
+          }
+          if (existingUserByEmail.role === 'ADMIN') {
+            throw clerk.failure(403, 'Administrative accounts cannot be self-linked via participant registration');
+          }
+          if (!existingUserByEmail.isActive) {
+            throw clerk.failure(403, 'Account is inactive. Contact an event organizer.');
+          }
+
+          const conflictUser = await User.findOne({ username, _id: { $ne: existingUserByEmail._id } });
+          if (conflictUser) {
+            throw clerk.failure(409, 'Username is already taken by another participant');
+          }
+
+          existingUserByEmail.clerkUserId = req.clerkIdentity.clerkUserId;
+          existingUserByEmail.clerkLinkedAt = new Date();
+          existingUserByEmail.tokenVersion = (existingUserByEmail.tokenVersion || 0) + 1;
+          existingUserByEmail.username = username;
+          if (fullName && fullName.trim()) {
+            existingUserByEmail.fullName = fullName.trim();
+          }
+          await existingUserByEmail.save();
+        } else {
+          if (await User.exists({ username })) {
+            throw clerk.failure(409, 'An account already exists. Link the existing account or contact an organizer.');
+          }
+          await User.create({
+            username,
+            fullName: fullName.trim(),
+            email,
+            clerkUserId: req.clerkIdentity.clerkUserId,
+            clerkLinkedAt: new Date(),
+            role: 'TEAM_MEMBER',
+            teamId: null
+          });
+        }
       });
       return success(res, null, 'Participant account created; team enrollment remains separate', 201);
     } catch (error) { return responseError(res, error); }

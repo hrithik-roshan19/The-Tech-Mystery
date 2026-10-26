@@ -26,6 +26,11 @@ export const adminService = {
     return res.data;
   },
 
+  approveTeam: async (teamId) => {
+    const res = await api.patch(`/admin/teams/${teamId}/approve`);
+    return res.data;
+  },
+
   addTeamMember: async (teamId, payload) => {
     const res = await api.post(`/admin/teams/${teamId}/members`, payload);
     return res.data;

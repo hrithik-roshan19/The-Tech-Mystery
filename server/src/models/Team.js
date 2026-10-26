@@ -22,6 +22,12 @@ const teamSchema = new mongoose.Schema(
       default: "Tula's University",
       maxlength: [100, 'College name must not exceed 100 characters']
     },
+    motto: {
+      type: String,
+      trim: true,
+      default: '',
+      maxlength: [120, 'Team motto must not exceed 120 characters']
+    },
     joinCode: {
       type: String,
       required: [true, 'Team join code is required'],
@@ -49,6 +55,12 @@ const teamSchema = new mongoose.Schema(
       default: 4,
       min: 2,
       max: 4
+    },
+    status: {
+      type: String,
+      enum: ['Pending', 'Active', 'Disqualified'],
+      default: 'Active',
+      index: true
     },
     currentLevel: {
       type: Number,
@@ -91,4 +103,3 @@ teamSchema.index({ totalScore: -1, lastSolveTimestamp: 1 });
 
 const Team = mongoose.model('Team', teamSchema);
 module.exports = Team;
-

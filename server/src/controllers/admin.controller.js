@@ -184,6 +184,62 @@ class AdminController {
     }
   }
 
+  async approveTeam(req, res, next) {
+    try {
+      const { teamId } = req.params;
+      if (!teamId || !/^[0-9a-fA-F]{24}$/.test(teamId)) {
+        return badRequest(res, 'Invalid team ID format');
+      }
+
+      const team = await Team.findById(teamId)
+        .populate('leaderId', 'username email fullName role collegeRollNo isActive')
+        .populate('members', 'username email fullName role collegeRollNo isActive');
+
+      if (!team) return notFound(res, 'Team not found');
+
+      if (team.isDisqualified) {
+        return badRequest(res, 'Cannot approve a disqualified team. Reinstate the team first.');
+      }
+
+      const config = await EventConfig.getSingleton({});
+      const minSize = Math.max(2, config?.minTeamSize || 2);
+      const activeMembers = await User.countDocuments({
+        _id: { $in: team.members },
+        teamId: team._id,
+        isActive: true,
+        role: { $in: ['TEAM_LEADER', 'TEAM_MEMBER'] }
+      });
+
+      if (activeMembers < minSize) {
+        return badRequest(
+          res,
+          `Team cannot be approved: Team "${team.name}" currently has ${activeMembers} member(s), but event rules require a minimum of ${minSize} members.`
+        );
+      }
+
+      team.status = 'Active';
+      await team.save();
+
+      const eventId = `EVT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      await SecurityLog.create({
+        eventId,
+        severity: 'INFO',
+        category: 'ADMIN ACTION',
+        event: 'Team approved',
+        actor: req.user?.username || 'admin',
+        target: team.name,
+        source: req.ip || '127.0.0.1',
+        detail: `Team ${team.name} approved with ${activeMembers} member(s)`,
+        status: 'RECORDED',
+        timestamp: new Date()
+      }).catch((err) => logger.warn(`Failed to write SecurityLog: ${err.message}`));
+
+      return success(res, { team }, `Team "${team.name}" has been approved and activated for gameplay`);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   async addTeamMember(req, res, next) {
     try {
       const { teamId } = req.params;

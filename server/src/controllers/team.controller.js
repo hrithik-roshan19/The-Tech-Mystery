@@ -11,10 +11,10 @@ const { success, created, badRequest, notFound } = require('../utils/apiResponse
 class TeamController {
   async createTeam(req, res, next) {
     try {
-      const { name, college } = req.body;
+      const { name, college, motto, members } = req.body;
       const userId = req.user.userId;
 
-      const team = await teamService.createTeam(userId, name, college);
+      const team = await teamService.createTeam(userId, { name, college, motto, members });
       const user = await User.findById(userId).select('+tokenVersion');
       const { accessToken, refreshToken } = authService.generateTokens(user);
 

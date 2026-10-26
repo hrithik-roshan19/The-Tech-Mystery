@@ -100,7 +100,8 @@ export function AdminDashboard() {
         r.status === "rejected" &&
         (r.reason?.isAuthError ||
           r.reason?.code === "ERR_AUTH_TOKEN_UNAVAILABLE" ||
-          r.reason?.response?.status === 401);
+          r.reason?.response?.status === 401 ||
+          r.reason?.response?.status === 403);
 
       const hasAuthError = isAuthFail(statsRes) || isAuthFail(teamsRes) || isAuthFail(subsRes);
 
@@ -267,6 +268,64 @@ export function AdminDashboard() {
             <small style={{ color: "#8a968c", fontSize: "11px" }}>
               Validating cryptographic security credentials and permissions
             </small>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!authLoading && (!isAuthenticated || user?.role !== 'ADMIN')) {
+    return (
+      <div className="ad-shell" style={{ display: "flex", minHeight: "100vh", background: "#080b0a" }}>
+        <AdminSidebar
+          teamsCount={0}
+          submissionsCount={0}
+          mobileOpen={menu}
+          onCloseMobile={() => setMenu(false)}
+        />
+        <main className="ad-main" style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "36px 32px",
+              background: "rgba(5, 12, 13, 0.85)",
+              border: "1px solid rgba(255, 77, 100, 0.3)",
+              borderRadius: "12px",
+              color: "#ff8595",
+              fontFamily: "monospace",
+              gap: "14px",
+              maxWidth: "460px",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: "32px" }}>🔒</div>
+            <span style={{ fontSize: "14px", letterSpacing: "1.4px", fontWeight: "700", color: "#ff8595" }}>
+              ADMINISTRATIVE PRIVILEGES REQUIRED
+            </span>
+            <p style={{ color: "#8a968c", fontSize: "12px", margin: "4px 0 16px", lineHeight: "1.5" }}>
+              You must be authenticated with an active administrator account to access the CyberSOC Mission Control.
+            </p>
+            <Link
+              to={ROUTES.ADMIN_LOGIN}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "8px 20px",
+                background: "rgba(184, 255, 61, 0.15)",
+                border: "1px solid var(--htg-lime, #b8ff3d)",
+                borderRadius: "6px",
+                color: "var(--htg-lime, #b8ff3d)",
+                fontSize: "12px",
+                fontWeight: "700",
+                textDecoration: "none",
+                letterSpacing: "1px"
+              }}
+            >
+              LOG IN AS ADMINISTRATOR →
+            </Link>
           </div>
         </main>
       </div>
@@ -610,6 +669,7 @@ export function AdminDashboard() {
                 >
                   <option>All</option>
                   <option>Active</option>
+                  <option>Pending</option>
                   <option>Disqualified</option>
                 </select>
               </div>
@@ -634,6 +694,13 @@ export function AdminDashboard() {
                       const statusLabel = String(t?.[5] || "Active");
                       const rowKey = t?.[6] || joinCode || idx;
 
+                      const statusBadgeClass =
+                        statusLabel === "Disqualified"
+                          ? "review"
+                          : statusLabel === "Pending"
+                          ? "pending"
+                          : "";
+
                       return (
                         <tr key={rowKey}>
                           <td>
@@ -645,9 +712,16 @@ export function AdminDashboard() {
                           <td className="ad-points">{scoreFormatted}</td>
                           <td>
                             <span
-                              className={`ad-status ${
-                                statusLabel === "Disqualified" ? "review" : ""
-                              }`}
+                              className={`ad-status ${statusBadgeClass}`}
+                              style={
+                                statusLabel === "Pending"
+                                  ? {
+                                      color: "#facc15",
+                                      borderColor: "rgba(250, 204, 21, 0.4)",
+                                      background: "rgba(250, 204, 21, 0.1)",
+                                    }
+                                  : undefined
+                              }
                             >
                               {statusLabel}
                             </span>

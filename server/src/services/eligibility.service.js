@@ -57,14 +57,19 @@ async function teamFor(teamId, userId, config) {
   const team = await Team.findOneAndUpdate({ _id: teamId, isDisqualified: false },
     { $inc: { securityRevision: 1 } }, { new: true });
   if (!team) throw denied('Team is unavailable or disqualified');
+  if (team.status === 'Pending') {
+    throw denied('Team registration is pending administrator approval');
+  }
   if (userId) {
     const user = await User.findOneAndUpdate({ _id: userId, teamId, isActive: true },
       { $inc: { securityRevision: 1 } }, { new: true });
     if (!user || !team.members.some(id => String(id) === String(userId))) throw denied('Active team membership required');
   }
+  const minSize = Math.max(2, config.minTeamSize || 2);
+  const maxSize = Math.min(team.maxMembers, config.maxTeamSize || 4);
   const activeMembers = await User.countDocuments({ _id: { $in: team.members }, teamId, isActive: true, role: { $in: ['TEAM_LEADER', 'TEAM_MEMBER'] } });
-  if (activeMembers < (Math.max(2, config.minTeamSize || 2)) || team.members.length > Math.min(team.maxMembers, config.maxTeamSize || 4)) {
-    throw denied('Team does not meet event team-size requirements');
+  if (activeMembers < minSize || team.members.length > maxSize) {
+    throw denied(`Team does not meet event team-size requirements (current: ${activeMembers}, required: ${minSize}–${maxSize})`);
   }
   return team;
 }
