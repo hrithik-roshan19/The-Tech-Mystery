@@ -501,6 +501,69 @@ export default function LeaderboardPage() {
               </table>
             </div>
 
+            {/* Mobile Stacked Card View (< 768px) */}
+            <div className="htg-lb-mobile-cards" aria-label="Team Rankings Mobile Cards">
+              {loading && (
+                <div className="htg-lb-empty-box">
+                  <div className="htg-lb-spinner" />
+                  <p>Connecting to The Tech Mystery telemetry...</p>
+                </div>
+              )}
+              {!loading && !isVisible && (
+                <div className="htg-lb-empty-box">
+                  <p style={{ fontSize: "15px", marginBottom: "6px" }}>🔒 STANDINGS CONCEALED</p>
+                  <p>The public leaderboard is currently hidden by event marshals.</p>
+                </div>
+              )}
+              {!loading && isVisible && visibleTeams.map((team) => (
+                <div key={team.id || team.rank} className={`htg-lb-mobile-card ${team.own ? "my-team" : ""}`}>
+                  <div className="htg-lb-mcard-top">
+                    <span className={`htg-lb-rank ${team.rank <= 3 ? `rank-${team.rank}` : ""}`}>
+                      {team.rank <= 3
+                        ? ["🥇", "🥈", "🥉"][team.rank - 1]
+                        : `#${String(team.rank).padStart(2, "0")}`}
+                    </span>
+                    <div className="htg-lb-mcard-identity">
+                      <span className="htg-lb-team-avatar">
+                        {team.name.slice(0, 2).toUpperCase()}
+                      </span>
+                      <div className="htg-lb-mcard-names">
+                        <strong>
+                          {team.name}
+                          {team.own && <em>YOU</em>}
+                        </strong>
+                        <small>{team.members}</small>
+                      </div>
+                    </div>
+                    <div className="htg-lb-mcard-score">
+                      <strong>{team.points.toLocaleString()}</strong>
+                      <small>PTS</small>
+                    </div>
+                  </div>
+                  <div className="htg-lb-mcard-bottom">
+                    <div className="htg-lb-mcard-progress-row">
+                      <span>Challenges: <strong>{team.solved} / 10</strong></span>
+                      <span className="htg-lb-mcard-activity">{team.last}</span>
+                    </div>
+                    <div className="htg-lb-row-progress">
+                      <i style={{ width: `${Math.min(100, team.solved * 10)}%` }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {!loading && isVisible && allTeams.length === 0 && (
+                <div className="htg-lb-empty-box">
+                  <p style={{ fontSize: "15px", marginBottom: "6px" }}>⚡ THE ARENA IS OPEN</p>
+                  <p>No teams ranked yet. Standings activate when squads scan checkpoints!</p>
+                </div>
+              )}
+              {!loading && isVisible && allTeams.length > 0 && visibleTeams.length === 0 && (
+                <div className="htg-lb-empty-box">
+                  <p>No teams match "{search}".</p>
+                </div>
+              )}
+            </div>
+
             <div className="htg-lb-table-footer">
               <span>Showing {visibleTeams.length} of {allTeams.length} active teams</span>
               <span>Scoring updates with verified flag submissions.</span>
@@ -512,33 +575,59 @@ export default function LeaderboardPage() {
         <aside className="htg-lb-col-right">
           {/* 1. Your Team Card */}
           <div className="htg-lb-side-card htg-lb-your-team-card">
-            <div className="htg-lb-side-card-top">
-              <span className="htg-lb-side-eyebrow">YOUR SQUAD</span>
-              <span className="htg-lb-side-badge">#{String(userTeam.rank || 1).padStart(2, "0")}</span>
-            </div>
-            <div className="htg-lb-your-team-row">
-              <span className="htg-lb-team-icon">▥</span>
-              <div>
-                <h3>{userTeam.name}</h3>
-                <p className="htg-lb-points-banner">{userTeam.points?.toLocaleString() || 0} <span>PTS</span></p>
+            {userTeam.unregistered ? (
+              <div className="htg-lb-unregistered-squad">
+                <div className="htg-lb-side-card-top">
+                  <span className="htg-lb-side-eyebrow">YOUR SQUAD</span>
+                  <span className="htg-lb-side-badge status-open">UNLINKED</span>
+                </div>
+                <div className="htg-lb-your-team-row">
+                  <span className="htg-lb-team-icon">▥</span>
+                  <div>
+                    <h3>No Squad Linked</h3>
+                    <p className="htg-lb-points-banner" style={{ color: "var(--lb-muted)", fontSize: "12px" }}>
+                      Standing Inactive
+                    </p>
+                  </div>
+                </div>
+                <p style={{ fontSize: "11px", color: "var(--lb-muted)", margin: "0 0 14px", lineHeight: "1.5" }}>
+                  Join or register a team to track your squad standing and sync real-time checkpoint telemetry.
+                </p>
+                <Link to={ROUTES.REGISTER} className="htg-lb-side-cta">
+                  Register / Join Squad →
+                </Link>
               </div>
-            </div>
-            <div className="htg-lb-your-team-details">
-              <div className="htg-lb-metric-line">
-                <span>Challenges Solved</span>
-                <strong>{userTeam.solved} / 10 ({userTeam.solved * 10}%)</strong>
-              </div>
-              <div className="htg-lb-progress-bar-wrap">
-                <i style={{ width: `${Math.min(100, userTeam.solved * 10)}%` }} />
-              </div>
-              <div className="htg-lb-metric-line">
-                <span>Current Standing</span>
-                <strong className="htg-lb-positive-trend">Rank #{userTeam.rank} on Grid</strong>
-              </div>
-            </div>
-            <Link to={ROUTES.DASHBOARD} className="htg-lb-side-cta">
-              View Mission Dashboard →
-            </Link>
+            ) : (
+              <>
+                <div className="htg-lb-side-card-top">
+                  <span className="htg-lb-side-eyebrow">YOUR SQUAD</span>
+                  <span className="htg-lb-side-badge">#{String(userTeam.rank).padStart(2, "0")}</span>
+                </div>
+                <div className="htg-lb-your-team-row">
+                  <span className="htg-lb-team-icon">▥</span>
+                  <div>
+                    <h3>{userTeam.name}</h3>
+                    <p className="htg-lb-points-banner">{userTeam.points?.toLocaleString() || 0} <span>PTS</span></p>
+                  </div>
+                </div>
+                <div className="htg-lb-your-team-details">
+                  <div className="htg-lb-metric-line">
+                    <span>Challenges Solved</span>
+                    <strong>{userTeam.solved} / 10 ({Math.min(100, userTeam.solved * 10)}%)</strong>
+                  </div>
+                  <div className="htg-lb-progress-bar-wrap">
+                    <i style={{ width: `${Math.min(100, userTeam.solved * 10)}%` }} />
+                  </div>
+                  <div className="htg-lb-metric-line">
+                    <span>Current Standing</span>
+                    <strong className="htg-lb-positive-trend">Rank #{userTeam.rank} on Grid</strong>
+                  </div>
+                </div>
+                <Link to={ROUTES.DASHBOARD} className="htg-lb-side-cta">
+                  View Mission Dashboard →
+                </Link>
+              </>
+            )}
           </div>
 
           {/* 2. Leaderboard Stats Card */}

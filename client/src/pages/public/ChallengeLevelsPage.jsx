@@ -111,18 +111,23 @@ export function ChallengeLevelsPage() {
                   onClick={() => setSelectedLevel(selectedLevel === level.number ? null : level.number)}
                   aria-expanded={selectedLevel === level.number}
                 >
-                  <span className="htg-level-number">{level.number}</span>
-                  <span className="htg-level-icon" aria-hidden="true">{level.icon}</span>
-                  <span className="htg-level-copy">
-                    <strong>
-                      {level.title}
-                      {level.isSolved && <span style={{ marginLeft: "8px", color: "var(--htg-lime, #b8ff3d)", fontSize: "11px" }}>✓ SOLVED</span>}
-                      {level.isCurrent && <span style={{ marginLeft: "8px", color: "#00e5ff", fontSize: "11px" }}>● ACTIVE</span>}
-                    </strong>
-                    <small>{level.description}</small>
+                  <div className="htg-level-leading">
+                    <span className="htg-level-number">{level.number}</span>
+                    <span className="htg-level-icon" aria-hidden="true">{level.icon}</span>
+                  </div>
+                  <div className="htg-level-copy">
+                    <div className="htg-level-meta-row">
+                      <strong className="htg-level-title">
+                        {level.title}
+                        {level.isSolved && <span className="htg-status-pill solved">✓ SOLVED</span>}
+                        {level.isCurrent && <span className="htg-status-pill active">● ACTIVE</span>}
+                      </strong>
+                      <span className={`htg-difficulty ${level.difficulty.toLowerCase()}`}>{level.difficulty}</span>
+                    </div>
+                    <small className="htg-level-desc">{level.description}</small>
                     <AnimatePresence>
                       {selectedLevel === level.number && (
-                        <motion.span
+                        <motion.div
                           className="htg-level-detail"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
@@ -187,11 +192,10 @@ export function ChallengeLevelsPage() {
                               DASHBOARD
                             </Link>
                           </div>
-                        </motion.span>
+                        </motion.div>
                       )}
                     </AnimatePresence>
-                  </span>
-                  <span className={`htg-difficulty ${level.difficulty.toLowerCase()}`}>{level.difficulty}</span>
+                  </div>
                   <span className="htg-level-chevron" aria-hidden="true">›</span>
                 </button>
               </StaggerItem>

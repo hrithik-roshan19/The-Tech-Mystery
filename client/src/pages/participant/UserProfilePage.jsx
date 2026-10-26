@@ -162,6 +162,22 @@ export default function UserProfilePage() {
     );
   }, [profile.fullName]);
 
+  // Derived real dynamic statistics formatting
+  const solvedCountNum = useMemo(() => {
+    const raw = String(stats.challengesSolved || "0").split('/')[0];
+    return parseInt(raw.trim(), 10) || 0;
+  }, [stats.challengesSolved]);
+
+  const remainingLevelsCount = Math.max(0, 10 - solvedCountNum);
+
+  const checkpointCountNum = useMemo(() => {
+    const raw = String(stats.checkpoints || "0").split('/')[0];
+    return parseInt(raw.trim(), 10) || 0;
+  }, [stats.checkpoints]);
+
+  const exploredPercentage = Math.min(100, checkpointCountNum * 10);
+  const displayRank = stats.teamRank && stats.teamRank !== "UNRANKED" ? stats.teamRank : stats.rankNumber;
+
   // Field updater
   const update = (key, value) => {
     setProfile((current) => ({ ...current, [key]: value }));
@@ -313,28 +329,28 @@ export default function UserProfilePage() {
 
       {/* Top Navbar */}
       <header className="htg-up-navbar">
-        <Link className="htg-up-brand" to={ROUTES.HOME}>
+        <Link className="htg-up-brand" to={ROUTES.HOME} aria-label="The Tech Mystery home">
           <span className="htg-up-brand-mark">H</span>
-          <span>
-            THE TECH MYSTERY<small>PARTICIPANT PORTAL</small>
+          <span className="htg-up-brand-text">
+            THE TECH MYSTERY<small className="htg-up-brand-sub">PARTICIPANT PORTAL</small>
           </span>
         </Link>
 
-        <nav className="htg-up-nav">
+        <nav className="htg-up-nav" aria-label="Participant primary navigation">
           <Link to={ROUTES.HOME}>Home</Link>
           <Link to={ROUTES.CHALLENGES}>Challenges</Link>
           <Link to={ROUTES.LEADERBOARD}>Leaderboard</Link>
           <Link to={ROUTES.RULES}>Rules</Link>
-          <Link to={ROUTES.TEAM_PROFILE}>Team</Link>
+          <Link to={ROUTES.PORTAL_DASHBOARD}>Team</Link>
           <Link to={ROUTES.PROFILE} className="active">Profile</Link>
         </nav>
 
         <div className="htg-up-nav-right">
-          {/* Data source indicator */}
+          {/* Data source indicator (desktop/tablet) */}
           <span className="htg-up-data-pill live"><i /> LIVE DATABASE</span>
 
           <span className="htg-up-live">
-            <i /> EVENT LIVE
+            <i /> <span className="htg-up-live-text">EVENT LIVE</span>
           </span>
 
           {/* User mini avatar button with dropdown */}
@@ -344,6 +360,7 @@ export default function UserProfilePage() {
             onClick={() => setAvatarMenu(!avatarMenu)}
             title="User menu"
             aria-label="User menu"
+            aria-expanded={avatarMenu}
           >
             {profile.avatar ? (
               <img
@@ -358,9 +375,9 @@ export default function UserProfilePage() {
 
           {avatarMenu && (
             <div className="htg-up-avatar-pop">
-              <strong>{profile.fullName}</strong>
+              <strong>{profile.fullName || profile.username || "Operative"}</strong>
               <small style={{ color: "#7f8a7d", padding: "0 5px 6px", display: "block", fontSize: "9px" }}>
-                @{profile.username}
+                @{profile.username || "user"}
               </small>
               <button
                 type="button"
@@ -385,7 +402,7 @@ export default function UserProfilePage() {
                 type="button"
                 onClick={() => {
                   setAvatarMenu(false);
-                  navigate(ROUTES.TEAM_PROFILE);
+                  navigate(ROUTES.PORTAL_DASHBOARD);
                 }}
               >
                 Team dashboard
@@ -403,8 +420,9 @@ export default function UserProfilePage() {
           {/* Mobile navigation toggle */}
           <button
             type="button"
-            className="htg-up-mobile-toggle"
-            aria-label="Toggle navigation drawer"
+            className={`htg-up-mobile-toggle ${mobileNavOpen ? "is-open" : ""}`}
+            aria-label={mobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileNavOpen}
             onClick={() => setMobileNavOpen((prev) => !prev)}
           >
             {mobileNavOpen ? "✕" : "☰"}
@@ -412,31 +430,47 @@ export default function UserProfilePage() {
         </div>
       </header>
 
-      {/* Mobile Drawer */}
-      <div className={`htg-up-mobile-drawer ${mobileNavOpen ? "open" : ""}`}>
+      {/* Mobile Drawer Backdrop Scrim */}
+      {mobileNavOpen && (
+        <div
+          className="htg-up-mobile-scrim"
+          aria-hidden="true"
+          onClick={() => setMobileNavOpen(false)}
+        />
+      )}
+
+      {/* Mobile Navigation Drawer */}
+      <div className={`htg-up-mobile-drawer ${mobileNavOpen ? "open" : ""}`} role="dialog" aria-modal="true" aria-label="Navigation Menu">
+        <div className="htg-up-drawer-telemetry">
+          <span className="htg-up-data-pill live"><i /> LIVE DATABASE</span>
+          <span className="htg-up-live"><i /> EVENT LIVE</span>
+        </div>
         <Link to={ROUTES.HOME} onClick={() => setMobileNavOpen(false)}>Home</Link>
-        <Link to={ROUTES.CHALLENGES} onClick={() => setMobileNavOpen(false)}>Challenges</Link>
-        <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileNavOpen(false)}>Leaderboard</Link>
-        <Link to={ROUTES.RULES} onClick={() => setMobileNavOpen(false)}>Rules</Link>
-        <Link to={ROUTES.TEAM_PROFILE} onClick={() => setMobileNavOpen(false)}>Team</Link>
-        <Link to={ROUTES.PROFILE} className="active" onClick={() => setMobileNavOpen(false)}>Profile</Link>
+        <Link to={ROUTES.PORTAL_DASHBOARD} onClick={() => setMobileNavOpen(false)}>Mission Dashboard</Link>
+        <Link to={ROUTES.CHALLENGES} onClick={() => setMobileNavOpen(false)}>Challenges (Mission Map)</Link>
+        <Link to={ROUTES.QR_CHECKPOINT} onClick={() => setMobileNavOpen(false)}>QR Checkpoint Scanner</Link>
+        <Link to={ROUTES.LEADERBOARD} onClick={() => setMobileNavOpen(false)}>Live Leaderboard</Link>
+        <Link to={ROUTES.RULES} onClick={() => setMobileNavOpen(false)}>Rules &amp; Regulations</Link>
+        <Link to={ROUTES.PROFILE} className="active" onClick={() => setMobileNavOpen(false)}>My Profile</Link>
         <button
           type="button"
           onClick={() => {
             setMobileNavOpen(false);
             setSecurityModalOpen(true);
           }}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#9aa49a",
-            textAlign: "left",
-            padding: "8px 0",
-            fontSize: "12px",
-            fontFamily: "inherit"
-          }}
+          className="htg-up-drawer-action"
         >
-          Security settings
+          Account Security
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMobileNavOpen(false);
+            handleSignOut();
+          }}
+          className="htg-up-drawer-action signout"
+        >
+          Sign Out
         </button>
       </div>
 
@@ -519,20 +553,40 @@ export default function UserProfilePage() {
 
           <div className="htg-up-hero-rank">
             <span>CURRENT RANK</span>
-            <strong>{stats.rankNumber}</strong>
+            <strong>{displayRank}</strong>
             <small>{stats.rankPercentile}</small>
             <div className="htg-up-rank-bar">
-              <span />
+              <span style={{ width: `${Math.min(100, Math.max(8, (solvedCountNum / 10) * 100))}%` }} />
             </div>
           </div>
         </section>
 
         {/* Quick Stats Grid */}
         <section className="htg-up-stat-grid">
-          <ProfileStat icon="⚑" label="Total XP" value={stats.totalXp} note="+230 this session" />
-          <ProfileStat icon="⌘" label="Challenges solved" value={stats.challengesSolved} note="2 levels remaining" />
-          <ProfileStat icon="▣" label="Checkpoints" value={stats.checkpoints} note="40% explored" />
-          <ProfileStat icon="♙" label="Team contribution" value={stats.contribution} note="Of team XP" />
+          <ProfileStat
+            icon="⚑"
+            label="Total XP"
+            value={`${stats.totalXp} PTS`}
+            note="Verified squad telemetry"
+          />
+          <ProfileStat
+            icon="⌘"
+            label="Challenges solved"
+            value={`${String(solvedCountNum).padStart(2, '0')} / 10`}
+            note={`${remainingLevelsCount} ${remainingLevelsCount === 1 ? 'level' : 'levels'} remaining`}
+          />
+          <ProfileStat
+            icon="▣"
+            label="Checkpoints"
+            value={`${String(checkpointCountNum).padStart(2, '0')} / 10`}
+            note={`${exploredPercentage}% of grid explored`}
+          />
+          <ProfileStat
+            icon="♙"
+            label="Team contribution"
+            value={stats.contribution || "0%"}
+            note="Of squad bounty"
+          />
         </section>
 
         {/* 2-Column Content Grid */}

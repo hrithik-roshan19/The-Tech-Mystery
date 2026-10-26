@@ -1,5 +1,5 @@
 import { it, expect, vi, afterEach } from 'vitest';
-import api, { setSessionTokenGetter, isClerkMode, getNormalizedApiBaseUrl } from './api';
+import api, { setSessionTokenGetter, isClerkMode, getNormalizedApiBaseUrl, clearApiCache } from './api';
 import { storage } from '../utils/storage';
 afterEach(() => { vi.unstubAllEnvs(); setSessionTokenGetter(null); storage.clearAll(); });
 const adapter = async config => ({ data: config.headers.Authorization, status: 200, statusText: 'OK', headers: {}, config });
@@ -59,3 +59,49 @@ it('eventService exports getEventStatus querying /event/status', async () => {
   const res = await api.get('/event/status', { adapter: urlAdapter });
   expect(res.data).toBe('/event/status');
 });
+
+it('transparently resolves HTTP 304 responses with cached JSON payload', async () => {
+  clearApiCache();
+  let callCount = 0;
+  const mockAdapter = async (config) => {
+    callCount++;
+    if (callCount === 1) {
+      return { data: { success: true, teams: ['Alpha', 'Beta'] }, status: 200, statusText: 'OK', headers: {}, config };
+    }
+    // Second call simulates server responding 304 Not Modified with empty string body
+    return { data: '', status: 304, statusText: 'Not Modified', headers: {}, config };
+  };
+
+  const res1 = await api.get('/teams/cached-test', { adapter: mockAdapter });
+  expect(res1.status).toBe(200);
+  expect(res1.data.teams).toEqual(['Alpha', 'Beta']);
+
+  const res2 = await api.get('/teams/cached-test', { adapter: mockAdapter });
+  expect(res2.status).toBe(200);
+  expect(res2.data.teams).toEqual(['Alpha', 'Beta']);
+});
+
+it('deduplicates concurrent sessionTokenGetter calls and caches token', async () => {
+  vi.stubEnv('VITE_AUTH_PROVIDER', 'clerk');
+  let tokenCallCount = 0;
+  setSessionTokenGetter(async () => {
+    tokenCallCount++;
+    await new Promise((r) => setTimeout(r, 10));
+    return 'deduped-token-123';
+  });
+
+  const authAdapter = async (config) => ({ data: config.headers.Authorization, status: 200, statusText: 'OK', headers: {}, config });
+
+  // Fire 3 simultaneous requests
+  const [r1, r2, r3] = await Promise.all([
+    api.get('/sim-1', { adapter: authAdapter }),
+    api.get('/sim-2', { adapter: authAdapter }),
+    api.get('/sim-3', { adapter: authAdapter }),
+  ]);
+
+  expect(tokenCallCount).toBe(1);
+  expect(r1.data).toBe('Bearer deduped-token-123');
+  expect(r2.data).toBe('Bearer deduped-token-123');
+  expect(r3.data).toBe('Bearer deduped-token-123');
+});
+

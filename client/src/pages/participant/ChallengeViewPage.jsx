@@ -796,7 +796,7 @@ export const ChallengeViewPage = () => {
               <p className="text-[11px] uppercase tracking-wider text-cyber-muted mb-2 font-bold">
                 PROBLEM STATEMENT:
               </p>
-              <div className="text-cyber-text whitespace-pre-wrap leading-relaxed bg-black/40 p-4 border border-cyber-border rounded-none">
+              <div className="text-cyber-text whitespace-pre-wrap break-words leading-relaxed bg-black/40 p-4 border border-cyber-border rounded-none overflow-x-auto">
                 {question.prompt || 'No question prompt available.'}
               </div>
             </div>
@@ -804,7 +804,7 @@ export const ChallengeViewPage = () => {
             {question.instructions && (
               <div className="bg-cyber-panel/40 border-l-2 border-cyber-cyan p-3.5 text-xs text-cyber-muted">
                 <span className="font-bold text-cyber-cyan uppercase block mb-1">INSTRUCTIONS / CONSTRAINTS:</span>
-                <p className="whitespace-pre-wrap">{question.instructions}</p>
+                <p className="whitespace-pre-wrap break-words">{question.instructions}</p>
               </div>
             )}
 

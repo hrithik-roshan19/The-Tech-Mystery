@@ -160,7 +160,7 @@ async function main() {
   // 4. Target Admin Record Verification
   const adminUser = await User.findOne({ username: ADMIN_USERNAME }).select('+passwordHash +clerkUserId +tokenVersion');
   if (!adminUser) {
-    throw new Error(`Target admin account '${ADMIN_USERNAME}' was not found in database '${dbName}'`);
+    throw new Error(`Target admin account '${ADMIN_USERNAME}' was not found in database '${dbName}'. To provision a new admin account, use: node server/scripts/provision-admin.js <clerkId> [--dry-run | --confirm]`);
   }
 
   if (adminUser.role !== 'ADMIN') {

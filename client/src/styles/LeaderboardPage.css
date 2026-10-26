@@ -654,6 +654,123 @@
   border-radius: 8px;
 }
 
+.htg-lb-mobile-cards {
+  display: none;
+}
+
+.htg-lb-mobile-card {
+  background: var(--lb-surface);
+  border: 1px solid var(--lb-border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.htg-lb-mobile-card.my-team {
+  background: rgba(184, 255, 61, 0.06);
+  border-color: rgba(184, 255, 61, 0.35);
+  box-shadow: inset 3px 0 var(--lb-lime);
+}
+
+.htg-lb-mcard-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.htg-lb-mcard-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.htg-lb-mcard-names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.htg-lb-mcard-names strong {
+  font-size: 13px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.htg-lb-mcard-names strong em {
+  font-style: normal;
+  color: #0b1108;
+  background: var(--lb-lime);
+  font-size: 7.5px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-left: 5px;
+  font-weight: 800;
+}
+
+.htg-lb-mcard-names small {
+  font-size: 9.5px;
+  color: var(--lb-dim);
+}
+
+.htg-lb-mcard-score {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.htg-lb-mcard-score strong {
+  font-size: 15px;
+  color: var(--lb-lime);
+  font-family: 'DM Mono', monospace;
+}
+
+.htg-lb-mcard-score small {
+  display: block;
+  font-size: 8px;
+  color: var(--lb-muted);
+  letter-spacing: 0.5px;
+}
+
+.htg-lb-mcard-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 8px;
+}
+
+.htg-lb-mcard-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--lb-muted);
+}
+
+.htg-lb-mcard-activity {
+  font-size: 9.5px;
+  color: var(--lb-dim);
+}
+
+.htg-lb-side-badge.status-open {
+  background: rgba(255, 170, 0, 0.12);
+  border-color: rgba(255, 170, 0, 0.3);
+  color: #ffaa00;
+}
+
+.htg-lb-unregistered-note {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--lb-muted);
+}
+
 .htg-lb-table {
   width: 100%;
   border-collapse: collapse;
@@ -1243,9 +1360,34 @@
   }
 }
 
+@media (max-width: 768px) {
+  .htg-lb-table-wrap {
+    display: none;
+  }
+
+  .htg-lb-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
 @media (max-width: 520px) {
   .htg-lb-hero-panel {
     padding: 20px 16px;
+  }
+
+  .htg-lb-panel-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .htg-lb-live {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 8px;
+    padding: 6px 8px;
   }
 
   .htg-lb-hero-stats {
@@ -1268,6 +1410,7 @@
   .htg-lb-filters button {
     flex: 1;
     padding: 7px 6px;
+    font-size: 9px;
   }
 
   .htg-lb-sort {
@@ -1279,6 +1422,41 @@
     font-size: 8px;
     flex-direction: column;
     gap: 4px;
+  }
+
+  .htg-lb-podium-card,
+  .htg-lb-podium-card.place-1,
+  .htg-lb-podium-card.place-2,
+  .htg-lb-podium-card.place-3 {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .htg-lb-layout {
+    width: 100%;
+    padding: 0 6px;
+  }
+
+  .htg-lb-hero-panel {
+    padding: 14px 10px;
+  }
+
+  .htg-lb-main-panel {
+    padding: 14px 8px;
+  }
+
+  .htg-lb-side-card {
+    padding: 12px 8px;
+  }
+
+  .htg-lb-hero-title {
+    font-size: 24px;
+  }
+
+  .htg-lb-mcard-names strong {
+    font-size: 11.5px;
   }
 }
 

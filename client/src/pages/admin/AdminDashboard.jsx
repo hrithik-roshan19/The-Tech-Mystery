@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import AdminSidebar from "../../components/navigation/AdminSidebar";
 import { ROUTES } from "../../constants/routes";
 import { adminService } from "../../services/admin.service";
+import { ErrorBoundary } from "../../components/common/ErrorBoundary";
 import "../../styles/AdminDashboard.css";
 
-export default function AdminDashboard() {
+export function AdminDashboard() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All");
   const [menu, setMenu] = useState(false);
@@ -89,9 +90,9 @@ export default function AdminDashboard() {
         getSubsPromise,
       ]);
 
-      if (statsRes.status === "fulfilled" && statsRes.value?.data) {
-        const d = statsRes.value.data;
-        if (d.stats) {
+      if (statsRes.status === "fulfilled" && statsRes.value) {
+        const d = statsRes.value?.data || statsRes.value;
+        if (d?.stats) {
           setStats((prev) => ({
             ...prev,
             ...d.stats,
@@ -99,32 +100,39 @@ export default function AdminDashboard() {
             recentActivity: Array.isArray(d.stats.recentActivity) ? d.stats.recentActivity : [],
           }));
         }
-        if (d.eventConfig || d.config) {
+        if (d?.eventConfig || d?.config) {
           setEventConfig(d.eventConfig || d.config);
         }
       } else if (statsRes.status === "rejected") {
         console.warn("Stats telemetry sync notice:", statsRes.reason);
       }
 
-      if (teamsRes.status === "fulfilled" && teamsRes.value?.data?.teams) {
-        const apiTeams = teamsRes.value.data.teams;
-        setTeams(
-          apiTeams.map((t) => [
-            t.name || "Unnamed Team",
-            t.joinCode || String(t._id).slice(-6).toUpperCase(),
-            t.members?.length || 0,
-            t.totalScore || 0,
-            Math.max(0, (t.currentLevel || 1) - 1),
-            t.isDisqualified ? "Disqualified" : "Active",
-            t._id,
-          ])
-        );
+      if (teamsRes.status === "fulfilled" && teamsRes.value) {
+        const tData = teamsRes.value?.data || teamsRes.value;
+        const apiTeams = Array.isArray(tData?.teams) ? tData.teams : Array.isArray(tData) ? tData : [];
+        if (apiTeams.length > 0 || Array.isArray(tData?.teams)) {
+          setTeams(
+            apiTeams.map((t) => [
+              t?.name || "Unnamed Team",
+              t?.joinCode || (t?._id ? String(t._id).slice(-6).toUpperCase() : "------"),
+              Array.isArray(t?.members) ? t.members.length : (Number(t?.members) || 0),
+              Number(t?.totalScore) || 0,
+              Math.max(0, (Number(t?.currentLevel) || 1) - 1),
+              t?.isDisqualified ? "Disqualified" : "Active",
+              t?._id || "",
+            ])
+          );
+        }
       } else if (teamsRes.status === "rejected") {
         console.warn("Teams telemetry sync notice:", teamsRes.reason);
       }
 
-      if (subsRes.status === "fulfilled" && subsRes.value?.data?.submissions) {
-        setRecentSubmissions(subsRes.value.data.submissions);
+      if (subsRes.status === "fulfilled" && subsRes.value) {
+        const sData = subsRes.value?.data || subsRes.value;
+        const apiSubs = Array.isArray(sData?.submissions) ? sData.submissions : Array.isArray(sData) ? sData : [];
+        if (apiSubs.length > 0 || Array.isArray(sData?.submissions)) {
+          setRecentSubmissions(apiSubs);
+        }
       } else if (subsRes.status === "rejected") {
         console.warn("Submissions telemetry sync notice:", subsRes.reason);
       }
@@ -233,6 +241,42 @@ export default function AdminDashboard() {
               <small>{eventStateSubtitle}</small>
             </div>
           </section>
+
+          {loading && stats.totalTeams === 0 && !error && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "28px 20px",
+                margin: "12px 0 20px",
+                background: "rgba(5, 12, 13, 0.7)",
+                border: "1px solid rgba(184, 255, 61, 0.25)",
+                borderRadius: "10px",
+                color: "#e8f7c9",
+                fontFamily: "monospace",
+                gap: "10px",
+              }}
+            >
+              <div
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  border: "2px solid rgba(184, 255, 61, 0.2)",
+                  borderTopColor: "var(--htg-lime, #b8ff3d)",
+                  borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                }}
+              />
+              <span style={{ fontSize: "12px", letterSpacing: "1.2px", fontWeight: "700" }}>
+                SYNCHRONIZING SOC COMMAND TELEMETRY...
+              </span>
+              <small style={{ color: "#8a968c", fontSize: "11px" }}>
+                Connecting to authoritative database and event controls
+              </small>
+            </div>
+          )}
 
           {notice && (
             <div className="ad-notice">
@@ -366,10 +410,10 @@ export default function AdminDashboard() {
                   <h2>Level progress</h2>
                 </div>
                 <b className="ad-level-percent">
-                  {stats.totalTeams > 0
+                  {stats.totalTeams > 0 && Array.isArray(stats.levelProgress) && stats.levelProgress.length > 0
                     ? `${Math.round(
-                        (stats.levelProgress.reduce((acc, curr) => acc + (curr[1] || 0), 0) /
-                          (stats.levelProgress.length * 100)) *
+                        (stats.levelProgress.reduce((acc, curr) => acc + (Array.isArray(curr) ? (Number(curr[1]) || 0) : 0), 0) /
+                          Math.max(1, stats.levelProgress.length * 100)) *
                           100
                       )}%`
                     : "0%"}
@@ -378,21 +422,25 @@ export default function AdminDashboard() {
               <div className="ad-level-overview">
                 <div className="ad-ring" aria-label="Average level completion">
                   <span>
-                    {stats.totalTeams > 0
-                      ? `${stats.levelProgress.filter((p) => p[1] > 0).length}/10`
+                    {stats.totalTeams > 0 && Array.isArray(stats.levelProgress)
+                      ? `${stats.levelProgress.filter((p) => Array.isArray(p) && Number(p[1]) > 0).length}/10`
                       : "0/10"}
                   </span>
                 </div>
                 <div className="ad-level-rows">
-                  {(stats.levelProgress || []).slice(0, 5).map(([lvl, pct]) => (
-                    <div className="ad-level-row" key={lvl}>
-                      <span>{lvl}</span>
-                      <div>
-                        <i style={{ width: pct + "%" }} />
+                  {(Array.isArray(stats.levelProgress) ? stats.levelProgress : []).slice(0, 5).map((item, idx) => {
+                    const [lvl, pct] = Array.isArray(item) ? item : [`Level ${String(idx + 1).padStart(2, "0")}`, 0];
+                    const numPct = Number(pct) || 0;
+                    return (
+                      <div className="ad-level-row" key={lvl || idx}>
+                        <span>{lvl}</span>
+                        <div>
+                          <i style={{ width: `${Math.min(100, Math.max(0, numPct))}%` }} />
+                        </div>
+                        <small>{numPct}%</small>
                       </div>
-                      <small>{pct}%</small>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               <Link to={ROUTES.ADMIN_CHALLENGES} className="ad-level-link">
@@ -484,26 +532,36 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((t) => (
-                      <tr key={t[6] || t[1]}>
-                        <td>
-                          <i className="ad-team-mark">{t[0][0]}</i>
-                          <b>{t[0]}</b>
-                        </td>
-                        <td>{t[1]}</td>
-                        <td>{t[4]}/10</td>
-                        <td className="ad-points">{t[3].toLocaleString()}</td>
-                        <td>
-                          <span
-                            className={`ad-status ${
-                              t[5] === "Disqualified" ? "review" : ""
-                            }`}
-                          >
-                            {t[5]}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {filtered.map((t, idx) => {
+                      const teamName = String(t?.[0] || "Unnamed Team");
+                      const initial = teamName.trim().charAt(0).toUpperCase() || "T";
+                      const joinCode = String(t?.[1] || "TEAM-??");
+                      const scoreFormatted = Number(t?.[3] || 0).toLocaleString();
+                      const currentLvl = Math.max(0, Number(t?.[4]) || 0);
+                      const statusLabel = String(t?.[5] || "Active");
+                      const rowKey = t?.[6] || joinCode || idx;
+
+                      return (
+                        <tr key={rowKey}>
+                          <td>
+                            <i className="ad-team-mark">{initial}</i>
+                            <b>{teamName}</b>
+                          </td>
+                          <td>{joinCode}</td>
+                          <td>{currentLvl}/10</td>
+                          <td className="ad-points">{scoreFormatted}</td>
+                          <td>
+                            <span
+                              className={`ad-status ${
+                                statusLabel === "Disqualified" ? "review" : ""
+                              }`}
+                            >
+                              {statusLabel}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
                 {!filtered.length && (
@@ -532,25 +590,33 @@ export default function AdminDashboard() {
                 <Link to={ROUTES.ADMIN_SUBMISSIONS}>View all ↗</Link>
               </div>
               <div className="ad-submission-list">
-                {recentSubmissions.length > 0 ? (
-                  recentSubmissions.map((s, i) => (
-                    <div className="ad-submission-row" key={s.id || s._id || i}>
-                      <span className="ad-sub-num">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <div>
-                        <b>{s.team || s.teamId?.name || "Team"}</b>
-                        <small>
-                          Level {s.level || s.levelNumber} · {s.submittedAt || "Recently"}
-                        </small>
+                {recentSubmissions && recentSubmissions.length > 0 ? (
+                  recentSubmissions.filter(Boolean).map((s, i) => {
+                    const resultText = s?.result || (s?.isCorrect ? "Correct" : "Incorrect");
+                    const resultClassModifier = String(resultText).toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+                    const teamName = s?.team || s?.teamId?.name || "Team";
+                    const lvl = s?.level ?? s?.levelNumber ?? "-";
+                    const timeStr = s?.submittedAt || s?.date || "Recently";
+
+                    return (
+                      <div className="ad-submission-row" key={s?.id || s?._id || i}>
+                        <span className="ad-sub-num">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <b>{teamName}</b>
+                          <small>
+                            Level {lvl} · {timeStr}
+                          </small>
+                        </div>
+                        <span
+                          className={`ad-result ad-result--${resultClassModifier}`}
+                        >
+                          {resultText}
+                        </span>
                       </div>
-                      <span
-                        className={`ad-result ad-result--${(s.result || (s.isCorrect ? "Correct" : "Incorrect")).toLowerCase()}`}
-                      >
-                        {s.result || (s.isCorrect ? "Correct" : "Incorrect")}
-                      </span>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div style={{ textAlign: "center", padding: "2rem 1rem", color: "#8a968c" }}>
                     <p style={{ margin: "0 0 6px", fontSize: "13px", color: "#f5f5f0" }}>No submissions yet.</p>
@@ -569,14 +635,14 @@ export default function AdminDashboard() {
                 <Link to={ROUTES.ADMIN_SECURITY_LOGS}>View logs ↗</Link>
               </div>
               <div className="ad-activity-list">
-                {stats.recentActivity.length > 0 ? (
-                  stats.recentActivity.map((a, idx) => (
-                    <div className="ad-activity" key={a.time + idx}>
-                      <i className={a.type === "success" ? "ok" : "info"} />
+                {Array.isArray(stats?.recentActivity) && stats.recentActivity.length > 0 ? (
+                  stats.recentActivity.filter(Boolean).map((a, idx) => (
+                    <div className="ad-activity" key={`${a?.time || "act"}-${idx}`}>
+                      <i className={a?.type === "success" ? "ok" : "info"} />
                       <div>
-                        <b>{a.title}</b>
-                        <p>{a.detail}</p>
-                        <small>{a.time}</small>
+                        <b>{a?.title || "Activity"}</b>
+                        <p>{a?.detail || ""}</p>
+                        <small>{a?.time || "Just now"}</small>
                       </div>
                     </div>
                   ))
@@ -642,5 +708,13 @@ export default function AdminDashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AdminDashboardWrapper(props) {
+  return (
+    <ErrorBoundary title="ADMIN DASHBOARD ANOMALY // RECOVERY ACTIVE">
+      <AdminDashboard {...props} />
+    </ErrorBoundary>
   );
 }

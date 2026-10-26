@@ -47,8 +47,9 @@ export default function AdminSidebar({
       adminService
         .getDashboardStats()
         .then((res) => {
-          if (isMounted && res?.data?.stats) {
-            setLiveStats(res.data.stats);
+          const statsObj = res?.data?.stats || res?.stats;
+          if (isMounted && statsObj) {
+            setLiveStats(statsObj);
           }
         })
         .catch(() => {

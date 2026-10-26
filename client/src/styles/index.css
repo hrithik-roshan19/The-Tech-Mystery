@@ -3,24 +3,49 @@
 @tailwind utilities;
 
 @layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   html {
     background-color: #05070A;
     color: #F5F7FA;
     overflow-x: clip;
     scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100vw;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     background-color: #05070A;
     color: #F5F7FA;
     overflow-x: clip;
+    width: 100%;
+    max-width: 100vw;
     margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   #root {
     min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
+    overflow-x: clip;
+  }
+
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  pre, code, kbd, samp {
+    max-width: 100%;
+    overflow-x: auto;
+    word-break: break-word;
   }
 
   /* Ensure in-page anchor targets clear the sticky navbar (72px + offset) */

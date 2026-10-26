@@ -2,7 +2,26 @@ import axios from 'axios';
 import { storage } from '../utils/storage';
 
 let sessionTokenGetter = null;
-export const setSessionTokenGetter = getter => { sessionTokenGetter = getter; };
+let inflightTokenPromise = null;
+let cachedSessionToken = null;
+let tokenExpiresAt = 0;
+
+export const setSessionTokenGetter = (getter) => {
+  sessionTokenGetter = getter;
+  if (!getter) {
+    cachedSessionToken = null;
+    tokenExpiresAt = 0;
+    inflightTokenPromise = null;
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('htg:unauthorized', () => {
+    cachedSessionToken = null;
+    tokenExpiresAt = 0;
+    inflightTokenPromise = null;
+  });
+}
 
 /**
  * Determine if Clerk authentication is active.
@@ -27,13 +46,117 @@ export const getNormalizedApiBaseUrl = (raw) => {
 
 const API_BASE_URL = getNormalizedApiBaseUrl();
 
+// In-memory cache for GET responses to support HTTP 304 Not Modified transparently
+const responseCache = new Map();
+
+export const clearApiCache = () => {
+  responseCache.clear();
+};
+
+const getCacheKey = (config) => {
+  if (!config) return null;
+  const method = (config.method || 'get').toLowerCase();
+  if (method !== 'get') return null;
+  const url = config.url || '';
+  const paramsStr = config.params ? JSON.stringify(config.params) : '';
+  return `htg_api_cache:${url}:${paramsStr}`;
+};
+
+const getFromCache = (cacheKey) => {
+  if (!cacheKey) return null;
+  if (responseCache.has(cacheKey)) {
+    return responseCache.get(cacheKey);
+  }
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      const raw = window.sessionStorage.getItem(cacheKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        responseCache.set(cacheKey, parsed);
+        return parsed;
+      }
+    } catch {
+      // ignore storage access errors
+    }
+  }
+  return null;
+};
+
+const saveToCache = (cacheKey, data) => {
+  if (!cacheKey || data === undefined || data === null || data === '') return;
+  responseCache.set(cacheKey, data);
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      window.sessionStorage.setItem(cacheKey, JSON.stringify(data));
+    } catch {
+      // ignore storage quota errors
+    }
+  }
+};
+
+const isDataEmpty = (data) => {
+  if (data === undefined || data === null || data === '') return true;
+  if (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0) return true;
+  return false;
+};
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: 10000,
+  validateStatus: (status) => (status >= 200 && status < 300) || status === 304,
 });
+
+/**
+ * Safely acquire the session token:
+ * - Deduplicates concurrent calls to sessionTokenGetter()
+ * - Enforces a 4-second safety timeout so requests never hang in the interceptor
+ * - Caches the token for 30s in memory to avoid Clerk /tokens rate limits
+ */
+const getSafeToken = async () => {
+  if (!isClerkMode()) {
+    return storage.getToken();
+  }
+  if (!sessionTokenGetter || typeof sessionTokenGetter !== 'function') {
+    return null;
+  }
+
+  const now = Date.now();
+  if (cachedSessionToken && now < tokenExpiresAt) {
+    return cachedSessionToken;
+  }
+
+  if (inflightTokenPromise) {
+    return inflightTokenPromise;
+  }
+
+  inflightTokenPromise = (async () => {
+    try {
+      const tokenPromiseWithTimeout = Promise.race([
+        sessionTokenGetter(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Clerk session token acquisition timed out (4000ms)')), 4000)
+        ),
+      ]);
+      const token = await tokenPromiseWithTimeout;
+      if (token && typeof token === 'string' && token !== 'null' && token !== 'undefined') {
+        cachedSessionToken = token;
+        tokenExpiresAt = Date.now() + 30000;
+        return token;
+      }
+      return null;
+    } catch (err) {
+      console.warn('Session token acquisition warning:', err?.message || err);
+      return cachedSessionToken || null;
+    } finally {
+      inflightTokenPromise = null;
+    }
+  })();
+
+  return inflightTokenPromise;
+};
 
 // Request interceptor to attach token and prevent duplicate /api/v1 prefixes
 api.interceptors.request.use(
@@ -51,9 +174,7 @@ api.interceptors.request.use(
       }
     }
 
-    const token = isClerkMode()
-      ? await sessionTokenGetter?.()
-      : storage.getToken();
+    const token = await getSafeToken();
 
     if (token && typeof token === 'string' && token !== 'null' && token !== 'undefined' && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -63,12 +184,64 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle unauthenticated 401 responses
+// Response interceptor to handle cached 304s and unauthenticated 401 responses
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  async (response) => {
+    const cacheKey = getCacheKey(response.config);
+    if (cacheKey) {
+      if (response.status === 304) {
+        if (isDataEmpty(response.data)) {
+          const cached = getFromCache(cacheKey);
+          if (cached) {
+            response.data = cached;
+            response.status = 200;
+            return response;
+          }
+          // If no cached body exists, retry once with no-cache to force the full body
+          if (!response.config._retry304) {
+            response.config._retry304 = true;
+            response.config.headers = response.config.headers || {};
+            response.config.headers['Cache-Control'] = 'no-cache';
+            response.config.headers['Pragma'] = 'no-cache';
+            delete response.config.headers['If-None-Match'];
+            delete response.config.headers['if-none-match'];
+            return api.request(response.config);
+          }
+        }
+      } else if (response.status >= 200 && response.status < 300 && response.data) {
+        saveToCache(cacheKey, response.data);
+      }
+    }
+    return response;
+  },
+  async (error) => {
+    const config = error.config;
+    if (error.response && error.response.status === 304 && config) {
+      const cacheKey = getCacheKey(config);
+      const cached = getFromCache(cacheKey);
+      if (cached) {
+        return {
+          ...error.response,
+          status: 200,
+          statusText: 'OK (Cached 304)',
+          data: cached,
+        };
+      }
+      if (!config._retry304) {
+        config._retry304 = true;
+        config.headers = config.headers || {};
+        config.headers['Cache-Control'] = 'no-cache';
+        config.headers['Pragma'] = 'no-cache';
+        delete config.headers['If-None-Match'];
+        delete config.headers['if-none-match'];
+        return api.request(config);
+      }
+    }
+
     if (error.response && error.response.status === 401) {
-      // Clear token if expired or invalid (JWT mode only)
+      // Clear token if expired or invalid
+      cachedSessionToken = null;
+      tokenExpiresAt = 0;
       if (!isClerkMode()) storage.clearAll();
       window.dispatchEvent(new Event('htg:unauthorized'));
     }

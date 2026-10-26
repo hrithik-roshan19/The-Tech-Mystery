@@ -13,6 +13,8 @@ const isLocalOrTest = (req) => {
 /**
  * Standard API Rate Limiter
  * Guards general endpoints from scanning/scraping.
+ * Uses express-rate-limit standard validation which verifies safe proxy trust
+ * configured via app.set('trust proxy', config.trustProxy).
  */
 const apiLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
@@ -83,4 +85,3 @@ module.exports = {
   submissionLimiter,
   qrScanLimiter
 };
-

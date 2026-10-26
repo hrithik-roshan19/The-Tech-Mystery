@@ -18,6 +18,7 @@
 @media(max-width:850px){.htg-qr-navbar{padding:16px 22px;gap:17px}.htg-qr-navlinks{order:3;width:100%;justify-content:flex-start;overflow-x:auto;padding:8px 0 4px}.htg-qr-navlinks a{font-size:11px}.htg-qr-navlinks a.active:after{bottom:-6px}.htg-qr-layout{grid-template-columns:1fr;padding:25px 22px;gap:20px}.htg-qr-intro{padding:10px 0 0}.htg-qr-intro h1{font-size:clamp(54px,11vw,78px)}.htg-qr-stats{margin-top:28px}.htg-qr-quote{display:none}.htg-qr-center-column{grid-row:2}.htg-qr-right-column{grid-column:auto;grid-template-columns:1fr 1fr}.htg-qr-checkpoint-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:560px){.htg-qr-navbar{padding:14px 15px}.htg-qr-brand>span{font-size:19px}.htg-qr-brand small{font-size:8px;letter-spacing:1.3px}.htg-qr-nav-actions{gap:6px}.htg-qr-dashboard-link,.htg-qr-register-link{padding:11px 10px;font-size:9px}.htg-qr-layout{padding:19px 14px 26px}.htg-qr-eyebrow{font-size:11px}.htg-qr-intro h1{letter-spacing:-2.5px}.htg-qr-intro-copy{font-size:14px}.htg-qr-stats{gap:12px}.htg-qr-stat-icon{font-size:25px}.htg-qr-stats strong{font-size:17px}.htg-qr-stats small{font-size:8px}.htg-qr-scanner-panel{padding:20px 13px}.htg-qr-scanner-panel h2{font-size:31px}.htg-qr-panel-subtitle{font-size:12px}.htg-qr-scan-frame{min-height:270px}.htg-qr-checkpoint-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.htg-qr-checkpoint-card{padding:12px}.htg-qr-right-column{grid-template-columns:1fr}.htg-qr-how-panel{padding:19px 16px 0}.htg-qr-rules{margin:0 -16px;padding:18px 16px}.htg-qr-next-panel{padding:16px}.htg-qr-recent-panel{padding:17px 13px}}
 @media(max-width:360px){.htg-qr-navbar{gap:10px}.htg-qr-nav-actions{width:100%}.htg-qr-dashboard-link,.htg-qr-register-link{flex:1;text-align:center}.htg-qr-stats{flex-wrap:wrap}.htg-qr-stat-icon{font-size:22px}.htg-qr-stats>div{column-gap:6px}}
+@media(max-width:380px){.htg-qr-checkpoint-grid{grid-template-columns:1fr}.htg-qr-mode-tabs{flex-direction:column}.htg-qr-unlocked-actions{flex-direction:column}.htg-qr-proceed-btn,.htg-qr-secondary-btn{width:100%;text-align:center}}
 
 /* Live QR scanner */
 .htg-qr-scan-frame.camera-active{padding:28px 12px 18px;gap:10px}
@@ -31,7 +32,7 @@
 .htg-qr-error{color:#ffb8b8}
 .htg-qr-result{display:flex;flex-direction:column;gap:9px;margin-top:14px;padding:14px;border:1px solid rgba(184,255,61,.45);border-radius:10px;background:rgba(184,255,61,.06)}
 .htg-qr-result>strong{font-size:13px;color:var(--qr-lime)}
-.htg-qr-result code{display:block;max-height:100px;overflow:auto;overflow-wrap:anywhere;white-space:pre-wrap;font-size:11px;color:#eef4ee}
+.htg-qr-result code{display:block;max-height:100px;overflow:auto;overflow-wrap:anywhere;word-break: break-all;white-space:pre-wrap;font-size:11px;color:#eef4ee}
 .htg-qr-result small{font-size:11px;line-height:1.5;color:#c8d0ca}
 .htg-qr-result button{align-self:flex-start;border:0;background:transparent;color:var(--qr-lime);font-weight:700;cursor:pointer;padding:3px 0}
 .htg-qr-verify-btn{background:var(--qr-lime)!important;color:#11170b!important;padding:6px 14px!important;border-radius:6px!important;font-size:11px!important;font-weight:700!important}

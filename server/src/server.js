@@ -12,6 +12,11 @@ const logger = require('./utils/logger');
 
 const app = express();
 
+// Proxy Configuration for Render Reverse Proxy / Load Balancer
+if (config.trustProxy) {
+  app.set('trust proxy', config.trustProxy);
+}
+
 // 1. Security & Protection Middlewares
 app.use(helmet());
 app.use(

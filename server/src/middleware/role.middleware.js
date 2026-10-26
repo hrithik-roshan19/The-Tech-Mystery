@@ -1,5 +1,6 @@
 const { ROLES } = require('../constants/roles');
 const { forbidden, unauthorized } = require('../utils/apiResponse');
+const logger = require('../utils/logger');
 
 /**
  * Role-Based Access Control Middleware
@@ -12,6 +13,7 @@ const requireRole = (...allowedRoles) => {
     }
 
     if (!allowedRoles.includes(req.user.role)) {
+      logger.warn(`[Auth] Role authorization failed: user '${req.user.username}' (role: ${req.user.role}) attempted action requiring [${allowedRoles.join(', ')}] on ${req.method} ${req.originalUrl}`);
       return forbidden(res, `Forbidden: Requires one of [${allowedRoles.join(', ')}] permissions`);
     }
 
@@ -35,6 +37,7 @@ const requireTeamMembership = (req, res, next) => {
   }
 
   if (!req.user.teamId) {
+    logger.warn(`[Auth] Team membership required: user '${req.user.username}' attempted action requiring active team on ${req.method} ${req.originalUrl}`);
     return forbidden(res, 'Action requires active membership in a registered team');
   }
 

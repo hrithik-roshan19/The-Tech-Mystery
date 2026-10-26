@@ -21,6 +21,11 @@ const config = {
   port: parseInt(process.env.PORT, 10) || 5000,
   apiPrefix: process.env.API_PREFIX || '/api/v1',
   
+  // Proxy Trust Configuration (Single hop for Render / Reverse Proxy)
+  trustProxy: process.env.TRUST_PROXY !== undefined
+    ? (process.env.TRUST_PROXY === 'true' ? 1 : isNaN(Number(process.env.TRUST_PROXY)) ? process.env.TRUST_PROXY : Number(process.env.TRUST_PROXY))
+    : (process.env.NODE_ENV === 'production' ? 1 : false),
+  
   // Database
   mongodbUri: (process.env.MONGODB_URI && !process.env.MONGODB_URI.includes('example.mongodb.net') && !process.env.MONGODB_URI.includes('<password>'))
     ? process.env.MONGODB_URI
