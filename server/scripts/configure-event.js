@@ -31,7 +31,7 @@ async function main() {
   console.log('='.repeat(60));
   console.log(`[✓] Connected to MongoDB database: ${dbName}`);
 
-  let eventConfig = await EventConfig.findOne();
+  let eventConfig = await EventConfig.getSingleton({});
   if (!eventConfig) {
     console.log('[*] EventConfig singleton missing. Initializing baseline document in DRAFT state...');
     eventConfig = await EventConfig.create({});

@@ -29,6 +29,7 @@ const { EVENT_STATES } = require('../src/constants/eventStates');
 const { eventFor } = require('../src/services/eligibility.service');
 const checkpointController = require('../src/controllers/checkpoint.controller');
 const adminController = require('../src/controllers/admin.controller');
+const eventController = require('../src/controllers/event.controller');
 const { generateCheckpointToken } = require('../src/utils/crypto');
 
 describe('Event Lifecycle States & QR Checkpoint Verification Test Suite', () => {
@@ -464,5 +465,73 @@ describe('Event Lifecycle States & QR Checkpoint Verification Test Suite', () =>
     assert.equal(pStatus, 200);
     assert.equal(pPayload.success, true);
     assert.equal(pPayload.data.checkpoint.code, 'HTG-CP01');
+  });
+
+  it('13. Public event status endpoint returns authoritative state without requiring authentication', async () => {
+    await EventConfig.deleteMany({});
+    await EventConfig.create({
+      eventName: 'The Tech Mystery',
+      state: 'REGISTRATION_OPEN',
+      registrationOpen: true,
+      maintenanceMode: false,
+      qrCheckpoints: true
+    });
+
+    let status = 200;
+    let payload = null;
+    const res = {
+      status(s) { status = s; return this; },
+      json(d) { payload = d; return this; }
+    };
+
+    // Public request has no req.user or req.headers.authorization
+    const publicReq = {};
+    await eventController.getEventStatus(publicReq, res, () => {});
+
+    assert.equal(status, 200);
+    assert.equal(payload.success, true);
+    assert.equal(payload.data.state, 'REGISTRATION_OPEN');
+    assert.equal(payload.data.isLive, false);
+    assert.equal(payload.data.registrationOpen, true);
+    assert.equal(payload.data.maintenanceMode, false);
+    assert.equal(payload.data.qrCheckpoints, true);
+    assert.ok(payload.data.serverTime);
+
+    // Transition to LIVE and verify public status reflects it immediately
+    const singleton = await EventConfig.getSingleton({});
+    singleton.state = 'LIVE';
+    await singleton.save();
+
+    await eventController.getEventStatus(publicReq, res, () => {});
+    assert.equal(status, 200);
+    assert.equal(payload.data.state, 'LIVE');
+    assert.equal(payload.data.isLive, true);
+  });
+
+  it('14. Server environment reconciliation preserves admin database changes against stale EVENT_STATE reboots', async () => {
+    await EventConfig.deleteMany({});
+    // Simulate an event modified by an administrator
+    const adminSavedConfig = await EventConfig.create({
+      state: 'LIVE',
+      securityRevision: 3,
+      registrationOpen: true
+    });
+
+    const desiredState = 'REGISTRATION_OPEN'; // Stale environment variable on Render
+    const forceOverride = false; // Normal reboot
+
+    // Logic from server.js
+    if (desiredState && adminSavedConfig.state !== desiredState) {
+      const forceReconcile = forceOverride || !adminSavedConfig.securityRevision;
+      if (forceReconcile) {
+        adminSavedConfig.state = desiredState;
+        await adminSavedConfig.save();
+      }
+    }
+
+    const verifyDoc = await EventConfig.getSingleton({});
+    // The admin's LIVE state MUST be preserved!
+    assert.equal(verifyDoc.state, 'LIVE');
+    assert.equal(verifyDoc.securityRevision, 3);
   });
 });

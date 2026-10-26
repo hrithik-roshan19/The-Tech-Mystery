@@ -135,17 +135,21 @@ export default function EventControlPage() {
     setIsSaving(true);
     try {
       const res = await adminService.updateEventConfig({ state: targetState });
-      const updated = res?.data?.config || res?.data?.eventConfig;
+      const updated = res?.data?.config || res?.data?.eventConfig || res?.config || res?.eventConfig;
+      if (!updated && !res?.success) {
+        throw new Error(res?.message || "Server did not confirm state update");
+      }
+      const confirmedState = updated?.state || targetState;
       const displayStatus =
-        targetState === "LIVE"
+        confirmedState === "LIVE"
           ? "Live"
-          : targetState === "PAUSED"
+          : confirmedState === "PAUSED"
           ? "Paused"
-          : targetState === "CONCLUDED"
+          : confirmedState === "CONCLUDED"
           ? "Concluded"
-          : targetState === "REGISTRATION_OPEN"
+          : confirmedState === "REGISTRATION_OPEN"
           ? "Registration Open"
-          : targetState === "REGISTRATION_CLOSED"
+          : confirmedState === "REGISTRATION_CLOSED"
           ? "Registration Closed"
           : "Draft";
 
@@ -155,7 +159,7 @@ export default function EventControlPage() {
         maintenanceMode: updated?.maintenanceMode ?? curr.maintenanceMode,
       }));
       setIsLiveDb(true);
-      setNotice(`Event state successfully transitioned to ${targetState}.`);
+      setNotice(`Event state successfully transitioned to ${confirmedState} in live database.`);
       setSaved(true);
       fetchEventConfig(true);
     } catch (err) {
@@ -204,12 +208,14 @@ export default function EventControlPage() {
       };
 
       const res = await adminService.updateEventConfig(payload);
+      const updated = res?.data?.config || res?.data?.eventConfig || res?.config || res?.eventConfig;
+      if (!updated && !res?.success) {
+        throw new Error(res?.message || "Server did not save event configuration");
+      }
       setIsLiveDb(true);
       setNotice("Event configuration successfully persisted to live database.");
       setSaved(true);
-      if (res?.data?.config || res?.data?.eventConfig) {
-        fetchEventConfig(true);
-      }
+      fetchEventConfig(true);
     } catch (err) {
       setNotice(
         `Failed to save configuration: ${
@@ -309,11 +315,44 @@ export default function EventControlPage() {
             </button>
             <div className="htg-ec-breadcrumb">
               MISSION CONTROL <span>/</span> <b>EVENT CONTROL</b>
-              <span className="htg-ec-data-pill live">● LIVE DATABASE</span>
+              <span className={`htg-ec-data-pill ${isLiveDb ? "live" : "offline"}`}>
+                ● {isLiveDb ? "LIVE DATABASE" : "LOCAL DEMO MODE"}
+              </span>
             </div>
           </div>
           <div className="htg-ec-top-actions">
-            <span className="htg-ec-live-dot" /> LIVE EVENT <i />{" "}
+            <span
+              className={`htg-ec-live-dot ${settings.status === "Live" && !settings.maintenanceMode ? "live" : "inactive"}`}
+              style={{
+                background: settings.maintenanceMode
+                  ? "#ef4444"
+                  : settings.status === "Live"
+                  ? "#10b981"
+                  : settings.status === "Registration Open"
+                  ? "#3b82f6"
+                  : settings.status === "Registration Closed"
+                  ? "#eab308"
+                  : settings.status === "Paused"
+                  ? "#f97316"
+                  : "#64748b"
+              }}
+            />{" "}
+            <b>
+              {settings.maintenanceMode
+                ? "MAINTENANCE"
+                : settings.status === "Live"
+                ? "EVENT LIVE"
+                : settings.status === "Registration Open"
+                ? "REGISTRATION OPEN"
+                : settings.status === "Registration Closed"
+                ? "REGISTRATION CLOSED"
+                : settings.status === "Paused"
+                ? "EVENT PAUSED"
+                : settings.status === "Concluded"
+                ? "EVENT CONCLUDED"
+                : "EVENT DRAFT"}
+            </b>{" "}
+            <i />{" "}
             <button className="htg-ec-icon-button" aria-label="Notifications">
               ♧
             </button>

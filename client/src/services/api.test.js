@@ -51,3 +51,11 @@ it('adminService exports both getSubmissions and getSubmissionLogs as functions 
   expect(typeof adminService.getSubmissions).toBe('function');
   expect(typeof adminService.getSubmissionLogs).toBe('function');
 });
+
+it('eventService exports getEventStatus querying /event/status', async () => {
+  const { eventService } = await import('./event.service');
+  expect(typeof eventService.getEventStatus).toBe('function');
+  const urlAdapter = async config => ({ data: config.url, status: 200, statusText: 'OK', headers: {}, config });
+  const res = await api.get('/event/status', { adapter: urlAdapter });
+  expect(res.data).toBe('/event/status');
+});

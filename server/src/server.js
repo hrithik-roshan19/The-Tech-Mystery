@@ -74,15 +74,21 @@ const startServer = async () => {
       });
 
       if (desiredState && existingConfig.state !== desiredState) {
-        logger.info(`[Database] Reconciling EventConfig state: ${existingConfig.state} -> ${desiredState} from environment`);
-        existingConfig.state = desiredState;
-        if (desiredState === EVENT_STATES.REGISTRATION_OPEN) {
-          existingConfig.registrationOpen = true;
-        } else if (desiredState === EVENT_STATES.REGISTRATION_CLOSED) {
-          existingConfig.registrationOpen = false;
+        // Only force environment override if FORCE_EVENT_STATE is set or if document has never been modified by an admin
+        const forceReconcile = process.env.FORCE_EVENT_STATE === 'true' || !existingConfig.securityRevision;
+        if (forceReconcile) {
+          logger.info(`[Database] Reconciling EventConfig state: ${existingConfig.state} -> ${desiredState} from environment`);
+          existingConfig.state = desiredState;
+          if (desiredState === EVENT_STATES.REGISTRATION_OPEN) {
+            existingConfig.registrationOpen = true;
+          } else if (desiredState === EVENT_STATES.REGISTRATION_CLOSED) {
+            existingConfig.registrationOpen = false;
+          }
+          await existingConfig.save();
+          logger.info(`[Database] EventConfig state reconciled to ${desiredState}`);
+        } else {
+          logger.info(`[Database] Environment EVENT_STATE=${desiredState} detected, but authoritative database state '${existingConfig.state}' (securityRevision: ${existingConfig.securityRevision}) takes precedence.`);
         }
-        await existingConfig.save();
-        logger.info(`[Database] EventConfig state reconciled to ${desiredState}`);
       }
     } catch (configError) {
       logger.error(`[Database] EventConfig initialization error: ${configError.message}`);

@@ -1,5 +1,6 @@
 const express = require('express');
 const healthRoutes = require('./health.routes');
+const eventRoutes = require('./event.routes');
 const authRoutes = require('./auth.routes');
 const teamRoutes = require('./team.routes');
 const challengeRoutes = require('./challenge.routes');
@@ -11,6 +12,8 @@ const adminRoutes = require('./admin.routes');
 const router = express.Router();
 
 router.use('/health', healthRoutes);
+router.use('/event', eventRoutes);
+router.use('/event-status', eventRoutes);
 router.use('/auth', authRoutes);
 router.use('/teams', teamRoutes);
 router.use('/challenges', challengeRoutes);

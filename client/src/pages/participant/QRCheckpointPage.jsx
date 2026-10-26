@@ -5,6 +5,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { checkpointService } from "../../services/checkpoint.service";
 import { challengeService } from "../../services/challenge.service";
 import { teamService } from "../../services/team.service";
+import { eventService } from "../../services/event.service";
 import { ROUTES } from "../../constants/routes";
 import Navbar from "../../components/navigation/Navbar";
 import { ErrorBoundary } from "../../components/common/ErrorBoundary";
@@ -82,6 +83,8 @@ export function QRCheckpointPage() {
   const [submissionFlag, setSubmissionFlag] = useState("");
   const [submittingFlag, setSubmittingFlag] = useState(false);
   const [solveResult, setSolveResult] = useState(null);
+  const [checkingEventStatus, setCheckingEventStatus] = useState(false);
+  const [eventStatusFeedback, setEventStatusFeedback] = useState("");
 
   const [missionMap, setMissionMap] = useState([]);
 
@@ -435,6 +438,32 @@ export function QRCheckpointPage() {
     }
   }
 
+  // Handle checking live event lifecycle status directly
+  async function handleRecheckEventStatus() {
+    setCheckingEventStatus(true);
+    setEventStatusFeedback("");
+    try {
+      const res = await eventService.getEventStatus();
+      const statusData = res?.data;
+      if (statusData?.isLive) {
+        setEventStatusFeedback("✓ Event is now LIVE! Verifying checkpoint station...");
+        await handleVerifyWithServer();
+      } else if (statusData?.state === "REGISTRATION_OPEN") {
+        setEventStatusFeedback("Notice: Competition is still in REGISTRATION phase. Checkpoint scanning unlocks as soon as organizers transition the event to LIVE.");
+      } else if (statusData?.state === "PAUSED") {
+        setEventStatusFeedback("Notice: Competition is currently PAUSED by administrators. Checkpoint scanning will resume shortly.");
+      } else if (statusData?.maintenanceMode) {
+        setEventStatusFeedback("Notice: Event is currently undergoing maintenance. Checkpoint scanning will resume shortly.");
+      } else {
+        setEventStatusFeedback(`Current Event State: ${statusData?.state || "NOT LIVE"}. Gameplay unlocks when administrators start the live event.`);
+      }
+    } catch {
+      await handleVerifyWithServer();
+    } finally {
+      setCheckingEventStatus(false);
+    }
+  }
+
   // Handle manual code entry verification
   async function handleManualVerify(e) {
     if (e) e.preventDefault();
@@ -780,8 +809,8 @@ export function QRCheckpointPage() {
                     <span>Gameplay unlocks as soon as administrators transition the competition to LIVE state.</span>
                     <button
                       type="button"
-                      onClick={handleVerifyWithServer}
-                      disabled={verifying}
+                      onClick={handleRecheckEventStatus}
+                      disabled={checkingEventStatus || verifying}
                       style={{
                         background: "rgba(184, 255, 61, 0.1)",
                         border: "1px solid rgba(184, 255, 61, 0.4)",
@@ -793,8 +822,24 @@ export function QRCheckpointPage() {
                         fontWeight: 600
                       }}
                     >
-                      {verifying ? "Checking..." : "↻ Recheck Event Status"}
+                      {checkingEventStatus ? "Checking Event Status..." : "↻ Recheck Event Status"}
                     </button>
+                  </div>
+                )}
+                {eventStatusFeedback && (
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      padding: "6px 10px",
+                      borderRadius: "4px",
+                      fontSize: "11.5px",
+                      background: eventStatusFeedback.includes("LIVE") ? "rgba(16, 185, 129, 0.15)" : "rgba(59, 130, 246, 0.15)",
+                      border: eventStatusFeedback.includes("LIVE") ? "1px solid #10b981" : "1px solid rgba(59, 130, 246, 0.4)",
+                      color: eventStatusFeedback.includes("LIVE") ? "#34d399" : "#93c5fd",
+                      fontWeight: 500
+                    }}
+                  >
+                    ℹ {eventStatusFeedback}
                   </div>
                 )}
               </div>
