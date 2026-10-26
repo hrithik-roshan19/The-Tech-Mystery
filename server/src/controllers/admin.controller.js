@@ -203,8 +203,9 @@ class AdminController {
 
       const config = await EventConfig.getSingleton({});
       const minSize = Math.max(2, config?.minTeamSize || 2);
+      const memberIds = Array.isArray(team.members) ? team.members.map((m) => m?._id || m) : [];
       const activeMembers = await User.countDocuments({
-        _id: { $in: team.members },
+        _id: { $in: memberIds },
         teamId: team._id,
         isActive: true,
         role: { $in: ['TEAM_LEADER', 'TEAM_MEMBER'] }
@@ -234,7 +235,11 @@ class AdminController {
         timestamp: new Date()
       }).catch((err) => logger.warn(`Failed to write SecurityLog: ${err.message}`));
 
-      return success(res, { team }, `Team "${team.name}" has been approved and activated for gameplay`);
+      const updatedTeam = await Team.findById(teamId)
+        .populate('leaderId', 'username email fullName role collegeRollNo isActive')
+        .populate('members', 'username email fullName role collegeRollNo isActive');
+
+      return success(res, { team: updatedTeam }, `Team "${team.name}" has been approved and activated for gameplay`);
     } catch (error) {
       return next(error);
     }

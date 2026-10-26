@@ -50,10 +50,24 @@ function mapApiTeamToUi(team, index) {
     };
   });
 
-  const memberCount = mappedMembers.length || 1;
-  const derivedStatus = team.isDisqualified
-    ? "Disqualified"
-    : team.status || (memberCount < 2 ? "Pending" : "Active");
+  const memberCount = mappedMembers.length || 0;
+  const rawStatus = typeof team.status === "string" ? team.status.trim() : "";
+  const isDisqualified = Boolean(
+    team.isDisqualified ||
+    rawStatus.toLowerCase() === "disqualified"
+  );
+
+  let canonicalStatus = "Pending";
+  if (isDisqualified) {
+    canonicalStatus = "Disqualified";
+  } else if (rawStatus.toLowerCase() === "active") {
+    canonicalStatus = "Active";
+  } else if (rawStatus.toLowerCase() === "pending") {
+    canonicalStatus = "Pending";
+  } else {
+    // If no explicit status exists, unapproved squads remain Pending
+    canonicalStatus = "Pending";
+  }
 
   return {
     id: team._id || index + 1,
@@ -62,7 +76,8 @@ function mapApiTeamToUi(team, index) {
     name: team.name || `Team ${index + 1}`,
     college: team.college || "Tula's University",
     members: memberCount,
-    status: derivedStatus,
+    status: canonicalStatus,
+    isDisqualified,
     level: Number(team.currentLevel) || 1,
     score: Number(team.totalScore) || 0,
     registered: formatRegisteredDate(team.createdAt),
@@ -1230,17 +1245,51 @@ export const TeamManagementPage = () => {
                 ))}
               </section>
 
-              <section className="htg-detail-actions" style={{ flexWrap: "wrap" }}>
+              <section className="htg-detail-actions" style={{ flexWrap: "wrap", gap: "8px" }}>
                 {selectedTeam.status === "Pending" && !selectedTeam.isDisqualified && (
-                  <button
-                    type="button"
-                    className="htg-primary-button"
-                    style={{ background: "var(--htg-lime, #b8ff3d)", color: "#080b0a", fontWeight: "700" }}
-                    disabled={actionBusy}
-                    onClick={() => handleApproveTeam(selectedTeam)}
-                  >
-                    {actionBusy ? "Approving..." : "✓ Approve Team"}
-                  </button>
+                  selectedTeam.members >= 2 ? (
+                    <button
+                      type="button"
+                      className="htg-primary-button"
+                      style={{ background: "var(--htg-lime, #b8ff3d)", color: "#080b0a", fontWeight: "700" }}
+                      disabled={actionBusy}
+                      onClick={() => handleApproveTeam(selectedTeam)}
+                    >
+                      {actionBusy ? "Approving..." : "✓ Approve Team"}
+                    </button>
+                  ) : (
+                    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div
+                        className="htg-eligibility-notice"
+                        style={{
+                          padding: "8px 10px",
+                          background: "rgba(255, 187, 0, 0.12)",
+                          border: "1px solid rgba(255, 187, 0, 0.35)",
+                          borderRadius: "6px",
+                          color: "#ffd066",
+                          fontSize: "11px",
+                          lineHeight: "1.4",
+                        }}
+                      >
+                        ⚠ <strong>Approval requirement:</strong> Squad requires at least 2 members for gameplay approval (currently {selectedTeam.members} of 2). Add another operative to enable squad approval.
+                      </div>
+                      <button
+                        type="button"
+                        className="htg-primary-button"
+                        style={{
+                          background: "#242d26",
+                          color: "#8a968c",
+                          fontWeight: "700",
+                          cursor: "not-allowed",
+                          border: "1px solid #334436",
+                        }}
+                        disabled={true}
+                        title="Squad requires at least 2 members for approval"
+                      >
+                        ✓ Approve Team (Requires 2+ Members)
+                      </button>
+                    </div>
+                  )
                 )}
                 <button
                   type="button"

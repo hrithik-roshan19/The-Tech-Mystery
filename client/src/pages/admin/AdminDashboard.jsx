@@ -147,7 +147,11 @@ export function AdminDashboard() {
               Array.isArray(t?.members) ? t.members.length : (Number(t?.members) || 0),
               Number(t?.totalScore) || 0,
               Math.max(0, (Number(t?.currentLevel) || 1) - 1),
-              t?.isDisqualified ? "Disqualified" : "Active",
+              t?.isDisqualified
+                ? "Disqualified"
+                : (typeof t?.status === "string" && t.status.trim()
+                    ? (t.status.trim().charAt(0).toUpperCase() + t.status.trim().slice(1).toLowerCase())
+                    : "Pending"),
               t?._id || "",
             ])
           );

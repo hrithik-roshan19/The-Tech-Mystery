@@ -280,5 +280,269 @@ describe('Authenticated Team Registration & Member Persistence Flow', () => {
     await waitFor(() => {
       expect(fixture.approveTeamMock).toHaveBeenCalledWith('team_cyber_123');
     });
+
+    // After approval, team status badge should update to Active and Approve button should disappear
+    await waitFor(() => {
+      expect(screen.queryByText('✓ Approve Team')).toBeNull();
+    });
+  });
+
+  it('3. Regression: Pending team with 3 members (like Techbaaz) displays functional Approve Team button and transitions to Active', async () => {
+    const techbaazTeam = {
+      _id: 'team_techbaaz_999',
+      name: 'Techbaaz',
+      college: "Tula's University",
+      joinCode: 'TBZ-778899',
+      status: 'Pending',
+      currentLevel: 1,
+      totalScore: 0,
+      isDisqualified: false,
+      leaderId: {
+        _id: 'user_tbz_leader',
+        fullName: 'Techbaaz Leader',
+        email: 'tbz_leader@tulas.edu.in',
+        role: 'TEAM_LEADER',
+        isActive: true,
+      },
+      members: [
+        {
+          _id: 'user_tbz_leader',
+          fullName: 'Techbaaz Leader',
+          email: 'tbz_leader@tulas.edu.in',
+          role: 'TEAM_LEADER',
+          isActive: true,
+        },
+        {
+          _id: 'user_tbz_m2',
+          fullName: 'Operative Two',
+          email: 'op2@tulas.edu.in',
+          role: 'TEAM_MEMBER',
+          isActive: true,
+        },
+        {
+          _id: 'user_tbz_m3',
+          fullName: 'Operative Three',
+          email: 'op3@tulas.edu.in',
+          role: 'TEAM_MEMBER',
+          isActive: true,
+        },
+      ],
+    };
+
+    fixture.getAllTeamsMock.mockResolvedValueOnce({
+      success: true,
+      data: { teams: [techbaazTeam] },
+    });
+
+    fixture.approveTeamMock.mockResolvedValueOnce({
+      success: true,
+      message: 'Team "Techbaaz" has been approved and activated for gameplay',
+      data: {
+        team: {
+          ...techbaazTeam,
+          status: 'Active',
+        },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>
+    );
+
+    // Verify Techbaaz is rendered with Pending status and 3 members
+    const teamNameOccurrences = await screen.findAllByText('Techbaaz');
+    expect(teamNameOccurrences.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Team Members \(3\)/i)).toBeTruthy();
+
+    // The Approve Team button MUST be visible and functional for Techbaaz
+    const approveBtn = screen.getByText('✓ Approve Team');
+    expect(approveBtn).toBeTruthy();
+    expect(approveBtn.hasAttribute('disabled')).toBe(false);
+
+    // Click Approve Team
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    fireEvent.click(approveBtn);
+
+    await waitFor(() => {
+      expect(fixture.approveTeamMock).toHaveBeenCalledWith('team_techbaaz_999');
+    });
+
+    // UI updates to Active status and Approve button disappears
+    await waitFor(() => {
+      expect(screen.queryByText('✓ Approve Team')).toBeNull();
+    });
+    expect(screen.getAllByText('Active').length).toBeGreaterThan(0);
+  });
+
+  it('4. Pending undersized team (< 2 members) displays clear eligibility explanation and disabled button', async () => {
+    const soloTeam = {
+      _id: 'team_solo_111',
+      name: 'SoloSquad',
+      college: "Tula's University",
+      joinCode: 'SOLO-112233',
+      status: 'Pending',
+      currentLevel: 1,
+      totalScore: 0,
+      isDisqualified: false,
+      leaderId: {
+        _id: 'user_solo_1',
+        fullName: 'Solo Commander',
+        email: 'solo@tulas.edu.in',
+        role: 'TEAM_LEADER',
+        isActive: true,
+      },
+      members: [
+        {
+          _id: 'user_solo_1',
+          fullName: 'Solo Commander',
+          email: 'solo@tulas.edu.in',
+          role: 'TEAM_LEADER',
+          isActive: true,
+        },
+      ],
+    };
+
+    fixture.getAllTeamsMock.mockResolvedValueOnce({
+      success: true,
+      data: { teams: [soloTeam] },
+    });
+
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>
+    );
+
+    const soloNames = await screen.findAllByText('SoloSquad');
+    expect(soloNames.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Team Members \(1\)/i)).toBeTruthy();
+
+    // Must show clear eligibility explanation
+    expect(
+      screen.getByText(/Squad requires at least 2 members for gameplay approval \(currently 1 of 2\)/i)
+    ).toBeTruthy();
+
+    // Disabled button indicating the requirement
+    const disabledBtn = screen.getByText(/Approve Team \(Requires 2\+ Members\)/i);
+    expect(disabledBtn).toBeTruthy();
+    expect(disabledBtn.hasAttribute('disabled')).toBe(true);
+
+    // Clicking should NOT trigger approveTeamMock
+    fireEvent.click(disabledBtn);
+    expect(fixture.approveTeamMock).not.toHaveBeenCalled();
+  });
+
+  it('5. Active and Disqualified teams do not render the Approve Team action', async () => {
+    const activeTeam = {
+      _id: 'team_active_1',
+      name: 'ActiveSquad',
+      college: "Tula's University",
+      joinCode: 'ACT-111111',
+      status: 'Active',
+      currentLevel: 2,
+      totalScore: 100,
+      isDisqualified: false,
+      leaderId: { _id: 'u1', fullName: 'Leader 1', email: 'l1@tulas.edu.in', role: 'TEAM_LEADER', isActive: true },
+      members: [
+        { _id: 'u1', fullName: 'Leader 1', email: 'l1@tulas.edu.in', role: 'TEAM_LEADER', isActive: true },
+        { _id: 'u2', fullName: 'Member 2', email: 'm2@tulas.edu.in', role: 'TEAM_MEMBER', isActive: true },
+      ],
+    };
+
+    const disqTeam = {
+      _id: 'team_disq_2',
+      name: 'DisqualifiedSquad',
+      college: "Tula's University",
+      joinCode: 'DSQ-222222',
+      status: 'Disqualified',
+      isDisqualified: true,
+      currentLevel: 1,
+      totalScore: 0,
+      leaderId: { _id: 'u3', fullName: 'Leader 3', email: 'l3@tulas.edu.in', role: 'TEAM_LEADER', isActive: true },
+      members: [
+        { _id: 'u3', fullName: 'Leader 3', email: 'l3@tulas.edu.in', role: 'TEAM_LEADER', isActive: true },
+        { _id: 'u4', fullName: 'Member 4', email: 'm4@tulas.edu.in', role: 'TEAM_MEMBER', isActive: true },
+      ],
+    };
+
+    fixture.getAllTeamsMock.mockResolvedValueOnce({
+      success: true,
+      data: { teams: [activeTeam, disqTeam] },
+    });
+
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>
+    );
+
+    const activeNames = await screen.findAllByText('ActiveSquad');
+    expect(activeNames.length).toBeGreaterThan(0);
+    // For Active squad, Approve Team button MUST NOT be present
+    expect(screen.queryByText(/✓ Approve Team/i)).toBeNull();
+
+    // Select DisqualifiedSquad
+    const disqElements = screen.getAllByText('DisqualifiedSquad');
+    fireEvent.click(disqElements[0]);
+
+    // For Disqualified squad, Approve Team button MUST NOT be present
+    expect(screen.queryByText(/✓ Approve Team/i)).toBeNull();
+    // Restore button is shown instead
+    expect(screen.getByText('Restore Team')).toBeTruthy();
+  });
+
+  it('6. API failure displays visible error and preserves Pending status', async () => {
+    const pendingTeam = {
+      _id: 'team_fail_1',
+      name: 'FailSquad',
+      college: "Tula's University",
+      joinCode: 'FAIL-123456',
+      status: 'Pending',
+      currentLevel: 1,
+      totalScore: 0,
+      isDisqualified: false,
+      leaderId: { _id: 'u1', fullName: 'Leader 1', email: 'l1@tulas.edu.in', role: 'TEAM_LEADER', isActive: true },
+      members: [
+        { _id: 'u1', fullName: 'Leader 1', email: 'l1@tulas.edu.in', role: 'TEAM_LEADER', isActive: true },
+        { _id: 'u2', fullName: 'Member 2', email: 'm2@tulas.edu.in', role: 'TEAM_MEMBER', isActive: true },
+      ],
+    };
+
+    fixture.getAllTeamsMock.mockResolvedValueOnce({
+      success: true,
+      data: { teams: [pendingTeam] },
+    });
+
+    fixture.approveTeamMock.mockRejectedValueOnce({
+      response: {
+        data: {
+          success: false,
+          message: 'Server authorization expired. Admin re-authentication required.',
+        },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>
+    );
+
+    const failNames = await screen.findAllByText('FailSquad');
+    expect(failNames.length).toBeGreaterThan(0);
+    const approveBtn = screen.getByText('✓ Approve Team');
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    fireEvent.click(approveBtn);
+
+    // Visible error message must appear
+    expect(
+      await screen.findByText('Server authorization expired. Admin re-authentication required.')
+    ).toBeTruthy();
+
+    // Team status must NOT be falsely set to Active; Approve Team button must still be available
+    expect(screen.getByText('✓ Approve Team')).toBeTruthy();
   });
 });
