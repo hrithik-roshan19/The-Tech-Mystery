@@ -99,9 +99,14 @@ export function AuthProvider({ children }) {
   }
 
   // Derive proxyUrl:
-  // In production (pk_live_...) or if explicitly configured via VITE_CLERK_PROXY_URL, use the proxy route.
-  // In development (pk_test_...), leave undefined so localhost uses direct Clerk dev FAPI.
-  const proxyUrl = import.meta.env.VITE_CLERK_PROXY_URL || (key.startsWith('pk_live_') ? '/.__clerk' : undefined);
+  // In deployed environments (e.g. Vercel) or when using pk_live_, route through /.__clerk proxy.
+  // On local dev (localhost / 127.0.0.1) with pk_test_, leave undefined so it uses direct dev FAPI.
+  const isLocalDev = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '[::1]'
+  );
+  const proxyUrl = import.meta.env.VITE_CLERK_PROXY_URL || (!isLocalDev || key.startsWith('pk_live_') ? '/.__clerk' : undefined);
 
   return <ClerkProvider publishableKey={key} proxyUrl={proxyUrl} signInUrl="/login" signUpUrl="/register"
     signInForceRedirectUrl="/auth/complete" signUpForceRedirectUrl="/auth/complete">

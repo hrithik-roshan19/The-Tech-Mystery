@@ -197,16 +197,24 @@ api.interceptors.response.use(
             response.status = 200;
             return response;
           }
-          // If no cached body exists, retry once with no-cache to force the full body
+          // If no cached body exists, retry once with cache-busting to force the full body
           if (!response.config._retry304) {
             response.config._retry304 = true;
             response.config.headers = response.config.headers || {};
-            response.config.headers['Cache-Control'] = 'no-cache';
+            response.config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
             response.config.headers['Pragma'] = 'no-cache';
             delete response.config.headers['If-None-Match'];
             delete response.config.headers['if-none-match'];
+
+            // Cache-bust the URL so the native browser network stack bypasses disk ETag cache
+            const separator = response.config.url.includes('?') ? '&' : '?';
+            response.config.url = `${response.config.url}${separator}_t=${Date.now()}`;
+
             return api.request(response.config);
           }
+          const empty304Error = new Error('Cached 304 response with empty payload');
+          empty304Error.response = response;
+          return Promise.reject(empty304Error);
         }
       } else if (response.status >= 200 && response.status < 300 && response.data) {
         saveToCache(cacheKey, response.data);
@@ -230,10 +238,14 @@ api.interceptors.response.use(
       if (!config._retry304) {
         config._retry304 = true;
         config.headers = config.headers || {};
-        config.headers['Cache-Control'] = 'no-cache';
+        config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
         config.headers['Pragma'] = 'no-cache';
         delete config.headers['If-None-Match'];
         delete config.headers['if-none-match'];
+
+        const separator = config.url.includes('?') ? '&' : '?';
+        config.url = `${config.url}${separator}_t=${Date.now()}`;
+
         return api.request(config);
       }
     }

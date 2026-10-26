@@ -12,6 +12,9 @@ const logger = require('./utils/logger');
 
 const app = express();
 
+// Disable ETags for dynamic API responses to eliminate 304 Not Modified empty cache responses
+app.set('etag', false);
+
 // Proxy Configuration for Render Reverse Proxy / Load Balancer
 if (config.trustProxy) {
   app.set('trust proxy', config.trustProxy);
@@ -37,7 +40,13 @@ if (config.env !== 'test') {
   app.use(morgan(config.isProduction ? 'combined' : 'dev'));
 }
 
-// 4. Rate Limiting for all incoming API routes
+// 4. Rate Limiting and Cache Control for all incoming API routes
+app.use(config.apiPrefix, (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
 app.use(config.apiPrefix, apiLimiter);
 
 // 5. Mount Core API Routes

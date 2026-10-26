@@ -91,7 +91,8 @@ export function AdminDashboard() {
       ]);
 
       if (statsRes.status === "fulfilled" && statsRes.value) {
-        const d = statsRes.value?.data || statsRes.value;
+        const raw = statsRes.value;
+        const d = raw?.data?.data?.stats ? raw.data.data : raw?.data?.stats ? raw.data : raw?.stats ? raw : raw?.data || raw;
         if (d?.stats) {
           setStats((prev) => ({
             ...prev,
@@ -100,15 +101,17 @@ export function AdminDashboard() {
             recentActivity: Array.isArray(d.stats.recentActivity) ? d.stats.recentActivity : [],
           }));
         }
-        if (d?.eventConfig || d?.config) {
-          setEventConfig(d.eventConfig || d.config);
+        const cfg = d?.eventConfig || d?.config || raw?.data?.eventConfig || raw?.eventConfig;
+        if (cfg) {
+          setEventConfig(cfg);
         }
       } else if (statsRes.status === "rejected") {
         console.warn("Stats telemetry sync notice:", statsRes.reason);
       }
 
       if (teamsRes.status === "fulfilled" && teamsRes.value) {
-        const tData = teamsRes.value?.data || teamsRes.value;
+        const rawT = teamsRes.value;
+        const tData = rawT?.data?.teams ? rawT.data : rawT?.teams ? rawT : rawT?.data || rawT;
         const apiTeams = Array.isArray(tData?.teams) ? tData.teams : Array.isArray(tData) ? tData : [];
         if (apiTeams.length > 0 || Array.isArray(tData?.teams)) {
           setTeams(
@@ -128,7 +131,8 @@ export function AdminDashboard() {
       }
 
       if (subsRes.status === "fulfilled" && subsRes.value) {
-        const sData = subsRes.value?.data || subsRes.value;
+        const rawS = subsRes.value;
+        const sData = rawS?.data?.submissions ? rawS.data : rawS?.submissions ? rawS : rawS?.data || rawS;
         const apiSubs = Array.isArray(sData?.submissions) ? sData.submissions : Array.isArray(sData) ? sData : [];
         if (apiSubs.length > 0 || Array.isArray(sData?.submissions)) {
           setRecentSubmissions(apiSubs);
