@@ -4,12 +4,16 @@ const denied = message => Object.assign(new Error(message), { statusCode: 403 })
 async function eventFor(action) {
   // Write conflict with lifecycle edits prevents a concurrent pause/close from
   // being ignored by a transaction using an older snapshot.
-  const config = await EventConfig.findOneAndUpdate({}, { $inc: { securityRevision: 1 } }, { new: true });
+  const config = await EventConfig.findOneAndUpdate(
+    {},
+    { $inc: { securityRevision: 1 } },
+    { sort: { createdAt: 1 }, new: true }
+  );
   if (!config) {
     if (action === 'registration') {
       throw denied('Registration is currently closed');
     }
-    throw denied('Event must be LIVE for gameplay');
+    throw denied('Event must be LIVE for gameplay (no event configuration found)');
   }
   if (config.maintenanceMode) throw denied('Event is unavailable or in maintenance mode');
   if (action === 'registration') {
@@ -18,10 +22,33 @@ async function eventFor(action) {
     }
     if (config.registrationDeadline && new Date() > config.registrationDeadline) throw denied('Registration deadline has passed');
   } else {
-    if (config.state !== 'LIVE') throw denied('Event must be LIVE for gameplay');
-    if (config.startTime && new Date() < config.startTime) throw denied('Event has not started');
-    if (config.endTime && new Date() >= config.endTime) throw denied('Event has concluded');
-    if (action === 'scan' && !config.qrCheckpoints) throw denied('QR checkpoints are disabled');
+    if (config.state !== 'LIVE') {
+      if (config.state === 'PAUSED') {
+        throw denied('Event is currently paused by administrators. Checkpoint scanning and gameplay are temporarily suspended.');
+      }
+      if (config.state === 'REGISTRATION_OPEN') {
+        throw denied('Event is currently in registration phase. Gameplay and QR checkpoint scanning unlock when the event goes LIVE.');
+      }
+      if (config.state === 'REGISTRATION_CLOSED') {
+        throw denied('Event registration is closed and gameplay has not started yet. QR scanning unlocks when the event goes LIVE.');
+      }
+      if (config.state === 'DRAFT') {
+        throw denied('Event is in setup/draft mode. Gameplay has not started yet.');
+      }
+      if (config.state === 'CONCLUDED') {
+        throw denied('Event has concluded. Checkpoint scanning and submissions are closed.');
+      }
+      throw denied(`Event must be LIVE for gameplay (current status: ${config.state || 'INACTIVE'})`);
+    }
+    if (config.startTime && new Date() < config.startTime) {
+      throw denied(`Event has not started yet. Scheduled to begin at ${config.startTime.toISOString()}`);
+    }
+    if (config.endTime && new Date() >= config.endTime) {
+      throw denied(`Event has concluded at ${config.endTime.toISOString()}`);
+    }
+    if (action === 'scan' && !config.qrCheckpoints) {
+      throw denied('QR checkpoints are disabled');
+    }
   }
   return config;
 }

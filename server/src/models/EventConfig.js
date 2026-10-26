@@ -115,5 +115,19 @@ const eventConfigSchema = new mongoose.Schema(
   }
 );
 
+/**
+ * Singleton getter and duplicate cleanup
+ */
+eventConfigSchema.statics.getSingleton = async function(defaults = {}) {
+  let doc = await this.findOne().sort({ createdAt: 1 });
+  if (!doc) {
+    doc = await this.create(defaults);
+  } else {
+    // If multiple exist, clean up duplicates to preserve single authoritative record
+    await this.deleteMany({ _id: { $ne: doc._id } });
+  }
+  return doc;
+};
+
 const EventConfig = mongoose.model('EventConfig', eventConfigSchema);
 module.exports = EventConfig;

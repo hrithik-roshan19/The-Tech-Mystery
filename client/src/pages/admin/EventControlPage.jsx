@@ -9,9 +9,9 @@ import "../../styles/EventControlPage.css";
 const initialSettings = {
   eventName: "THE TECH MYSTERY",
   subtitle: "CodeSphere × UTKRISHT 2026",
-  status: "Live",
-  startDate: "2026-10-13T10:00",
-  endDate: "2026-10-13T16:00",
+  status: "Draft",
+  startDate: "",
+  endDate: "",
   duration: "120",
   maxTeams: "50",
   teamSizeMin: "2",
@@ -85,10 +85,10 @@ export default function EventControlPage() {
                 : "Draft",
             startDate: cfg.startTime
               ? new Date(cfg.startTime).toISOString().slice(0, 16)
-              : curr.startDate,
+              : "",
             endDate: cfg.endTime
               ? new Date(cfg.endTime).toISOString().slice(0, 16)
-              : curr.endDate,
+              : "",
             duration: String(cfg.duration || curr.duration),
             maxTeams: String(cfg.maxTeams || curr.maxTeams),
             teamSizeMin: String(cfg.minTeamSize || curr.teamSizeMin),
@@ -131,6 +131,44 @@ export default function EventControlPage() {
     setSaved(false);
   };
 
+  const handleQuickStateChange = async (targetState) => {
+    setIsSaving(true);
+    try {
+      const res = await adminService.updateEventConfig({ state: targetState });
+      const updated = res?.data?.config || res?.data?.eventConfig;
+      const displayStatus =
+        targetState === "LIVE"
+          ? "Live"
+          : targetState === "PAUSED"
+          ? "Paused"
+          : targetState === "CONCLUDED"
+          ? "Concluded"
+          : targetState === "REGISTRATION_OPEN"
+          ? "Registration Open"
+          : targetState === "REGISTRATION_CLOSED"
+          ? "Registration Closed"
+          : "Draft";
+
+      setSettings((curr) => ({
+        ...curr,
+        status: displayStatus,
+        maintenanceMode: updated?.maintenanceMode ?? curr.maintenanceMode,
+      }));
+      setIsLiveDb(true);
+      setNotice(`Event state successfully transitioned to ${targetState}.`);
+      setSaved(true);
+      fetchEventConfig(true);
+    } catch (err) {
+      setNotice(
+        `Failed to transition event state: ${
+          err?.response?.data?.message || err?.message || "Server error"
+        }`
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -160,17 +198,18 @@ export default function EventControlPage() {
             ? "REGISTRATION_OPEN"
             : settings.status === "Registration Closed"
             ? "REGISTRATION_CLOSED"
-            : Boolean(settings.registrationOpen)
-            ? "REGISTRATION_OPEN"
             : "DRAFT",
         startTime: settings.startDate ? new Date(settings.startDate) : null,
         endTime: settings.endDate ? new Date(settings.endDate) : null,
       };
 
-      await adminService.updateEventConfig(payload);
+      const res = await adminService.updateEventConfig(payload);
       setIsLiveDb(true);
       setNotice("Event configuration successfully persisted to live database.");
       setSaved(true);
+      if (res?.data?.config || res?.data?.eventConfig) {
+        fetchEventConfig(true);
+      }
     } catch (err) {
       setNotice(
         `Failed to save configuration: ${
@@ -295,6 +334,27 @@ export default function EventControlPage() {
             <span className={`htg-ec-status-pill ${statusClass}`}>
               <span /> {statusLabel}
             </span>
+            {settings.status === "Live" ? (
+              <button
+                type="button"
+                className="htg-ec-btn"
+                style={{ background: "#f59e0b", color: "#000", fontWeight: "bold" }}
+                disabled={isSaving}
+                onClick={() => handleQuickStateChange("PAUSED")}
+              >
+                ⏸ Pause Event
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="htg-ec-btn"
+                style={{ background: "#10b981", color: "#000", fontWeight: "bold" }}
+                disabled={isSaving}
+                onClick={() => handleQuickStateChange("LIVE")}
+              >
+                🚀 Make Event LIVE
+              </button>
+            )}
             <button
               type="button"
               className="htg-ec-btn primary"
@@ -356,11 +416,35 @@ export default function EventControlPage() {
           </div>
           <div className="htg-ec-banner-right">
             <span>EVENT STATE</span>
-            <strong>{settings.maintenanceMode ? "PAUSED" : "RUNNING"}</strong>
+            <strong style={{ color: settings.maintenanceMode ? "#ef4444" : (settings.status === "Live" ? "#10b981" : "#f59e0b") }}>
+              {settings.maintenanceMode
+                ? "MAINTENANCE"
+                : settings.status === "Live"
+                ? "LIVE"
+                : settings.status === "Paused"
+                ? "PAUSED"
+                : settings.status === "Registration Open"
+                ? "REGISTRATION OPEN"
+                : settings.status === "Registration Closed"
+                ? "REGISTRATION CLOSED"
+                : settings.status === "Concluded"
+                ? "CONCLUDED"
+                : "DRAFT"}
+            </strong>
             <small>
               {settings.maintenanceMode
-                ? "Participant actions are paused"
-                : "Participants can play now"}
+                ? "Participant actions are paused (maintenance mode active)"
+                : settings.status === "Live"
+                ? "Event is LIVE. Participants can scan checkpoints & play"
+                : settings.status === "Paused"
+                ? "Gameplay paused by administrators"
+                : settings.status === "Registration Open"
+                ? "Registration open; QR scanning begins when LIVE"
+                : settings.status === "Registration Closed"
+                ? "Registration closed; QR scanning begins when LIVE"
+                : settings.status === "Concluded"
+                ? "Competition finished; submissions closed"
+                : "Event is in draft/setup mode"}
             </small>
           </div>
         </section>
@@ -567,6 +651,29 @@ export default function EventControlPage() {
                   onChange={(e) => update("subtitle", e.target.value)}
                   placeholder="CodeSphere × UTKRISHT 2026"
                 />
+              </Field>
+              <Field label="Competition Lifecycle State">
+                <select
+                  value={settings.status}
+                  onChange={(e) => update("status", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    background: "#0c0f0c",
+                    border: "1px solid #252b25",
+                    borderRadius: "6px",
+                    color: settings.status === "Live" ? "#10b981" : "#eef4ec",
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: "13px"
+                  }}
+                >
+                  <option value="Live">🟢 LIVE — Active gameplay & QR scanning</option>
+                  <option value="Registration Open">🔵 REGISTRATION OPEN — Teams join, gameplay locked</option>
+                  <option value="Registration Closed">🟡 REGISTRATION CLOSED — Reg locked, gameplay locked</option>
+                  <option value="Paused">🟠 PAUSED — Temporarily suspended</option>
+                  <option value="Concluded">⚪ CONCLUDED — Event finished, read-only</option>
+                  <option value="Draft">⚪ DRAFT — Setup phase</option>
+                </select>
               </Field>
               <Field label="Start date & time">
                 <input

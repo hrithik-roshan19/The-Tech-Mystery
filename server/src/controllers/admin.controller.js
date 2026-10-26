@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const { Team, User, Challenge, Question, TeamChallenge, Submission, Checkpoint, EventConfig, SecurityLog } = require('../models');
 const { success, created, badRequest, notFound } = require('../utils/apiResponse');
 const { SUBMISSION_STATUS } = require('../constants/submissionStatus');
+const { EVENT_STATES } = require('../constants/eventStates');
 const teamService = require('../services/team.service');
 const logger = require('../utils/logger');
 
@@ -59,10 +60,7 @@ class AdminController {
         };
       });
 
-      let config = await EventConfig.findOne();
-      if (!config) {
-        config = await EventConfig.create({});
-      }
+      let config = await EventConfig.getSingleton({});
 
       return success(res, {
         stats: {
@@ -1677,8 +1675,15 @@ class AdminController {
         minTeamSize,
         maxTeamSize,
         state,
+        status,
+        lifecycleState,
+        isLive,
         maintenanceMode,
         isLeaderboardFrozen,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
         ..._otherFields
       } = req.body;
 
@@ -1698,57 +1703,132 @@ class AdminController {
         return badRequest(res, 'Maximum team size must be between 2 and 4');
       }
 
-      let config = await EventConfig.findOne();
+      // Normalize lifecycle state parameter across state, status, lifecycleState, and isLive
+      let resolvedState = undefined;
+      const rawState = state !== undefined
+        ? state
+        : (status !== undefined ? status : lifecycleState);
+
+      if (typeof rawState === 'string') {
+        const normalized = rawState.trim().toUpperCase().replace(/[\s-]+/g, '_');
+        if (normalized === 'LIVE') resolvedState = EVENT_STATES.LIVE;
+        else if (normalized === 'PAUSED') resolvedState = EVENT_STATES.PAUSED;
+        else if (normalized === 'CONCLUDED' || normalized === 'ENDED') resolvedState = EVENT_STATES.CONCLUDED;
+        else if (normalized === 'REGISTRATION_OPEN') resolvedState = EVENT_STATES.REGISTRATION_OPEN;
+        else if (normalized === 'REGISTRATION_CLOSED') resolvedState = EVENT_STATES.REGISTRATION_CLOSED;
+        else if (normalized === 'DRAFT') resolvedState = EVENT_STATES.DRAFT;
+        else if (Object.values(EVENT_STATES).includes(normalized)) resolvedState = normalized;
+        else {
+          return badRequest(res, `Invalid event state '${rawState}'. Valid states: ${Object.values(EVENT_STATES).join(', ')}`);
+        }
+      } else if (isLive !== undefined) {
+        resolvedState = Boolean(isLive) ? EVENT_STATES.LIVE : EVENT_STATES.PAUSED;
+      }
+
+      // Normalize schedule start and end dates (null/empty string clears restriction)
+      const rawStartTime = startTime !== undefined ? startTime : startDate;
+      let resolvedStartTime = undefined;
+      if (rawStartTime !== undefined) {
+        if (rawStartTime === null || rawStartTime === '' || rawStartTime === false) {
+          resolvedStartTime = null;
+        } else {
+          const d = new Date(rawStartTime);
+          if (isNaN(d.getTime())) return badRequest(res, 'Invalid start date format');
+          resolvedStartTime = d;
+        }
+      }
+
+      const rawEndTime = endTime !== undefined ? endTime : endDate;
+      let resolvedEndTime = undefined;
+      if (rawEndTime !== undefined) {
+        if (rawEndTime === null || rawEndTime === '' || rawEndTime === false) {
+          resolvedEndTime = null;
+        } else {
+          const d = new Date(rawEndTime);
+          if (isNaN(d.getTime())) return badRequest(res, 'Invalid end date format');
+          resolvedEndTime = d;
+        }
+      }
+
+      let config = await EventConfig.getSingleton({});
       if (Number(minTeamSize ?? config?.minTeamSize ?? 2) > Number(maxTeamSize ?? config?.maxTeamSize ?? 4)) {
         return badRequest(res, 'Minimum team size cannot exceed maximum team size');
       }
-      if (!config) {
-        config = await EventConfig.create(req.body);
-      } else {
-        // Audit logging for sensitive operations
-        const changedFields = [];
-        if (maintenanceMode !== undefined && config.maintenanceMode !== Boolean(maintenanceMode)) {
-          changedFields.push(`maintenanceMode: ${config.maintenanceMode} -> ${maintenanceMode}`);
-          logger.warn(`AUDIT: Maintenance mode set to ${maintenanceMode} by admin ${req.user?.username || 'Admin'}`);
-        }
-        if (state !== undefined && config.state !== state) {
-          changedFields.push(`state: ${config.state} -> ${state}`);
-          logger.info(`AUDIT: Event state transitioned to ${state} by admin ${req.user?.username || 'Admin'}`);
-        }
-        if (isLeaderboardFrozen !== undefined && config.isLeaderboardFrozen !== Boolean(isLeaderboardFrozen)) {
-          changedFields.push(`isLeaderboardFrozen: ${config.isLeaderboardFrozen} -> ${isLeaderboardFrozen}`);
-          logger.info(`AUDIT: Leaderboard freeze toggled to ${isLeaderboardFrozen} by admin ${req.user?.username || 'Admin'}`);
-        }
-        if (req.body.isLeaderboardVisible !== undefined && config.isLeaderboardVisible !== Boolean(req.body.isLeaderboardVisible)) {
-          changedFields.push(`isLeaderboardVisible: ${config.isLeaderboardVisible} -> ${req.body.isLeaderboardVisible}`);
-          logger.info(`AUDIT: Leaderboard visibility set to ${req.body.isLeaderboardVisible} by admin ${req.user?.username || 'Admin'}`);
-        }
-        if (req.body.registrationOpen !== undefined && config.registrationOpen !== Boolean(req.body.registrationOpen)) {
-          changedFields.push(`registrationOpen: ${config.registrationOpen} -> ${req.body.registrationOpen}`);
-          logger.info(`AUDIT: Registration open set to ${req.body.registrationOpen} by admin ${req.user?.username || 'Admin'}`);
-        }
 
-        if (changedFields.length > 0) {
-          const eventId = `EVT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-          await SecurityLog.create({
-            eventId,
-            severity: Boolean(maintenanceMode) || state === 'PAUSED' ? 'WARNING' : 'INFO',
-            category: 'CONFIGURATION',
-            event: 'Event configuration updated',
-            actor: req.user?.username || 'admin',
-            target: 'EventConfig',
-            source: req.ip || '127.0.0.1',
-            detail: changedFields.join('; '),
-            status: 'RECORDED',
-            timestamp: new Date()
-          }).catch((err) => logger.warn(`Failed to write SecurityLog: ${err.message}`));
-        }
+      // Audit logging for sensitive operations
+      const changedFields = [];
+      if (maintenanceMode !== undefined && config.maintenanceMode !== Boolean(maintenanceMode)) {
+        changedFields.push(`maintenanceMode: ${config.maintenanceMode} -> ${maintenanceMode}`);
+        logger.warn(`AUDIT: Maintenance mode set to ${maintenanceMode} by admin ${req.user?.username || 'Admin'}`);
+        config.maintenanceMode = Boolean(maintenanceMode);
+      }
+      if (resolvedState !== undefined && config.state !== resolvedState) {
+        changedFields.push(`state: ${config.state} -> ${resolvedState}`);
+        logger.info(`AUDIT: Event state transitioned to ${resolvedState} by admin ${req.user?.username || 'Admin'}`);
+        config.state = resolvedState;
+      }
+      if (isLeaderboardFrozen !== undefined && config.isLeaderboardFrozen !== Boolean(isLeaderboardFrozen)) {
+        changedFields.push(`isLeaderboardFrozen: ${config.isLeaderboardFrozen} -> ${isLeaderboardFrozen}`);
+        logger.info(`AUDIT: Leaderboard freeze toggled to ${isLeaderboardFrozen} by admin ${req.user?.username || 'Admin'}`);
+        config.isLeaderboardFrozen = Boolean(isLeaderboardFrozen);
+        config.frozenAt = Boolean(isLeaderboardFrozen) ? (config.frozenAt || new Date()) : null;
+      }
+      if (req.body.isLeaderboardVisible !== undefined && config.isLeaderboardVisible !== Boolean(req.body.isLeaderboardVisible)) {
+        changedFields.push(`isLeaderboardVisible: ${config.isLeaderboardVisible} -> ${req.body.isLeaderboardVisible}`);
+        logger.info(`AUDIT: Leaderboard visibility set to ${req.body.isLeaderboardVisible} by admin ${req.user?.username || 'Admin'}`);
+        config.isLeaderboardVisible = Boolean(req.body.isLeaderboardVisible);
+      }
+      if (req.body.registrationOpen !== undefined && config.registrationOpen !== Boolean(req.body.registrationOpen)) {
+        changedFields.push(`registrationOpen: ${config.registrationOpen} -> ${req.body.registrationOpen}`);
+        logger.info(`AUDIT: Registration open set to ${req.body.registrationOpen} by admin ${req.user?.username || 'Admin'}`);
+        config.registrationOpen = Boolean(req.body.registrationOpen);
+      }
+      if (req.body.qrCheckpoints !== undefined && config.qrCheckpoints !== Boolean(req.body.qrCheckpoints)) {
+        changedFields.push(`qrCheckpoints: ${config.qrCheckpoints} -> ${req.body.qrCheckpoints}`);
+        config.qrCheckpoints = Boolean(req.body.qrCheckpoints);
+      }
+      if (req.body.hintsEnabled !== undefined) {
+        config.hintsEnabled = Boolean(req.body.hintsEnabled);
+      }
+      if (req.body.announcementsEnabled !== undefined) {
+        config.announcementsEnabled = Boolean(req.body.announcementsEnabled);
+      }
+      if (resolvedStartTime !== undefined) {
+        config.startTime = resolvedStartTime;
+      }
+      if (resolvedEndTime !== undefined) {
+        config.endTime = resolvedEndTime;
+      }
+      if (req.body.registrationDeadline !== undefined) {
+        config.registrationDeadline = req.body.registrationDeadline ? new Date(req.body.registrationDeadline) : null;
+      }
+      if (req.body.eventName) config.eventName = req.body.eventName;
+      if (req.body.subtitle) config.subtitle = req.body.subtitle;
+      if (duration !== undefined) config.duration = Number(duration);
+      if (maxTeams !== undefined) config.maxTeams = Number(maxTeams);
+      if (minTeamSize !== undefined) config.minTeamSize = Number(minTeamSize);
+      if (maxTeamSize !== undefined) config.maxTeamSize = Number(maxTeamSize);
 
-        Object.assign(config, req.body);
-        await config.save();
+      if (changedFields.length > 0) {
+        const eventId = `EVT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        await SecurityLog.create({
+          eventId,
+          severity: Boolean(config.maintenanceMode) || config.state === 'PAUSED' ? 'WARNING' : 'INFO',
+          category: 'CONFIGURATION',
+          event: 'Event configuration updated',
+          actor: req.user?.username || 'admin',
+          target: 'EventConfig',
+          source: req.ip || '127.0.0.1',
+          detail: changedFields.join('; '),
+          status: 'RECORDED',
+          timestamp: new Date()
+        }).catch((err) => logger.warn(`Failed to write SecurityLog: ${err.message}`));
       }
 
-      return success(res, { config }, 'Event configuration updated');
+      config.securityRevision = (config.securityRevision || 0) + 1;
+      await config.save();
+
+      return success(res, { config, eventConfig: config }, 'Event configuration updated');
     } catch (error) {
       return badRequest(res, error.message);
     }
@@ -1761,10 +1841,7 @@ class AdminController {
         return badRequest(res, 'Announcement message content is required');
       }
 
-      let config = await EventConfig.findOne();
-      if (!config) {
-        config = await EventConfig.create({});
-      }
+      let config = await EventConfig.getSingleton({});
 
       const newAnnouncement = {
         title: title && typeof title === 'string' && title.trim() ? title.trim() : 'System Announcement',

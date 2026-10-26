@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   });
 
   const [eventConfig, setEventConfig] = useState({
-    state: "LIVE",
+    state: "DRAFT",
     registrationOpen: true,
     qrCheckpoints: true,
     hintsEnabled: true,
@@ -46,6 +46,33 @@ export default function AdminDashboard() {
   const [recentSubmissions, setRecentSubmissions] = useState([]);
 
   const isLive = eventConfig.state === "LIVE";
+  const eventStateBadge = isLive
+    ? "EVENT LIVE"
+    : eventConfig.state === "PAUSED"
+    ? "EVENT PAUSED"
+    : eventConfig.state === "REGISTRATION_OPEN"
+    ? "REGISTRATION OPEN"
+    : eventConfig.state === "REGISTRATION_CLOSED"
+    ? "REGISTRATION CLOSED"
+    : eventConfig.state === "CONCLUDED"
+    ? "EVENT CONCLUDED"
+    : "EVENT DRAFT";
+
+  const eventStateSubtitle = isLive
+    ? "TEAMS SUBMITTING"
+    : eventConfig.state === "PAUSED"
+    ? "SUBMISSIONS PAUSED"
+    : eventConfig.state === "REGISTRATION_OPEN"
+    ? "REGISTRATION ACTIVE"
+    : "GAMEPLAY LOCKED";
+
+  const toggleButtonLabel = toggling
+    ? "Updating..."
+    : isLive
+    ? "Pause Event"
+    : eventConfig.state === "PAUSED"
+    ? "Resume Event"
+    : "Start Event (Go Live)";
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -72,8 +99,8 @@ export default function AdminDashboard() {
             recentActivity: Array.isArray(d.stats.recentActivity) ? d.stats.recentActivity : [],
           }));
         }
-        if (d.eventConfig) {
-          setEventConfig(d.eventConfig);
+        if (d.eventConfig || d.config) {
+          setEventConfig(d.eventConfig || d.config);
         }
       } else if (statsRes.status === "rejected") {
         console.warn("Stats telemetry sync notice:", statsRes.reason);
@@ -129,12 +156,14 @@ export default function AdminDashboard() {
     const nextState = isLive ? "PAUSED" : "LIVE";
     try {
       const res = await adminService.updateEventConfig({ state: nextState });
-      if (res?.data?.eventConfig) {
-        setEventConfig(res.data.eventConfig);
+      const updated = res?.data?.config || res?.data?.eventConfig;
+      if (updated) {
+        setEventConfig(updated);
       } else {
         setEventConfig((prev) => ({ ...prev, state: nextState }));
       }
-      setNotice(`Event status changed to ${nextState}.`);
+      setNotice(`Event status transitioned to ${nextState}.`);
+      loadDashboardData();
     } catch (err) {
       setNotice(`Failed to update event state: ${err?.response?.data?.message || err.message}`);
     } finally {
@@ -200,8 +229,8 @@ export default function AdminDashboard() {
             </div>
             <div className="ad-event-pill">
               <i className={`ad-dot ${isLive ? "" : "off"}`} />
-              {isLive ? "EVENT LIVE" : "EVENT PAUSED"}{" "}
-              <small>{isLive ? "TEAMS SUBMITTING" : "SUBMISSIONS PAUSED"}</small>
+              {eventStateBadge}{" "}
+              <small>{eventStateSubtitle}</small>
             </div>
           </section>
 
@@ -382,7 +411,7 @@ export default function AdminDashboard() {
               <div className="ad-live-card">
                 <i className={`ad-dot ${isLive ? "" : "off"}`} />
                 <div>
-                  <b>{isLive ? "Event is live" : "Event is paused"}</b>
+                  <b>{eventStateBadge}</b>
                   <small>
                     {isLive
                       ? "Teams can submit flags & scan QRs"
@@ -395,7 +424,7 @@ export default function AdminDashboard() {
                 onClick={handleToggleEvent}
                 disabled={toggling}
               >
-                {toggling ? "Updating..." : isLive ? "Pause Event" : "Resume Event"}{" "}
+                {toggleButtonLabel}{" "}
                 <span>↗</span>
               </button>
               {[

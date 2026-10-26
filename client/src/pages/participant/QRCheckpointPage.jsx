@@ -768,8 +768,35 @@ export function QRCheckpointPage() {
             {/* Error Feedback */}
             {verifyResult && !verifyResult.success && (
               <div className="htg-qr-verify-status error" style={{ marginTop: "14px" }} role="alert">
-                <strong>⚠ Verification Failed: </strong>
-                {verifyResult.message}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                  <strong>⚠ Verification Failed: </strong>
+                  <span>{verifyResult.message}</span>
+                </div>
+                {(verifyResult.message?.includes("LIVE") ||
+                  verifyResult.message?.includes("registration") ||
+                  verifyResult.message?.includes("paused") ||
+                  verifyResult.message?.includes("maintenance")) && (
+                  <div style={{ marginTop: "10px", fontSize: "11px", color: "#b0b8b2", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "8px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+                    <span>Gameplay unlocks as soon as administrators transition the competition to LIVE state.</span>
+                    <button
+                      type="button"
+                      onClick={handleVerifyWithServer}
+                      disabled={verifying}
+                      style={{
+                        background: "rgba(184, 255, 61, 0.1)",
+                        border: "1px solid rgba(184, 255, 61, 0.4)",
+                        color: "var(--qr-lime, #b8ff3d)",
+                        borderRadius: "4px",
+                        padding: "3px 10px",
+                        fontSize: "11px",
+                        cursor: "pointer",
+                        fontWeight: 600
+                      }}
+                    >
+                      {verifying ? "Checking..." : "↻ Recheck Event Status"}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
