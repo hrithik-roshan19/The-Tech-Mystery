@@ -13,6 +13,7 @@ vi.mock('@clerk/react', () => ({
 vi.mock('../services/api', () => ({
   default: { get: (...args) => fixture.get(...args), post: (...args) => fixture.post(...args) },
   setSessionTokenGetter: vi.fn(),
+  setCachedToken: vi.fn(),
   isClerkMode: () => {
     const provider = import.meta.env.VITE_AUTH_PROVIDER;
     if (provider === 'jwt') return false;

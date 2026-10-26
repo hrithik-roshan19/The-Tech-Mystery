@@ -1,12 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import AdminSidebar from "../../components/navigation/AdminSidebar";
 import { ROUTES } from "../../constants/routes";
 import { adminService } from "../../services/admin.service";
 import { ErrorBoundary } from "../../components/common/ErrorBoundary";
+import { useAuth } from "../../hooks/useAuth";
 import "../../styles/AdminDashboard.css";
 
 export function AdminDashboard() {
+  const { user, isAuthenticated, loading: authLoading, authError } = useAuth();
+  const consecutiveAuthFailures = useRef(0);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All");
   const [menu, setMenu] = useState(false);
@@ -76,6 +79,9 @@ export function AdminDashboard() {
     : "Start Event (Go Live)";
 
   const loadDashboardData = useCallback(async () => {
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
     try {
       setError(null);
       const getSubsPromise = typeof adminService.getSubmissions === "function"
@@ -89,6 +95,25 @@ export function AdminDashboard() {
         adminService.getAllTeams(),
         getSubsPromise,
       ]);
+
+      const isAuthFail = (r) =>
+        r.status === "rejected" &&
+        (r.reason?.isAuthError ||
+          r.reason?.code === "ERR_AUTH_TOKEN_UNAVAILABLE" ||
+          r.reason?.response?.status === 401);
+
+      const hasAuthError = isAuthFail(statsRes) || isAuthFail(teamsRes) || isAuthFail(subsRes);
+
+      if (hasAuthError) {
+        consecutiveAuthFailures.current += 1;
+        setError("Administrative session unauthenticated or token expired. Polling paused. Refresh or log in again.");
+      } else if (
+        statsRes.status === "fulfilled" ||
+        teamsRes.status === "fulfilled" ||
+        subsRes.status === "fulfilled"
+      ) {
+        consecutiveAuthFailures.current = 0;
+      }
 
       if (statsRes.status === "fulfilled" && statsRes.value) {
         const raw = statsRes.value;
@@ -141,8 +166,9 @@ export function AdminDashboard() {
         console.warn("Submissions telemetry sync notice:", subsRes.reason);
       }
 
-      // If all three telemetry calls failed, display actionable error banner
+      // If all three telemetry calls failed and not already flagged as auth failure
       if (
+        !hasAuthError &&
         statsRes.status === "rejected" &&
         teamsRes.status === "rejected" &&
         subsRes.status === "rejected"
@@ -154,13 +180,18 @@ export function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
     loadDashboardData();
-    const interval = setInterval(loadDashboardData, 15000);
+    const interval = setInterval(() => {
+      if (consecutiveAuthFailures.current < 2) {
+        loadDashboardData();
+      }
+    }, 15000);
     return () => clearInterval(interval);
-  }, [loadDashboardData]);
+  }, [authLoading, isAuthenticated, loadDashboardData]);
 
   const handleToggleEvent = async () => {
     if (toggling) return;
@@ -193,9 +224,63 @@ export function AdminDashboard() {
     [teams, query, filter]
   );
 
+  if (authLoading) {
+    return (
+      <div className="ad-shell" style={{ display: "flex", minHeight: "100vh", background: "#080b0a" }}>
+        <AdminSidebar
+          teamsCount={stats.totalTeams}
+          submissionsCount={stats.totalSubmissions}
+          mobileOpen={menu}
+          onCloseMobile={() => setMenu(false)}
+        />
+        <main className="ad-main" style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "36px 32px",
+              background: "rgba(5, 12, 13, 0.85)",
+              border: "1px solid rgba(184, 255, 61, 0.3)",
+              borderRadius: "12px",
+              color: "#e8f7c9",
+              fontFamily: "monospace",
+              gap: "14px",
+              maxWidth: "420px",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                border: "3px solid rgba(184, 255, 61, 0.2)",
+                borderTopColor: "var(--htg-lime, #b8ff3d)",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+            <span style={{ fontSize: "13px", letterSpacing: "1.4px", fontWeight: "700" }}>
+              INITIALIZING CYBERSOC ADMIN CONSOLE...
+            </span>
+            <small style={{ color: "#8a968c", fontSize: "11px" }}>
+              Validating cryptographic security credentials and permissions
+            </small>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="ad-shell">
-      <AdminSidebar mobileOpen={menu} onCloseMobile={() => setMenu(false)} />
+      <AdminSidebar
+        teamsCount={stats.totalTeams}
+        submissionsCount={stats.totalSubmissions}
+        mobileOpen={menu}
+        onCloseMobile={() => setMenu(false)}
+      />
 
       <main className="ad-main">
         <header className="ad-topbar">
@@ -215,6 +300,7 @@ export function AdminDashboard() {
             </span>
             <button
               onClick={() => {
+                consecutiveAuthFailures.current = 0;
                 loadDashboardData();
                 setNotice("Dashboard data refreshed from database.");
               }}
@@ -308,7 +394,10 @@ export function AdminDashboard() {
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <button
                   type="button"
-                  onClick={() => loadDashboardData()}
+                  onClick={() => {
+                    consecutiveAuthFailures.current = 0;
+                    loadDashboardData();
+                  }}
                   style={{
                     background: "rgba(255, 107, 107, 0.2)",
                     border: "1px solid #ff6b6b",

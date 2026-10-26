@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
+import { AdminDashboard } from './pages/admin/AdminDashboard';
 
 vi.mock('@clerk/react', () => ({
   ClerkProvider: ({ children }) => <>{children}</>,
@@ -189,5 +190,53 @@ describe('Admin Dashboard Route & Component Mount Tests', () => {
 
     expect(container.innerHTML).not.toBe('');
     expect(container.querySelector('.htg-admin-layout-root')).toBeDefined();
+  });
+
+  it('renders CyberSOC initializing gate when auth is loading without calling telemetry endpoints', () => {
+    mockAuth = {
+      user: null,
+      isAuthenticated: false,
+      loading: true,
+      identityAuthenticated: true,
+    };
+
+    render(
+      <MemoryRouter>
+        <AdminDashboard />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/INITIALIZING CYBERSOC ADMIN CONSOLE/i)).toBeDefined();
+    expect(mockAdminService.getDashboardStats).not.toHaveBeenCalled();
+    expect(mockAdminService.getAllTeams).not.toHaveBeenCalled();
+    expect(mockAdminService.getSubmissions).not.toHaveBeenCalled();
+  });
+
+  it('displays auth failure banner and pauses polling when telemetry rejects with auth error', async () => {
+    mockAuth = {
+      user: { id: 'admin-1', username: 'hrx_admin', role: 'ADMIN', email: 'admin@codesphere.tulas.edu.in' },
+      isAuthenticated: true,
+      loading: false,
+      identityAuthenticated: true,
+    };
+
+    const authError = new Error('Authentication required');
+    authError.code = 'ERR_AUTH_TOKEN_UNAVAILABLE';
+    authError.isAuthError = true;
+
+    mockAdminService.getDashboardStats.mockRejectedValue(authError);
+    mockAdminService.getAllTeams.mockRejectedValue(authError);
+    mockAdminService.getSubmissions.mockRejectedValue(authError);
+
+    render(
+      <MemoryRouter>
+        <AdminDashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Administrative session unauthenticated or token expired/i)).toBeDefined();
+    });
+    expect(screen.getByRole('button', { name: /Retry loading dashboard/i })).toBeDefined();
   });
 });

@@ -43,6 +43,9 @@ export default function AdminSidebar({
   // Fetch real counts from backend if props not directly supplied
   useEffect(() => {
     let isMounted = true;
+    if (teamsCount !== undefined && submissionsCount !== undefined) {
+      return;
+    }
     if (isAuthenticated && user?.role === "ADMIN") {
       adminService
         .getDashboardStats()
@@ -59,7 +62,7 @@ export default function AdminSidebar({
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, user?.role]);
+  }, [isAuthenticated, user?.role, teamsCount, submissionsCount]);
 
   const pathname = location.pathname;
   const adminName = user?.fullName || user?.username || "Event Admin";

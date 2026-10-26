@@ -1,5 +1,6 @@
+// @vitest-environment jsdom
 import { it, expect, vi, afterEach } from 'vitest';
-import api, { setSessionTokenGetter, isClerkMode, getNormalizedApiBaseUrl, clearApiCache } from './api';
+import api, { setSessionTokenGetter, setCachedToken, isClerkMode, getNormalizedApiBaseUrl, clearApiCache } from './api';
 import { storage } from '../utils/storage';
 afterEach(() => { vi.unstubAllEnvs(); setSessionTokenGetter(null); storage.clearAll(); });
 const adapter = async config => ({ data: config.headers.Authorization, status: 200, statusText: 'OK', headers: {}, config });
@@ -103,5 +104,87 @@ it('deduplicates concurrent sessionTokenGetter calls and caches token', async ()
   expect(r1.data).toBe('Bearer deduped-token-123');
   expect(r2.data).toBe('Bearer deduped-token-123');
   expect(r3.data).toBe('Bearer deduped-token-123');
+});
+
+it('setCachedToken primes token synchronously without invoking getter', async () => {
+  vi.stubEnv('VITE_AUTH_PROVIDER', 'clerk');
+  const throwingGetter = vi.fn(() => { throw new Error('Getter should not be invoked when cache is warm'); });
+  setSessionTokenGetter(throwingGetter);
+  setCachedToken('prime-jwt-999', 60000);
+
+  const res = await api.get('/synthetic', { adapter });
+  expect(res.data).toBe('Bearer prime-jwt-999');
+  expect(throwingGetter).not.toHaveBeenCalled();
+});
+
+it('setSessionTokenGetter unregister closure protects against stale unmount clearing newer getter', async () => {
+  vi.stubEnv('VITE_AUTH_PROVIDER', 'clerk');
+  const unregister1 = setSessionTokenGetter(async () => 'token-instance-1');
+  const unregister2 = setSessionTokenGetter(async () => 'token-instance-2');
+
+  // Stale unmount callback executes
+  unregister1();
+
+  // Active getter should remain token-instance-2
+  const res1 = await api.get('/synthetic', { adapter });
+  expect(res1.data).toBe('Bearer token-instance-2');
+
+  // Active unregister callback executes
+  unregister2();
+  const res2 = await api.get('/synthetic', { adapter });
+  expect(res2.data).toBeUndefined();
+});
+
+it('protected admin routes reject locally with ERR_AUTH_TOKEN_UNAVAILABLE when session token is unavailable in Clerk mode', async () => {
+  vi.stubEnv('VITE_AUTH_PROVIDER', 'clerk');
+  setSessionTokenGetter(null);
+
+  // Protected admin endpoint must reject locally, never emitting anonymous request to server
+  await expect(api.get('/admin/dashboard-stats', { adapter })).rejects.toMatchObject({
+    code: 'ERR_AUTH_TOKEN_UNAVAILABLE',
+    isAuthError: true,
+  });
+
+  await expect(api.get('admin/teams', { adapter })).rejects.toMatchObject({
+    code: 'ERR_AUTH_TOKEN_UNAVAILABLE',
+    isAuthError: true,
+  });
+
+  // Non-admin route should not reject locally, but proceed without Authorization header
+  const nonAdminRes = await api.get('/synthetic', { adapter });
+  expect(nonAdminRes.data).toBeUndefined();
+});
+
+it('401 response interceptor only dispatches htg:unauthorized when request included Authorization', async () => {
+  const unauthorizedAdapter = async (config) => {
+    const error = new Error('Request failed with status code 401');
+    error.config = config;
+    error.response = { status: 401, data: { message: 'Unauthorized' } };
+    throw error;
+  };
+
+  const dispatchSpy = vi.fn();
+  window.addEventListener('htg:unauthorized', dispatchSpy);
+
+  // 1. Anonymous request that returns 401 should NOT dispatch htg:unauthorized
+  try {
+    await api.get('/public-probe', { adapter: unauthorizedAdapter });
+  } catch {
+    // Expected rejection
+  }
+  expect(dispatchSpy).not.toHaveBeenCalled();
+
+  // 2. Authenticated request with Bearer token that returns 401 MUST dispatch htg:unauthorized
+  try {
+    await api.get('/protected-probe', {
+      adapter: unauthorizedAdapter,
+      headers: { Authorization: 'Bearer invalid-expired-token' },
+    });
+  } catch {
+    // Expected rejection
+  }
+  expect(dispatchSpy).toHaveBeenCalledTimes(1);
+
+  window.removeEventListener('htg:unauthorized', dispatchSpy);
 });
 

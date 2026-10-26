@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { ClerkProvider, useAuth as useClerkAuth, useClerk } from '@clerk/react';
 import { AuthContext, LegacyAuthProvider } from './AuthContext';
-import api, { setSessionTokenGetter, isClerkMode } from '../services/api';
+import api, { setSessionTokenGetter, setCachedToken, isClerkMode } from '../services/api';
 
 export function ClerkBridge({ children }) {
   const { isLoaded, isSignedIn, getToken } = useClerkAuth();
@@ -25,6 +25,7 @@ export function ClerkBridge({ children }) {
         setAuthError(null);
         return;
       }
+      setCachedToken(token);
       const res = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
       if (requestRevision !== revision.current) return;
       setUser(res.data.data.user);
@@ -62,11 +63,14 @@ export function ClerkBridge({ children }) {
   }, [isLoaded]);
 
   useEffect(() => {
-    setSessionTokenGetter(getToken);
+    const unregister = setSessionTokenGetter(getToken);
     if (!isLoaded) return;
     if (isSignedIn) refreshUser();
     else { setUser(null); setAuthError(null); setLoading(false); }
-    return () => { revision.current++; setSessionTokenGetter(null); };
+    return () => {
+      revision.current++;
+      if (typeof unregister === 'function') unregister();
+    };
   }, [isLoaded, isSignedIn, getToken, refreshUser]);
   useEffect(() => {
     const clear = () => { revision.current++; setUser(null); setLoading(false); setAuthError('ACCOUNT_VERIFICATION_FAILED'); };
@@ -87,8 +91,7 @@ export function ClerkBridge({ children }) {
 }
 
 function ClerkSessionBoundary({ children }) {
-  const { sessionId } = useClerkAuth();
-  return <ClerkBridge key={sessionId || 'signed-out'}>{children}</ClerkBridge>;
+  return <ClerkBridge>{children}</ClerkBridge>;
 }
 
 export function AuthProvider({ children }) {

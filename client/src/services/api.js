@@ -2,16 +2,44 @@ import axios from 'axios';
 import { storage } from '../utils/storage';
 
 let sessionTokenGetter = null;
+let currentGetterId = 0;
 let inflightTokenPromise = null;
 let cachedSessionToken = null;
 let tokenExpiresAt = 0;
 
+/**
+ * Register the session token getter callback with lifecycle unregistration tracking.
+ * Returns an unregister function to prevent stale unmount cleanup from clearing a newer getter.
+ */
 export const setSessionTokenGetter = (getter) => {
-  sessionTokenGetter = getter;
+  const getterId = ++currentGetterId;
+  sessionTokenGetter = typeof getter === 'function' ? getter : null;
   if (!getter) {
     cachedSessionToken = null;
     tokenExpiresAt = 0;
     inflightTokenPromise = null;
+  }
+  return () => {
+    if (currentGetterId === getterId) {
+      sessionTokenGetter = null;
+      cachedSessionToken = null;
+      tokenExpiresAt = 0;
+      inflightTokenPromise = null;
+    }
+  };
+};
+
+/**
+ * Directly seed or update the in-memory cached session token.
+ * Allows ClerkBridge or refreshUser to prime the token synchronously.
+ */
+export const setCachedToken = (token, ttlMs = 45000) => {
+  if (token && typeof token === 'string' && token !== 'null' && token !== 'undefined') {
+    cachedSessionToken = token;
+    tokenExpiresAt = Date.now() + ttlMs;
+  } else {
+    cachedSessionToken = null;
+    tokenExpiresAt = 0;
   }
 };
 
@@ -119,13 +147,14 @@ const getSafeToken = async () => {
   if (!isClerkMode()) {
     return storage.getToken();
   }
-  if (!sessionTokenGetter || typeof sessionTokenGetter !== 'function') {
-    return null;
-  }
 
   const now = Date.now();
   if (cachedSessionToken && now < tokenExpiresAt) {
     return cachedSessionToken;
+  }
+
+  if (!sessionTokenGetter || typeof sessionTokenGetter !== 'function') {
+    return null;
   }
 
   if (inflightTokenPromise) {
@@ -137,19 +166,19 @@ const getSafeToken = async () => {
       const tokenPromiseWithTimeout = Promise.race([
         sessionTokenGetter(),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Clerk session token acquisition timed out (4000ms)')), 4000)
+          setTimeout(() => reject(new Error('Clerk session token acquisition timed out (10000ms)')), 10000)
         ),
       ]);
       const token = await tokenPromiseWithTimeout;
       if (token && typeof token === 'string' && token !== 'null' && token !== 'undefined') {
         cachedSessionToken = token;
-        tokenExpiresAt = Date.now() + 30000;
+        tokenExpiresAt = Date.now() + 45000;
         return token;
       }
       return null;
     } catch (err) {
       console.warn('Session token acquisition warning:', err?.message || err);
-      return cachedSessionToken || null;
+      return (cachedSessionToken && Date.now() < tokenExpiresAt) ? cachedSessionToken : null;
     } finally {
       inflightTokenPromise = null;
     }
@@ -179,6 +208,21 @@ api.interceptors.request.use(
     if (token && typeof token === 'string' && token !== 'null' && token !== 'undefined' && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Guard protected administrative routes: Never send an anonymous request to /admin/*
+    const isProtectedAdminRoute = config.url && (
+      config.url.startsWith('/admin') ||
+      config.url.startsWith('admin')
+    );
+
+    if (isProtectedAdminRoute && !config.headers?.Authorization && isClerkMode()) {
+      const authError = new Error('Authentication required: Protected admin request blocked because session token is unavailable');
+      authError.code = 'ERR_AUTH_TOKEN_UNAVAILABLE';
+      authError.isAuthError = true;
+      authError.config = config;
+      return Promise.reject(authError);
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -251,11 +295,13 @@ api.interceptors.response.use(
     }
 
     if (error.response && error.response.status === 401) {
-      // Clear token if expired or invalid
-      cachedSessionToken = null;
-      tokenExpiresAt = 0;
-      if (!isClerkMode()) storage.clearAll();
-      window.dispatchEvent(new Event('htg:unauthorized'));
+      // Clear token only if request actually carried an Authorization header that was rejected
+      if (config?.headers?.Authorization) {
+        cachedSessionToken = null;
+        tokenExpiresAt = 0;
+        if (!isClerkMode()) storage.clearAll();
+        window.dispatchEvent(new Event('htg:unauthorized'));
+      }
     }
     return Promise.reject(error);
   }
