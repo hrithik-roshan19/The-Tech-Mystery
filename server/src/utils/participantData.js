@@ -1,21 +1,49 @@
 const WITHHELD = 'Content withheld pending organizer review.';
 
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+}
+
+function containsAnswer(text, answer) {
+  if (!text || !answer || typeof text !== 'string') return false;
+  if (/HTG\{[^}]+\}/i.test(text)) return true;
+  const a = String(answer).trim();
+  if (!a) return false;
+
+  // Boundary check: require non-alphanumeric/word boundaries around alphanumeric start/end
+  const startBound = /^[a-zA-Z0-9]/.test(a) ? '(?:^|[^a-zA-Z0-9])' : '';
+  const endBound = /[a-zA-Z0-9]$/.test(a) ? '(?:[^a-zA-Z0-9]|$)' : '';
+  const regex = new RegExp(startBound + escapeRegex(a) + endBound, 'i');
+  return regex.test(text);
+}
+
 function safeContent(value, answers = []) {
   if (typeof value !== 'string') return value;
-  const lower = value.toLowerCase();
-  if (/HTG\{[^}]+\}/i.test(value) || answers.some(a => a && lower.includes(String(a).toLowerCase()))) return WITHHELD;
+  if (/HTG\{[^}]+\}/i.test(value)) return WITHHELD;
+  if (Array.isArray(answers) && answers.some(a => containsAnswer(value, a))) return WITHHELD;
   return value;
 }
 
 // Explicit DTO: never serialize entire private question documents, hints or metadata.
-async function privateAnswers() {
-  const keys = await require('../models').Question.find().select('flag').lean();
-  return keys.map(key => key.flag).filter(Boolean);
+async function privateAnswers(questionId = null) {
+  const query = questionId ? { _id: questionId } : {};
+  const keys = await require('../models').Question.find(query).select('flag').lean();
+  return keys
+    .map(key => key.flag)
+    .filter(Boolean)
+    .filter(f => /HTG\{/i.test(f) || String(f).length >= 16);
 }
 
 async function participantQuestion(question) {
-  const answers = await privateAnswers();
   if (!question) throw new Error('Assigned question is unavailable');
+  let answers = await privateAnswers();
+  if (question.flag) {
+    answers.push(question.flag);
+  } else if (question._id) {
+    const doc = await require('../models').Question.findById(question._id).select('flag').lean();
+    if (doc?.flag) answers.push(doc.flag);
+  }
+
   const fields = ['title', 'prompt', 'category', 'difficulty', 'type', 'instructions'];
   const result = {
     _id: question._id,

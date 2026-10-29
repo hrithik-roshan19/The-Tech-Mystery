@@ -31,10 +31,24 @@ function verifyAnswer(submitted, question) {
   }
 
   if (qType === 'Multiple Choice') {
+    const s = strSubmitted.trim();
+    const e = expected.trim();
     if (!isCaseSensitive) {
-      return strSubmitted.trim().toLowerCase() === expected.trim().toLowerCase();
+      if (s.toLowerCase() === e.toLowerCase()) return true;
+    } else {
+      if (s === e) return true;
     }
-    return strSubmitted.trim() === expected.trim();
+    // Also accept option letter (A, B, C, D) corresponding to the correct option index
+    if (Array.isArray(question.options) && question.options.length > 0 && /^[a-dA-D]$/.test(s)) {
+      const idx = s.toUpperCase().charCodeAt(0) - 65;
+      const chosenOpt = question.options[idx];
+      if (chosenOpt) {
+        return !isCaseSensitive
+          ? chosenOpt.trim().toLowerCase() === e.toLowerCase()
+          : chosenOpt.trim() === e;
+      }
+    }
+    return false;
   }
 
   if (qType === 'Text Answer' || qType === 'Short Text') {
