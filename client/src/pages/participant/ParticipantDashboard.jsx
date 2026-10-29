@@ -456,8 +456,13 @@ export function ParticipantDashboard() {
                 </span>
               </div>
               <div className="pd-current-actions">
-                <Link to="/portal/challenge" className="pd-primary-button">Continue Challenge <span>→</span></Link>
-                <Link to={ROUTES.QR_CHECKPOINT} className="pd-secondary-button">Scan QR Station</Link>
+                <Link
+                  to={currentLevelNumber > 10 ? ROUTES.FINAL_FLAG : ROUTES.QR_CHECKPOINT}
+                  className="pd-primary-button"
+                >
+                  {currentLevelNumber > 10 ? "Capture Master Flag" : "Continue Challenge"} <span>→</span>
+                </Link>
+                <Link to={ROUTES.CHALLENGES} className="pd-secondary-button">View Mission Map</Link>
               </div>
             </section>
 

@@ -22,7 +22,6 @@ import { LoginPage, RegisterPage, AuthCompletePage } from '../pages/auth/ClerkPa
 
 // Participant Pages
 import ParticipantDashboard from '../pages/participant/ParticipantDashboard';
-import ChallengeViewPage from '../pages/participant/ChallengeViewPage';
 import QRCheckpointPage from '../pages/participant/QRCheckpointPage';
 import LeaderboardPage from '../pages/public/LeaderboardPage';
 import UserProfilePage from '../pages/participant/UserProfilePage';
@@ -56,8 +55,8 @@ export const AppRoutes = () => {
       <Route path="/checkpoint/:checkpointId" element={<QRCheckpointPage />} />
       <Route path={ROUTES.LEADERBOARD} element={<LeaderboardPage />} />
       <Route path={ROUTES.FINAL_FLAG} element={<FinalFlagPage />} />
-      <Route path="/challenge" element={<ChallengeViewPage />} />
-      <Route path="/challenges/:levelNumber" element={<ChallengeViewPage />} />
+      <Route path="/challenge" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
+      <Route path="/challenges/:levelNumber" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
       <Route path={ROUTES.PORTAL_DASHBOARD} element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/auth/complete" element={<AuthCompletePage />} />
@@ -83,20 +82,20 @@ export const AppRoutes = () => {
       <Route path="/portal" element={<Navigate to={ROUTES.PORTAL_DASHBOARD} replace />} />
       <Route path="/portal/dashboard" element={<ProtectedRoute><ParticipantDashboard /></ProtectedRoute>} />
       <Route path="/portal/missions" element={<Navigate to={ROUTES.CHALLENGES} replace />} />
-      <Route path="/portal/challenge" element={<ChallengeViewPage />} />
-      <Route path="/portal/challenges/:levelNumber" element={<ChallengeViewPage />} />
+      <Route path="/portal/challenge" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
+      <Route path="/portal/challenges/:levelNumber" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
       <Route path="/portal/checkpoint" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
       <Route path="/portal/team" element={<Navigate to={ROUTES.PORTAL_DASHBOARD} replace />} />
       <Route path="/portal/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       <Route path="/portal/master-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
       <Route path="/portal/final-flag" element={<Navigate to={ROUTES.FINAL_FLAG} replace />} />
-      <Route path="/question" element={<Navigate to="/portal/challenge" replace />} />
-      <Route path="/portal/question" element={<Navigate to="/portal/challenge" replace />} />
+      <Route path="/question" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
+      <Route path="/portal/question" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
       <Route path="/questions" element={<Navigate to={ROUTES.CHALLENGES} replace />} />
-      <Route path="/submission" element={<Navigate to="/portal/challenge" replace />} />
-      <Route path="/portal/submission" element={<Navigate to="/portal/challenge" replace />} />
-      <Route path="/challenges/current" element={<Navigate to="/portal/challenge" replace />} />
-      <Route path="/portal/challenge/current" element={<Navigate to="/portal/challenge" replace />} />
+      <Route path="/submission" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
+      <Route path="/portal/submission" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
+      <Route path="/challenges/current" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
+      <Route path="/portal/challenge/current" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />} />
 
       {/* 4. Admin Command SOC Protected Routes (AdminLayout strictly guarded by ADMIN role) */}
       <Route

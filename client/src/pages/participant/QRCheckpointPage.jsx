@@ -109,6 +109,36 @@ export function QRCheckpointPage() {
         } catch {
           // non-blocking
         }
+
+        // Auto-mount active question if checkpoint is already verified
+        try {
+          const curRes = await challengeService.getCurrentChallenge();
+          if (isMounted && curRes?.success && curRes.data) {
+            const curData = curRes.data;
+            if (curData.teamChallenge?.checkpointScanned && curData.question) {
+              setVerifyResult((prev) => {
+                if (prev) return prev;
+                return {
+                  success: true,
+                  message: `Active Station: ${curData.checkpoint?.name || `Checkpoint Level ${curData.levelNumber}`}. Question ${curData.sequenceNumber || 1} of ${curData.totalQuestions || 1} ready.`,
+                  data: {
+                    checkpoint: curData.checkpoint,
+                    teamChallenge: curData.teamChallenge,
+                    question: curData.question,
+                    sequenceNumber: curData.sequenceNumber,
+                    totalQuestions: curData.totalQuestions,
+                    solvedCount: curData.solvedCount,
+                    isLevelComplete: curData.isLevelComplete,
+                    nextCheckpoint: curData.nextCheckpoint,
+                    alreadyScanned: true
+                  }
+                };
+              });
+            }
+          }
+        } catch {
+          // Expected 403 lock error when checkpoint has not been scanned yet
+        }
       }
     }
     fetchTeamData();
@@ -511,16 +541,29 @@ export function QRCheckpointPage() {
     try {
       const res = await challengeService.submitFlag(targetLevel, cleanFlag, qid);
       const isComplete = Boolean(res.data?.isLevelComplete);
+      const isEventComplete = Boolean(res.data?.isEventComplete);
       const nextQ = res.data?.nextQuestion;
-      const nextCpLoc = res.data?.nextCheckpointLocation || res.data?.nextCheckpoint?.name;
+      const nextCp = res.data?.nextCheckpoint;
+      const nextCpLoc = res.data?.nextLocationName
+        || res.data?.nextCheckpointLocation
+        || nextCp?.locationDescription
+        || nextCp?.name
+        || null;
 
       setSolveResult({
         success: true,
         message: res.message || (isComplete ? "Level completed! All questions conquered." : "Correct answer!"),
         pointsAwarded: res.data?.pointsAwarded,
         isLevelComplete: isComplete,
-        isEventComplete: Boolean(res.data?.isEventComplete),
+        isEventComplete,
+        nextCheckpoint: nextCp,
         nextCheckpointLocation: nextCpLoc,
+        nextLocationName: nextCpLoc,
+        locationInstructions: res.data?.locationInstructions || nextCp?.instructions || null,
+        sequenceNumber: res.data?.sequenceNumber,
+        totalQuestions: res.data?.totalQuestionsInLevel || res.data?.totalQuestions,
+        solvedQuestionsCount: res.data?.solvedQuestionsCount,
+        currentLevel: res.data?.currentLevel || targetLevel,
         attemptsRemaining: res.data?.attemptsRemaining,
         maxAttempts: res.data?.maxAttempts
       });
@@ -534,7 +577,19 @@ export function QRCheckpointPage() {
             ...prev.data,
             question: nextQ,
             sequenceNumber: res.data?.sequenceNumber || ((prev.data.sequenceNumber || 1) + 1),
-            solvedCount: res.data?.solvedQuestionsCount || ((prev.data.solvedCount || 0) + 1)
+            solvedCount: res.data?.solvedQuestionsCount || ((prev.data.solvedCount || 0) + 1),
+            totalQuestions: res.data?.totalQuestionsInLevel || res.data?.totalQuestions || prev.data.totalQuestions
+          }
+        }));
+      } else if (isComplete && verifyResult?.data) {
+        setVerifyResult((prev) => ({
+          ...prev,
+          data: {
+            ...prev.data,
+            isLevelComplete: true,
+            isEventComplete,
+            nextCheckpoint: nextCp,
+            solvedCount: res.data?.solvedQuestionsCount || prev.data.totalQuestions
           }
         }));
       }
@@ -940,44 +995,205 @@ export function QRCheckpointPage() {
                       </div>
                     )}
 
-                    {/* Solve Result Notice */}
+                    {/* Solve Result Feedback Alert */}
                     {solveResult && (
                       <div
                         style={{
-                          padding: "10px",
-                          borderRadius: "4px",
+                          padding: "12px",
+                          borderRadius: "6px",
                           marginBottom: "12px",
-                          fontSize: "12px",
+                          fontSize: "13px",
                           fontWeight: 600,
-                          background: solveResult.success ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)",
+                          background: solveResult.success ? "rgba(16, 185, 129, 0.18)" : "rgba(239, 68, 68, 0.18)",
                           border: solveResult.success ? "1px solid #10b981" : "1px solid #ef4444",
                           color: solveResult.success ? "#10b981" : "#fca5a5"
                         }}
                         role="alert"
                       >
-                        <div>
-                          {solveResult.success ? "✓ " : "⚠ "}
-                          {solveResult.message}
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span>{solveResult.success ? "✓" : "⚠"}</span>
+                          <span>{solveResult.message}</span>
                         </div>
+                        {solveResult.pointsAwarded !== undefined && solveResult.pointsAwarded > 0 && (
+                          <div style={{ marginTop: "4px", fontSize: "12px", color: "#34d399", fontWeight: 700 }}>
+                            +{solveResult.pointsAwarded} PTS added to your squad bounty!
+                          </div>
+                        )}
                         {solveResult.attemptsRemaining !== undefined && !solveResult.success && (
                           <div style={{ marginTop: "4px", fontSize: "11px", opacity: 0.9 }}>
                             Attempts Remaining: {solveResult.attemptsRemaining} of {solveResult.maxAttempts || 3}
                           </div>
                         )}
-                        {solveResult.isLevelComplete && solveResult.nextCheckpointLocation && (
-                          <div style={{
-                            marginTop: "8px",
-                            padding: "8px 10px",
+                      </div>
+                    )}
+
+                    {/* Issue 2: Dedicated Next QR Checkpoint Panel (When Level Complete) */}
+                    {(solveResult?.isLevelComplete || verifyResult?.data?.isLevelComplete) && (
+                      <div
+                        className="htg-qr-next-checkpoint-panel"
+                        style={{
+                          marginBottom: "14px",
+                          padding: "16px",
+                          borderRadius: "8px",
+                          background: "rgba(6, 182, 212, 0.12)",
+                          border: "1px solid #06b6d4",
+                          color: "#e2e8f0"
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
+                          <span style={{
+                            fontSize: "10.5px",
+                            fontWeight: 800,
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            padding: "3px 8px",
                             borderRadius: "4px",
-                            background: "rgba(6, 182, 212, 0.2)",
-                            border: "1px solid #06b6d4",
-                            color: "#67e8f9",
-                            fontSize: "12px",
-                            fontWeight: 700
+                            background: "#06b6d4",
+                            color: "#031018"
                           }}>
-                            📍 NEXT CHECKPOINT: {solveResult.nextCheckpointLocation}
+                            NEXT CHECKPOINT UNLOCKED
+                          </span>
+                          <span style={{ fontSize: "11px", fontWeight: 700, color: "#22d3ee" }}>
+                            Status: Unlocked ✓
+                          </span>
+                        </div>
+
+                        {/* Checkpoint Name */}
+                        <div style={{ fontSize: "16px", fontWeight: 800, color: "#fff", marginBottom: "4px" }}>
+                          {(solveResult?.nextCheckpoint?.name || verifyResult?.data?.nextCheckpoint?.name) ||
+                            `Checkpoint Level ${(solveResult?.currentLevel || verifyResult?.data?.checkpoint?.levelNumber || team?.currentLevel || 1) + 1}`}
+                        </div>
+
+                        {/* Checkpoint Code & Level */}
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", fontSize: "12px", color: "#94a3b8", marginBottom: "8px" }}>
+                          <span>
+                            <strong>Checkpoint Code:</strong>{" "}
+                            {(solveResult?.nextCheckpoint?.code || verifyResult?.data?.nextCheckpoint?.code) ||
+                              `HTG-CP${String((solveResult?.currentLevel || verifyResult?.data?.checkpoint?.levelNumber || team?.currentLevel || 1) + 1).padStart(2, "0")}`}
+                          </span>
+                          <span>
+                            <strong>Level:</strong> Level {(solveResult?.nextCheckpoint?.levelNumber || verifyResult?.data?.nextCheckpoint?.levelNumber) ||
+                              ((solveResult?.currentLevel || verifyResult?.data?.checkpoint?.levelNumber || team?.currentLevel || 1) + 1)}
+                          </span>
+                        </div>
+
+                        {/* Verified Campus Location */}
+                        <div style={{ fontSize: "13px", marginBottom: "10px" }}>
+                          <span>📍 <strong>Campus Location:</strong> </span>
+                          {(solveResult?.nextCheckpointLocation || solveResult?.nextLocationName || verifyResult?.data?.nextCheckpoint?.locationDescription) ? (
+                            <span style={{ color: "#67e8f9", fontWeight: 600 }}>
+                              {solveResult?.nextCheckpointLocation || solveResult?.nextLocationName || verifyResult?.data?.nextCheckpoint?.locationDescription}
+                            </span>
+                          ) : (
+                            <span style={{ color: "#fbbf24", fontWeight: 600 }}>
+                              Location not configured <em style={{ fontSize: "11px", opacity: 0.85 }}>(Coordinates pending from event staff)</em>
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Instructions */}
+                        {(solveResult?.locationInstructions || verifyResult?.data?.nextCheckpoint?.instructions) && (
+                          <div style={{ fontSize: "12px", color: "#cbd5e1", background: "rgba(0,0,0,0.35)", padding: "8px 10px", borderRadius: "4px", marginBottom: "12px", borderLeft: "2px solid #06b6d4" }}>
+                            <strong style={{ color: "#38bdf8" }}>INSTRUCTIONS: </strong>
+                            {solveResult?.locationInstructions || verifyResult?.data?.nextCheckpoint?.instructions}
                           </div>
                         )}
+
+                        {/* Action buttons */}
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "12px" }}>
+                          {solveResult?.isEventComplete || verifyResult?.data?.isEventComplete ? (
+                            <Link
+                              to={ROUTES.FINAL_FLAG}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                minHeight: "44px",
+                                padding: "10px 18px",
+                                borderRadius: "6px",
+                                background: "#06b6d4",
+                                color: "#031018",
+                                fontWeight: 800,
+                                fontSize: "12px",
+                                textDecoration: "none"
+                              }}
+                            >
+                              PROCEED TO FINAL FLAG GATE →
+                            </Link>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setVerifyResult(null);
+                                setDecodedValue("");
+                                setManualCode("");
+                                setManualToken("");
+                                setSolveResult(null);
+                                setSubmissionFlag("");
+                                setScanMessage(`Ready to scan Checkpoint Level ${(solveResult?.currentLevel || verifyResult?.data?.checkpoint?.levelNumber || team?.currentLevel || 1) + 1}.`);
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                minHeight: "44px",
+                                padding: "10px 18px",
+                                borderRadius: "6px",
+                                background: "#06b6d4",
+                                color: "#031018",
+                                fontWeight: 800,
+                                fontSize: "12px",
+                                border: "none",
+                                cursor: "pointer"
+                              }}
+                            >
+                              VIEW NEXT CHECKPOINT →
+                            </button>
+                          )}
+                          <Link
+                            to={ROUTES.CHALLENGES}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              minHeight: "44px",
+                              padding: "10px 16px",
+                              borderRadius: "6px",
+                              background: "rgba(255,255,255,0.08)",
+                              color: "#fff",
+                              fontWeight: 600,
+                              fontSize: "12px",
+                              textDecoration: "none",
+                              border: "1px solid rgba(255,255,255,0.2)"
+                            }}
+                          >
+                            VIEW MISSION MAP
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Issue 2: Locked Notification (When More Questions Remain in Level) */}
+                    {solveResult?.success && !solveResult?.isLevelComplete && (
+                      <div
+                        className="htg-qr-locked-notice"
+                        style={{
+                          marginBottom: "14px",
+                          padding: "14px 16px",
+                          borderRadius: "8px",
+                          background: "rgba(245, 158, 11, 0.12)",
+                          border: "1px solid rgba(245, 158, 11, 0.4)",
+                          color: "#fde68a"
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "12.5px", marginBottom: "4px", color: "#fbbf24" }}>
+                          <span>🔒</span>
+                          <span>NEXT CHECKPOINT (LEVEL {(solveResult.currentLevel || targetLevel) + 1}) LOCKED</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: "12px", color: "#fef3c7", lineHeight: 1.55 }}>
+                          Checkpoint Level {(solveResult.currentLevel || targetLevel) + 1} is locked. Solve the remaining {Math.max(1, (solveResult.totalQuestions || verifyResult.data.totalQuestions || 1) - (solveResult.solvedQuestionsCount || verifyResult.data.solvedCount || 0))} question(s) in Level {solveResult.currentLevel || targetLevel} to unlock the next campus QR station.
+                        </p>
                       </div>
                     )}
 
@@ -1067,13 +1283,35 @@ export function QRCheckpointPage() {
                 )}
 
                 <div className="htg-qr-points-notice" style={{ marginTop: "12px" }}>
-                  ℹ First-Come-First-Served QR question active. Submit your flag directly above or open the full terminal console.
+                  ℹ Active Level Checkpoint Station. Solve questions in sequence to advance your squad.
                 </div>
 
                 <div className="htg-qr-unlocked-actions">
-                  <Link to="/portal/challenge" className="htg-qr-proceed-btn">
-                    OPEN TERMINAL CHALLENGE →
-                  </Link>
+                  {solveResult?.isLevelComplete || verifyResult?.data?.isLevelComplete ? (
+                    solveResult?.isEventComplete || verifyResult?.data?.isEventComplete ? (
+                      <Link to={ROUTES.FINAL_FLAG} className="htg-qr-proceed-btn">
+                        PROCEED TO FINAL FLAG GATE →
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerifyResult(null);
+                          setDecodedValue("");
+                          setManualCode("");
+                          setManualToken("");
+                          setSolveResult(null);
+                          setSubmissionFlag("");
+                          setScanMessage("Ready to scan next checkpoint station.");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="htg-qr-proceed-btn"
+                        style={{ border: "none", cursor: "pointer" }}
+                      >
+                        VIEW NEXT CHECKPOINT →
+                      </button>
+                    )
+                  ) : null}
                   <Link to={ROUTES.CHALLENGES} className="htg-qr-secondary-btn">
                     VIEW MISSION MAP
                   </Link>

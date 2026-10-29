@@ -588,8 +588,9 @@ export const ChallengeViewPage = () => {
       resultMsg?.nextCheckpointLocation ||
       data?.nextLocationName ||
       data?.nextCheckpointLocation ||
+      data?.nextCheckpoint?.locationDescription ||
       data?.nextCheckpoint?.name ||
-      'Next Station Beacon';
+      null;
     const instructions =
       resultMsg?.locationInstructions ||
       data?.locationInstructions ||
@@ -630,7 +631,11 @@ export const ChallengeViewPage = () => {
                     YOUR NEXT LOCATION:
                   </span>
                   <div className="text-xl md:text-2xl font-heading font-black text-white tracking-wide flex items-center gap-2 text-cyber-cyan">
-                    📍 {nextLoc}
+                    📍 {nextLoc ? nextLoc : (
+                      <span className="text-amber-400 font-sans text-base">
+                        Location not configured <em className="text-xs text-amber-200/80">(Coordinates pending from event staff)</em>
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -871,6 +876,19 @@ export const ChallengeViewPage = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Locked notice when questions remain */}
+            {resultMsg?.success && !resultMsg?.isLevelComplete && (
+              <div className="bg-cyber-warning/10 border border-cyber-warning p-4 rounded text-xs text-cyber-warning font-mono space-y-1">
+                <div className="flex items-center gap-2 font-bold uppercase">
+                  <Lock className="w-4 h-4 shrink-0" />
+                  <span>NEXT CHECKPOINT (LEVEL {levelNumber + 1}) LOCKED</span>
+                </div>
+                <p className="text-cyber-warning/90 leading-relaxed text-[11px]">
+                  Checkpoint Level {levelNumber + 1} is locked. Solve the remaining {Math.max(1, (totalQuestions || 1) - (solvedCount || 0))} question(s) in Level {levelNumber} to unlock the next campus QR station.
+                </p>
               </div>
             )}
 

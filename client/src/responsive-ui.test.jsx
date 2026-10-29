@@ -63,6 +63,9 @@ describe('Mobile UI/UX Responsiveness & Layout Guard Tests', () => {
     expect(css).toContain('#htg-qr-reader');
     expect(css).toContain('@media(max-width:380px)');
     expect(css).toContain('.htg-qr-checkpoint-grid{grid-template-columns:1fr}');
+    expect(css).toContain('.htg-qr-next-checkpoint-panel');
+    expect(css).toContain('.htg-qr-locked-notice');
+    expect(css).toContain('min-height:44px');
   });
 
   it('7. TerminalWindow and CyberCard components have responsive wrapping and min-width constraints', () => {
@@ -72,6 +75,23 @@ describe('Mobile UI/UX Responsiveness & Layout Guard Tests', () => {
     expect(terminalJsx).toContain('truncate');
     expect(cardJsx).toContain('flex-wrap');
     expect(cardJsx).toContain('break-words');
+  });
+
+  it('8. Canonical gameplay navigation routes avoid obsolete standalone terminal (/portal/challenge)', () => {
+    const appRoutes = readCss('routes/AppRoutes.jsx');
+    const participantDash = readCss('pages/participant/ParticipantDashboard.jsx');
+    const qrPage = readCss('pages/participant/QRCheckpointPage.jsx');
+
+    // AppRoutes replaces /portal/challenge direct rendering with redirect
+    expect(appRoutes).toContain('path="/portal/challenge" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />}');
+    expect(appRoutes).toContain('path="/challenge" element={<Navigate to={ROUTES.QR_CHECKPOINT} replace />}');
+
+    // ParticipantDashboard routes to canonical QR_CHECKPOINT or FINAL_FLAG
+    expect(participantDash).not.toContain('to="/portal/challenge"');
+    expect(participantDash).toContain('ROUTES.QR_CHECKPOINT');
+
+    // QRCheckpointPage removes OPEN TERMINAL CHALLENGE link
+    expect(qrPage).not.toContain('OPEN TERMINAL CHALLENGE');
   });
 });
 

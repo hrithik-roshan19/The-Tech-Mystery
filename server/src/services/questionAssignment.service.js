@@ -133,12 +133,12 @@ class QuestionAssignmentService {
     })) || (await Checkpoint.findOne({ levelNumber: levelNumber + 1 }));
 
     const nextLocName = (currentCheckpoint?.nextLocationName && currentCheckpoint.nextLocationName.trim())
-      || nextCheckpoint?.name
-      || nextCheckpoint?.locationDescription
+      || (nextCheckpoint?.locationDescription && nextCheckpoint.locationDescription.trim())
+      || (nextCheckpoint?.name && nextCheckpoint.name.trim())
       || null;
 
     const locInstructions = (currentCheckpoint?.locationInstructions && currentCheckpoint.locationInstructions.trim())
-      || nextCheckpoint?.notes
+      || (nextCheckpoint?.notes && nextCheckpoint.notes.trim())
       || null;
 
     return {
@@ -153,10 +153,11 @@ class QuestionAssignmentService {
       locationInstructions: locInstructions,
       nextCheckpoint: nextCheckpoint
         ? {
-            name: nextLocName || nextCheckpoint.name,
-            locationDescription: nextCheckpoint.locationDescription,
+            code: nextCheckpoint.checkpointCode || `HTG-CP${String(nextCheckpoint.levelNumber).padStart(2, '0')}`,
+            name: nextCheckpoint.name || `Checkpoint Level ${nextCheckpoint.levelNumber}`,
             levelNumber: nextCheckpoint.levelNumber,
-            code: nextCheckpoint.checkpointCode,
+            locationDescription: nextLocName,
+            status: 'Unlocked',
             instructions: locInstructions
           }
         : null,

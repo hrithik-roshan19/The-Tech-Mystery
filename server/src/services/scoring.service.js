@@ -390,12 +390,12 @@ module.exports = {
             || (await Checkpoint.findOne({ levelNumber: team.currentLevel }));
 
           nextLocationName = (currentCp?.nextLocationName && currentCp.nextLocationName.trim())
-            || nextCheckpoint?.name
-            || nextCheckpoint?.locationDescription
-            || 'Next Station Venue';
+            || (nextCheckpoint?.name && nextCheckpoint.name.trim())
+            || (nextCheckpoint?.locationDescription && nextCheckpoint.locationDescription.trim())
+            || null;
 
           locationInstructions = (currentCp?.locationInstructions && currentCp.locationInstructions.trim())
-            || nextCheckpoint?.notes
+            || (nextCheckpoint?.notes && nextCheckpoint.notes.trim())
             || null;
         }
       }
@@ -453,11 +453,12 @@ module.exports = {
         locationInstructions: isLevelComplete && !isEventComplete ? locationInstructions : null,
         nextCheckpoint: isLevelComplete && !isEventComplete && nextCheckpoint
           ? {
-              name: nextLocationName,
-              locationDescription: nextCheckpoint.locationDescription,
+              code: nextCheckpoint.checkpointCode || `HTG-CP${String(nextCheckpoint.levelNumber).padStart(2, '0')}`,
+              name: nextLocationName || nextCheckpoint.name || `Checkpoint Level ${nextCheckpoint.levelNumber}`,
               levelNumber: nextCheckpoint.levelNumber,
-              code: nextCheckpoint.checkpointCode,
-              instructions: locationInstructions
+              locationDescription: (nextCheckpoint.locationDescription && nextCheckpoint.locationDescription.trim()) || nextLocationName || null,
+              status: 'Unlocked',
+              instructions: locationInstructions || null
             }
           : null
       };
