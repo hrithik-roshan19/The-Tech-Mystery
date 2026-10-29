@@ -120,12 +120,42 @@ async function applyDecision(tc, submission, correct, points, actor) {
   const now = new Date();
 
   if (correct) {
-    tc.status = 'SOLVED';
     tc.scoringSubmissionId = submission._id;
     tc.solvedAt = tc.solvedAt || now;
     tc.solvedByUserId = tc.solvedByUserId || submission.userId;
     tc.pointsAwarded = after;
-    if (!wasSolved) team.currentLevel = tc.levelNumber + 1;
+
+    if (submission.questionId) {
+      if (!tc.solvedQuestionIds) tc.solvedQuestionIds = [];
+      const alreadySolved = tc.solvedQuestionIds.some((id) => String(id) === String(submission.questionId));
+      if (!alreadySolved) {
+        tc.solvedQuestionIds.push(submission.questionId);
+      }
+    }
+
+    const allLevelQuestions = await Question.find({
+      challengeId: tc.challengeId,
+      levelNumber: tc.levelNumber,
+      status: 'Published',
+      isActive: true
+    });
+
+    const isAllSolved = allLevelQuestions.length === 0 || allLevelQuestions.every((q) =>
+      (tc.solvedQuestionIds || []).some((id) => String(id) === String(q._id))
+    );
+
+    if (isAllSolved) {
+      tc.status = 'SOLVED';
+      if (!wasSolved) team.currentLevel = tc.levelNumber + 1;
+    } else {
+      tc.status = 'UNLOCKED';
+      const nextUnsolved = allLevelQuestions.find((q) =>
+        !(tc.solvedQuestionIds || []).some((id) => String(id) === String(q._id))
+      );
+      if (nextUnsolved) {
+        tc.assignedQuestionId = nextUnsolved._id;
+      }
+    }
 
     // Atomically mark question completed
     if (tc.assignedQuestionId) {
@@ -250,6 +280,9 @@ module.exports = {
       if (!claimed) throw new Error('Maximum submission attempts reached');
 
       const isCorrect = verifyAnswer(flag, question);
+      const now = new Date();
+      const pointsAwarded = isCorrect ? Math.max(0, question.points - (claimed.penaltyIncurred || 0)) : 0;
+
       const submission = await Submission.create({
         teamId,
         userId,
@@ -261,6 +294,9 @@ module.exports = {
         isCorrect,
         status: isCorrect ? 'CORRECT' : 'INCORRECT',
         pointsDelta: 0,
+        reviewed: true,
+        reviewedAt: now,
+        reviewNote: isCorrect ? 'Automatically verified and scored' : 'Automatically verified (incorrect)',
         ipAddress,
         userAgent
       });
@@ -285,9 +321,6 @@ module.exports = {
       }
 
       // Answer is correct!
-      const now = new Date();
-      const pointsAwarded = Math.max(0, question.points - (claimed.penaltyIncurred || 0));
-
       const alreadySolvedThisQuestion = (claimed.solvedQuestionIds || []).some(
         (id) => String(id) === String(question._id)
       );
@@ -299,10 +332,16 @@ module.exports = {
         team.lastSolveTimestamp = now;
         claimed.pointsAwarded = (claimed.pointsAwarded || 0) + pointsAwarded;
         claimed.attemptsCount = 0; // reset attempts for next question
+        submission.status = 'CORRECT';
+        submission.pointsDelta = pointsAwarded;
+      } else {
+        submission.status = 'ALREADY_SOLVED';
+        submission.pointsDelta = 0;
+        submission.reviewNote = 'Already solved by team (idempotent submission)';
       }
 
-      submission.status = 'CORRECT';
-      submission.pointsDelta = pointsAwarded;
+      submission.reviewed = true;
+      submission.reviewedAt = now;
       await submission.save();
 
       // Check remaining questions in this level
@@ -436,7 +475,7 @@ module.exports = {
       const max = Math.max(0, challenge.points - (tc.penaltyIncurred || 0));
       const awarded = result === 'Correct' ? (points === undefined ? max : Number(points)) : 0;
       if (!Number.isFinite(awarded) || awarded < 0 || awarded > max) throw new Error('Awarded points exceed allowed bounds');
-      if (submission.reviewed && submission.isCorrect === (result === 'Correct') && submission.pointsDelta === awarded) {
+      if (submission.reviewedBy && submission.isCorrect === (result === 'Correct') && submission.pointsDelta === awarded) {
         throw new Error('Submission already reviewed with this decision');
       }
       // Serialize with participant solves and other administrative reviews.

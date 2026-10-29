@@ -1583,10 +1583,7 @@ class AdminController {
             { status: { $ne: SUBMISSION_STATUS.PENDING_REVIEW } }
           ];
         } else if (result === 'Pending Review') {
-          filter.$or = [
-            { status: SUBMISSION_STATUS.PENDING_REVIEW },
-            { reviewed: false, isCorrect: false }
-          ];
+          filter.status = SUBMISSION_STATUS.PENDING_REVIEW;
         }
       }
 
@@ -1622,10 +1619,7 @@ class AdminController {
         status: SUBMISSION_STATUS.INCORRECT
       });
       const pendingGlobal = await Submission.countDocuments({
-        $or: [
-          { status: SUBMISSION_STATUS.PENDING_REVIEW },
-          { reviewed: false, isCorrect: false }
-        ]
+        status: SUBMISSION_STATUS.PENDING_REVIEW
       });
 
       const pointsAgg = await Submission.aggregate([
@@ -1642,10 +1636,7 @@ class AdminController {
           : 'Oct 13, 2026';
 
         let resultLabel = 'Incorrect';
-        if (
-          item.status === SUBMISSION_STATUS.PENDING_REVIEW ||
-          (!item.reviewed && !item.isCorrect)
-        ) {
+        if (item.status === SUBMISSION_STATUS.PENDING_REVIEW) {
           resultLabel = 'Pending Review';
         } else if (item.isCorrect || item.status === SUBMISSION_STATUS.CORRECT) {
           resultLabel = 'Correct';
@@ -1672,6 +1663,7 @@ class AdminController {
           date: dateStr,
           attempts: 1,
           reviewed: Boolean(item.reviewed),
+          isAutoGraded: Boolean(item.reviewed && !item.reviewedBy),
           reviewNote: item.reviewNote || '',
           reviewedBy: item.reviewedBy?.username || null,
           reviewedAt: item.reviewedAt || null,

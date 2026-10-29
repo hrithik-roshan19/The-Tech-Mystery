@@ -453,23 +453,45 @@ export default function SubmissionManagementPage() {
         {/* Pending Queue Shortcut Strip */}
         <section className="subm-queue-strip">
           <div>
-            <span className="subm-live-dot" />
+            <span className={`subm-live-dot ${pendingCount === 0 ? "idle" : ""}`} />
             <span>
-              <strong>{pendingCount} submissions need review</strong>
-              <small>Check pending answers before approving points.</small>
+              <strong>
+                {pendingCount > 0
+                  ? `${pendingCount} submissions need review`
+                  : "0 submissions pending manual review"}
+              </strong>
+              <small>
+                {pendingCount > 0
+                  ? "Check pending answers before approving points."
+                  : "All objectively validated questions are automatically graded and scored."}
+              </small>
             </span>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setResultFilter("Pending Review");
-              setLevelFilter("All Levels");
-              setTeamFilter("All Teams");
-              setSearch("");
-            }}
-          >
-            Review pending queue →
-          </button>
+          {pendingCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => {
+                setResultFilter("Pending Review");
+                setLevelFilter("All Levels");
+                setTeamFilter("All Teams");
+                setSearch("");
+              }}
+            >
+              Review pending queue →
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setResultFilter("All Results");
+                setLevelFilter("All Levels");
+                setTeamFilter("All Teams");
+                setSearch("");
+              }}
+            >
+              View all submissions →
+            </button>
+          )}
         </section>
 
         {/* Toolbar */}
@@ -807,56 +829,71 @@ export default function SubmissionManagementPage() {
                 </code>
               </div>
 
-              <h3 className="subm-review-heading">Admin Review</h3>
-              <label className="subm-field">
-                Award points (Max: {selected.maxPoints || 100})
-                <input
-                  type="number"
-                  min="0"
-                  max={selected.maxPoints || 10000}
-                  value={reviewPoints}
-                  onChange={(event) => setReviewPoints(event.target.value)}
-                  disabled={selected.result !== "Pending Review" || isReviewing}
-                />
-              </label>
-              <label className="subm-field">
-                Review note
-                <textarea
-                  rows="2"
-                  value={reviewNote}
-                  onChange={(event) => setReviewNote(event.target.value)}
-                  placeholder="Add an internal review note..."
-                  disabled={selected.result !== "Pending Review" || isReviewing}
-                />
-              </label>
-              <div className="subm-review-actions">
-                <button
-                  type="button"
-                  className="subm-mark-wrong"
-                  onClick={() => reviewSubmission("Incorrect")}
-                  disabled={selected.result !== "Pending Review" || isReviewing}
-                >
-                  {isReviewing ? "Saving..." : "× Reject"}
-                </button>
-                <button
-                  type="button"
-                  className="subm-mark-correct"
-                  onClick={() => reviewSubmission("Correct")}
-                  disabled={selected.result !== "Pending Review" || isReviewing}
-                >
-                  {isReviewing ? "Saving..." : "✓ Approve"}
-                </button>
-              </div>
-
-              {selected.result !== "Pending Review" && (
-                <p className="subm-reviewed-note">
-                  This submission is already marked{" "}
-                  <strong>{selected.result}</strong> (
-                  {selected.points} pts awarded).
+              {selected.result === "Pending Review" ? (
+                <>
+                  <h3 className="subm-review-heading">Admin Review</h3>
+                  <label className="subm-field">
+                    Award points (Max: {selected.maxPoints || 100})
+                    <input
+                      type="number"
+                      min="0"
+                      max={selected.maxPoints || 10000}
+                      value={reviewPoints}
+                      onChange={(event) => setReviewPoints(event.target.value)}
+                      disabled={isReviewing}
+                    />
+                  </label>
+                  <label className="subm-field">
+                    Review note
+                    <textarea
+                      rows="2"
+                      value={reviewNote}
+                      onChange={(event) => setReviewNote(event.target.value)}
+                      placeholder="Add an internal review note..."
+                      disabled={isReviewing}
+                    />
+                  </label>
+                  <div className="subm-review-actions">
+                    <button
+                      type="button"
+                      className="subm-mark-wrong"
+                      onClick={() => reviewSubmission("Incorrect")}
+                      disabled={isReviewing}
+                    >
+                      {isReviewing ? "Saving..." : "× Reject"}
+                    </button>
+                    <button
+                      type="button"
+                      className="subm-mark-correct"
+                      onClick={() => reviewSubmission("Correct")}
+                      disabled={isReviewing}
+                    >
+                      {isReviewing ? "Saving..." : "✓ Approve"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div style={{ background: 'rgba(0, 240, 255, 0.05)', border: '1px solid rgba(0, 240, 255, 0.2)', padding: '16px', borderRadius: '4px', margin: '16px 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: selected.result === 'Correct' ? '#00f0ff' : '#ff4444', fontWeight: 'bold', fontSize: '13px', marginBottom: '6px' }}>
+                    <span>{selected.result === 'Correct' ? '✓' : '×'}</span>
+                    <span>{selected.isAutoGraded ? "Automated Server Evaluation" : "Graded & Finalized"}</span>
+                  </div>
+                  <p style={{ color: '#c0c5c1', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
+                    {selected.result === "Correct"
+                      ? `This submission was automatically verified against the answer key. ${selected.points} points were awarded, and question progression advanced without requiring manual approval.`
+                      : `This submission was evaluated and marked incorrect. Attempts and progression rules were updated automatically.`}
+                  </p>
                   {selected.reviewNote && (
-                    <span> Note: "{selected.reviewNote}"</span>
+                    <p style={{ color: '#8892b0', fontSize: '11px', marginTop: '8px', marginBottom: 0 }}>
+                      Note: <em>"{selected.reviewNote}"</em>
+                    </p>
                   )}
-                </p>
+                  {selected.reviewedAt && (
+                    <p style={{ color: '#556080', fontSize: '10.5px', marginTop: '6px', marginBottom: 0 }}>
+                      Evaluated: {new Date(selected.reviewedAt).toLocaleString("en-GB")}
+                    </p>
+                  )}
+                </div>
               )}
               <p className="subm-security-note">
                 Strict server-side validation enforced. Approved points update

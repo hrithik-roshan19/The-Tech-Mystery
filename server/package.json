@@ -9,7 +9,7 @@
     "lint": "eslint src scripts tests",
     "db:sync-indexes": "node scripts/sync-indexes.js",
     "db:configure-event": "node scripts/configure-event.js",
-    "test": "node --test --test-concurrency=1 tests/preparation.test.js tests/security.test.js tests/clerk.test.js tests/clerk-development.test.js tests/link-admin-clerk.test.js tests/clean-data-safeguards.test.js tests/automatic-qr-generation.test.js tests/dynamic-level-qr-challenge.test.js tests/sequential-qr-challenges.test.js tests/admin-next-location.test.js tests/clerk-proxy.test.js tests/event-lifecycle-verification.test.js tests/provision-admin.test.js tests/rate-limit-proxy.test.js tests/team-registration-approval.test.js tests/thirty-questions-progression.test.js tests/checkpoint-token-validation.test.js",
+    "test": "node --test --test-concurrency=1 tests/preparation.test.js tests/security.test.js tests/clerk.test.js tests/clerk-development.test.js tests/link-admin-clerk.test.js tests/clean-data-safeguards.test.js tests/automatic-qr-generation.test.js tests/dynamic-level-qr-challenge.test.js tests/sequential-qr-challenges.test.js tests/admin-next-location.test.js tests/clerk-proxy.test.js tests/event-lifecycle-verification.test.js tests/provision-admin.test.js tests/rate-limit-proxy.test.js tests/team-registration-approval.test.js tests/thirty-questions-progression.test.js tests/checkpoint-token-validation.test.js tests/automatic-progression-no-approval.test.js",
     "test:preparation": "node --test tests/preparation.test.js"
   },
   "dependencies": {

@@ -124,10 +124,18 @@ export const ChallengeViewPage = () => {
       const nextCpLocation = res.data?.nextLocationName || res.data?.nextCheckpointLocation || res.data?.nextCheckpoint?.name;
       const locInstructions = res.data?.locationInstructions || res.data?.nextCheckpoint?.instructions;
 
+      const pointsWon = res.data?.pointsAwarded;
+      const seqNum = res.data?.sequenceNumber;
+      const totalQ = res.data?.totalQuestionsInLevel;
+
       setResultMsg({
         success: true,
-        text: res.message || (isLevelComplete ? 'Correct Answer! Checkpoint Completed' : 'Correct answer!'),
-        pointsAwarded: res.data?.pointsAwarded,
+        text: res.message || (isLevelComplete
+          ? 'Level Complete! All questions conquered.'
+          : nextQ
+            ? `Correct Answer! +${pointsWon || 100} PTS awarded. Advancing to Question ${seqNum || ''} of ${totalQ || ''}.`
+            : 'Correct answer!'),
+        pointsAwarded: pointsWon,
         isLevelComplete,
         isEventComplete,
         nextCheckpointLocation: nextCpLocation,
