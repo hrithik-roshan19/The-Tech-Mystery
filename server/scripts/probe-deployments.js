@@ -1,18 +1,8 @@
 const https = require('https');
 
-function get(url, headers = {}) {
+function get(url) {
   return new Promise((resolve, reject) => {
-    const u = new URL(url);
-    const opts = {
-      hostname: u.hostname,
-      path: u.pathname + u.search,
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        ...headers
-      }
-    };
-    https.get(opts, (res) => {
+    https.get(url, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: data }));
@@ -21,33 +11,38 @@ function get(url, headers = {}) {
 }
 
 async function probe() {
-  console.log('--- Probing Vercel Frontend (cache-busted) ---');
+  console.log('--- Checking New Asset Bundle on Vercel ---');
   try {
-    const frontend = await get(`https://the-tech-mystery.vercel.app/?v=${Date.now()}`);
-    console.log('Frontend HTTP Status:', frontend.status);
-    console.log('Vercel Cache:', frontend.headers['x-vercel-cache']);
-    console.log('Age:', frontend.headers['age']);
-    const match = frontend.body.match(/src="\/assets\/(index-[^"]+\.js)"/);
-    console.log('Script bundle:', match ? match[1] : 'none');
+    const asset = await get('https://the-tech-mystery.vercel.app/assets/index-DTOdK20Z.js');
+    console.log('New Bundle (index-DTOdK20Z.js) Status:', asset.status);
+    console.log('Content-Length:', asset.headers['content-length']);
+    console.log('Age:', asset.headers['age']);
   } catch (e) {
-    console.error('Frontend error:', e.message);
+    console.error('Asset check error:', e.message);
   }
 
-  console.log('\n--- Probing Render Backend ---');
+  console.log('\n--- Checking Root on Vercel ---');
+  try {
+    const root = await get('https://the-tech-mystery.vercel.app');
+    console.log('Root Status:', root.status);
+    console.log('Age:', root.headers['age']);
+    console.log('Cache:', root.headers['x-vercel-cache']);
+    const match = root.body.match(/src="\/assets\/(index-[^"]+\.js)"/);
+    console.log('Root index.html references:', match ? match[1] : 'none');
+  } catch (e) {
+    console.error('Root check error:', e.message);
+  }
+
+  console.log('\n--- Checking Backend on Render ---');
   try {
     const backend = await get('https://tech-mystery.onrender.com/api/v1/health');
-    console.log('Backend HTTP Status:', backend.status);
-    try {
-      const parsed = JSON.parse(backend.body);
-      console.log('Backend Uptime (s):', parsed.data?.uptime);
-      console.log('Backend Status:', parsed.data?.status);
-      console.log('Database:', parsed.data?.database);
-      console.log('Event State:', parsed.data?.event?.state);
-    } catch {
-      console.log('Raw body:', backend.body.slice(0, 200));
-    }
+    console.log('Health Status:', backend.status);
+    const parsed = JSON.parse(backend.body);
+    console.log('Uptime:', parsed.data?.uptime);
+    console.log('Status:', parsed.data?.status);
+    console.log('Database:', parsed.data?.database);
   } catch (e) {
-    console.error('Backend error:', e.message);
+    console.error('Backend check error:', e.message);
   }
 }
 
