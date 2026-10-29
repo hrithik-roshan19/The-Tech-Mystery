@@ -203,5 +203,38 @@ it('link-admin-clerk.js test suite', async (t) => {
       /Clerk identity collision detected/
     );
   });
+
+  await t.test('Relink check: refuses to overwrite existing mapping without --relink', async () => {
+    const mockGetUser = mock.fn(async () => ({
+      banned: false,
+      locked: false,
+      primaryEmailAddressId: 'email_1',
+      emailAddresses: [{ id: 'email_1', emailAddress: 'admin@codesphere.tulas.edu.in', verification: { status: 'verified' } }]
+    }));
+    mock.method(clerk, 'getClient', () => ({ users: { getUser: mockGetUser } }));
+
+    process.argv = ['node', SCRIPT_PATH, 'user_newmock456', '--confirm'];
+    await assert.rejects(
+      async () => main(),
+      /already has a different Clerk ID mapped. To safely re-link\/rotate to this verified Clerk ID, re-run with --relink/
+    );
+  });
+
+  await t.test('Relink check: successfully rotates mapping with explicit --relink --confirm', async () => {
+    const mockGetUser = mock.fn(async () => ({
+      banned: false,
+      locked: false,
+      primaryEmailAddressId: 'email_1',
+      emailAddresses: [{ id: 'email_1', emailAddress: 'admin@codesphere.tulas.edu.in', verification: { status: 'verified' } }]
+    }));
+    mock.method(clerk, 'getClient', () => ({ users: { getUser: mockGetUser } }));
+
+    process.argv = ['node', SCRIPT_PATH, 'user_newmock456', '--relink', '--confirm'];
+    await main();
+
+    const userInDb = await User.findOne({ username: 'hrx_admin' }).select('+clerkUserId +tokenVersion');
+    assert.equal(userInDb.clerkUserId, 'user_newmock456');
+    assert.equal(userInDb.tokenVersion, 2);
+  });
 });
 

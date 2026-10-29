@@ -23,6 +23,26 @@ async function resolveUser(req) {
   const user = await User.findOne({ clerkUserId: identity.clerkUserId }).select('role teamId isActive username');
   if (!user) {
     const idPrefix = typeof identity.clerkUserId === 'string' ? `${identity.clerkUserId.substring(0, 8)}...` : 'unknown';
+
+    // Inspect if the verified Clerk identity belongs to an existing administrative account
+    let isAdminAccount = false;
+    try {
+      const email = await clerk.verifiedEmail(identity);
+      if (email) {
+        const adminUser = await User.findOne({ email, role: 'ADMIN' });
+        if (adminUser) {
+          isAdminAccount = true;
+        }
+      }
+    } catch {
+      // Identity lookup error in Clerk client; fallback to standard unlinked flow
+    }
+
+    if (isAdminAccount) {
+      logger.warn(`[Auth] Clerk session verified (${idPrefix}) for admin email, but account is unlinked in database. Returning CLERK_ADMIN_UNLINKED.`);
+      throw clerk.failure(403, 'Organizer-assisted admin account linking required. Contact the lead organizer.', 'CLERK_ADMIN_UNLINKED');
+    }
+
     logger.warn(`[Auth] Clerk session verified (${idPrefix}), but no matching account found in database. Returning CLERK_ACCOUNT_UNLINKED.`);
     throw clerk.failure(403, 'Link or register an application account to continue', 'CLERK_ACCOUNT_UNLINKED');
   }

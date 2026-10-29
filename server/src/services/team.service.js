@@ -109,7 +109,6 @@ class TeamService {
 
     // Resolve or pre-roster member users
     const resolvedMemberIds = [];
-    const bcrypt = require('bcryptjs');
 
     for (const member of processedMembers) {
       let memberUser = await User.findOne({ email: member.email });
@@ -129,13 +128,12 @@ class TeamService {
         const randomSuffix = crypto.randomBytes(3).toString('hex');
         const memberUsername = `${cleanPrefix}_${randomSuffix}`.slice(0, 30);
         const randomPass = crypto.randomBytes(32).toString('hex');
-        const passwordHash = await bcrypt.hash(randomPass, 10);
 
         memberUser = await User.create({
           username: memberUsername,
           email: member.email,
           fullName: member.name || memberUsername,
-          passwordHash,
+          passwordHash: randomPass,
           role: ROLES.TEAM_MEMBER,
           college: college && typeof college === 'string' && college.trim() ? college.trim() : (user.college || "Tula's University"),
           isActive: true

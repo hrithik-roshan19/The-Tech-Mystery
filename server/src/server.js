@@ -111,10 +111,11 @@ const startServer = async () => {
     const server = app.listen(config.port, () => {
       logger.info(`=======================================================`);
       logger.info(`  THE TECH MYSTERY - CTF CORE ENGINE READY`);
-      logger.info(`  Environment: ${config.env.toUpperCase()}`);
-      logger.info(`  Listening on: http://localhost:${config.port}`);
-      logger.info(`  API Prefix:   ${config.apiPrefix}`);
-      logger.info(`  Organizer:    CodeSphere Coding Club (Tula's University)`);
+      logger.info(`  Environment:   ${config.env.toUpperCase()}`);
+      logger.info(`  Auth Provider: ${config.authProvider.toUpperCase()}`);
+      logger.info(`  Listening on:  http://localhost:${config.port}`);
+      logger.info(`  API Prefix:    ${config.apiPrefix}`);
+      logger.info(`  Organizer:     CodeSphere Coding Club (Tula's University)`);
       logger.info(`=======================================================`);
     });
 

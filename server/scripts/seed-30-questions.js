@@ -11,6 +11,21 @@
  * - Verified against Question pre-validate and participant data sanitization.
  */
 
+const path = require('path');
+const dns = require('dns');
+const dotenv = require('dotenv');
+
+// Configure reliable DNS servers for Atlas SRV resolution
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1', ...dns.getServers()]);
+} catch (e) {
+  // Ignore fallback error
+}
+
+// Load environment configuration: server/.env takes precedence over root .env
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
 const mongoose = require('mongoose');
 const connectDB = require('../src/config/db');
 const { Challenge, Checkpoint, Question } = require('../src/models');
@@ -507,65 +522,111 @@ const LEVEL_CHALLENGES = {
   }
 };
 
-async function seed30Questions() {
+async function seed30Questions(options = {}) {
   console.log('====================================================');
   console.log('  THE TECH MYSTERY: 30 QUESTIONS DATABASE MIGRATION ');
   console.log('====================================================');
 
-  if (mongoose.connection.readyState !== 1) {
-    await connectDB();
-  }
-  const dbName = mongoose.connection.name;
-  console.log(`[INFO] Connected to MongoDB database: "${dbName}"`);
+  const isCli = require.main === module;
+  const cliOpts = isCli ? resolveCliOptions() : {};
+  const isConfirm = options.confirm ?? (isCli ? cliOpts.isConfirm : true);
+  const isDryRun = options.dryRun ?? (isCli ? cliOpts.isDryRun : !isConfirm);
+  const targetDb = options.targetDb || cliOpts.targetDb;
+  const targetUri = options.uri || cliOpts.uri || process.env.MONGODB_URI;
 
-  // 1. Resolve or Create Challenges for Levels 1, 2, 3
+  console.log(`[MODE] Execution Mode: ${isDryRun ? 'DRY-RUN (Safe Read-Only Audit)' : 'CONFIRMED (Live Database Write)'}`);
+  if (targetDb) {
+    console.log(`[TARGET] Enforced Target Database: "${targetDb}"`);
+  }
+
+  // 1. Establish or Verify Connection
+  if (mongoose.connection.readyState !== 1) {
+    if (targetUri) {
+      const sanitizedUri = targetUri.replace(/:\/\/.*@/, '://***@');
+      console.log(`[Database] Connecting to MongoDB: ${sanitizedUri}`);
+      await mongoose.connect(targetUri, {
+        serverSelectionTimeoutMS: 8000,
+        autoIndex: false
+      });
+    } else {
+      await connectDB();
+    }
+  }
+
+  const dbName = mongoose.connection.name;
+  const host = mongoose.connection.host || 'unknown-host';
+  console.log(`[INFO] Connected to MongoDB database: "${dbName}" on host: "${host}"`);
+
+  if (targetDb && dbName !== targetDb) {
+    throw new Error(`[SAFETY ABORT] Target database mismatch! Expected "${targetDb}", but connected to "${dbName}".`);
+  }
+
+  // 2. Resolve Challenges and Checkpoints for Levels 1, 2, 3
+  console.log('\n--- Resolving Level Containers & Physical Checkpoints ---');
   const challengeMap = new Map();
+  const checkpointMap = new Map();
+
   for (let lvl = 1; lvl <= 3; lvl++) {
     const cpCode = `HTG-CP0${lvl}`;
     const cp = await Checkpoint.findOne({ checkpointCode: cpCode });
+    checkpointMap.set(lvl, cp);
 
-    let ch = await Challenge.findOne({ levelNumber: lvl });
-    if (!ch && cp?.associatedChallengeId) {
+    if (cp) {
+      console.log(`[CHECKPOINT] Found physical checkpoint ${cpCode} (ID: ${cp._id}) | Has QR: ${Boolean(cp.qrCodeDataUrl || cp.qrCodeData)} | Scans: ${cp.scanCount}`);
+    } else {
+      console.warn(`[CHECKPOINT WARN] Checkpoint ${cpCode} not found in database!`);
+    }
+
+    let ch = null;
+    if (cp?.associatedChallengeId) {
       ch = await Challenge.findById(cp.associatedChallengeId);
+    }
+    if (!ch) {
+      ch = await Challenge.findOne({ levelNumber: lvl });
     }
 
     if (!ch) {
-      ch = await Challenge.create(LEVEL_CHALLENGES[lvl]);
-      console.log(`[CREATED] Challenge for Level ${lvl}: "${ch.title}" (ID: ${ch._id})`);
+      if (isDryRun) {
+        console.log(`[DRY-RUN] Would create Challenge container for Level ${lvl}: "${LEVEL_CHALLENGES[lvl].title}"`);
+        ch = { _id: new mongoose.Types.ObjectId(), ...LEVEL_CHALLENGES[lvl] };
+      } else {
+        ch = await Challenge.create(LEVEL_CHALLENGES[lvl]);
+        console.log(`[CREATED] Challenge container for Level ${lvl}: "${ch.title}" (ID: ${ch._id})`);
+      }
     } else {
-      // Keep challenge active and published
-      ch.status = 'Published';
-      ch.isActive = true;
-      await ch.save();
       console.log(`[RESOLVED] Existing Challenge for Level ${lvl}: "${ch.title}" (ID: ${ch._id})`);
+      if (!isDryRun) {
+        ch.status = 'Published';
+        ch.isActive = true;
+        await ch.save();
+      }
     }
     challengeMap.set(lvl, ch);
 
-    // Ensure Checkpoint exists and points to Challenge
-    if (cp) {
+    // Ensure Checkpoint links to Challenge without touching QR tokens/images
+    if (cp && !isDryRun) {
       if (String(cp.associatedChallengeId) !== String(ch._id)) {
         cp.associatedChallengeId = ch._id;
         await cp.save();
         console.log(`[LINKED] Checkpoint ${cpCode} associatedChallengeId updated to ${ch._id}`);
       }
-    } else {
-      console.warn(`[WARN] Checkpoint ${cpCode} not found in database!`);
     }
   }
 
-  // 2. Upsert Questions Idempotently
-  console.log('\n--- Upserting 30 Questions (10 per Level) ---');
-  let upsertedCount = 0;
+  // 3. Upsert Questions Idempotently
+  console.log(`\n--- ${isDryRun ? 'Previewing' : 'Upserting'} 30 Questions (10 per Level) ---`);
+  let insertedCount = 0;
+  let updatedCount = 0;
   const processedQuestions = [];
 
   for (const qDef of QUESTIONS_DATA) {
     const ch = challengeMap.get(qDef.levelNumber);
-    if (!ch) {
+    if (!ch && !isDryRun) {
       throw new Error(`Missing Challenge container for Level ${qDef.levelNumber}`);
     }
 
+    const cp = checkpointMap.get(qDef.levelNumber);
     const cpCode = `HTG-CP0${qDef.levelNumber}`;
-    const cp = await Checkpoint.findOne({ checkpointCode: cpCode });
 
     const filter = {
       levelNumber: qDef.levelNumber,
@@ -573,7 +634,7 @@ async function seed30Questions() {
     };
 
     const updateDoc = {
-      challengeId: ch._id,
+      challengeId: ch ? ch._id : null,
       levelNumber: qDef.levelNumber,
       order: qDef.order,
       checkpointId: cp ? cp._id : null,
@@ -593,23 +654,87 @@ async function seed30Questions() {
       isActive: true
     };
 
-    // Use findOne and save/create to trigger Mongoose pre-validate hook and verify integrity
-    let questionDoc = await Question.findOne(filter).select('+flag');
+    const existingMatches = await Question.find(filter).select('+flag');
+    let questionDoc = existingMatches[0] || null;
+
     if (!questionDoc) {
-      questionDoc = new Question(updateDoc);
-      await questionDoc.save();
-      upsertedCount++;
-      console.log(`[INSERTED] L${qDef.levelNumber} Q${qDef.order}: "${qDef.title}" -> Answer: "${qDef.flag}"`);
+      insertedCount++;
+      if (isDryRun) {
+        console.log(`[PREVIEW INSERT] L${qDef.levelNumber} Q${qDef.order}: "${qDef.title}" -> Answer: "${qDef.flag}"`);
+      } else {
+        questionDoc = new Question(updateDoc);
+        await questionDoc.save();
+        console.log(`[INSERTED] L${qDef.levelNumber} Q${qDef.order}: "${qDef.title}" -> Answer: "${qDef.flag}"`);
+      }
     } else {
-      Object.assign(questionDoc, updateDoc);
-      await questionDoc.save();
-      upsertedCount++;
-      console.log(`[UPDATED]  L${qDef.levelNumber} Q${qDef.order}: "${qDef.title}" -> Answer: "${qDef.flag}"`);
+      updatedCount++;
+      if (isDryRun) {
+        console.log(`[PREVIEW UPDATE] L${qDef.levelNumber} Q${qDef.order}: "${qDef.title}" -> Answer: "${qDef.flag}"`);
+      } else {
+        Object.assign(questionDoc, updateDoc);
+        await questionDoc.save();
+        console.log(`[UPDATED]  L${qDef.levelNumber} Q${qDef.order}: "${qDef.title}" -> Answer: "${qDef.flag}"`);
+      }
     }
-    processedQuestions.push(questionDoc);
+
+    if (questionDoc) {
+      processedQuestions.push(questionDoc);
+    }
+
+    // If duplicate questions exist for this order slot, archive the extras
+    if (existingMatches.length > 1) {
+      const duplicates = existingMatches.slice(1);
+      for (const dup of duplicates) {
+        if (isDryRun) {
+          console.log(`[PREVIEW ARCHIVE DUPLICATE] L${qDef.levelNumber} Q${qDef.order} (ID: ${dup._id}) "${dup.title}"`);
+        } else {
+          dup.isActive = false;
+          dup.status = 'Archived';
+          await dup.save();
+          console.log(`[ARCHIVED DUPLICATE] L${qDef.levelNumber} Q${qDef.order} (ID: ${dup._id}) "${dup.title}"`);
+        }
+      }
+    }
   }
 
-  // 3. Comprehensive Verification
+  // 4. Retire legacy questions in levels 1-3 that are not part of the canonical 30
+  const processedIds = processedQuestions.map(q => q._id).filter(Boolean);
+  const legacyToRetire = await Question.find({
+    levelNumber: { $in: [1, 2, 3] },
+    _id: { $nin: processedIds },
+    isActive: true
+  }).lean();
+
+  if (legacyToRetire.length > 0) {
+    if (isDryRun) {
+      console.log(`\n[PREVIEW ARCHIVAL] ${legacyToRetire.length} legacy/duplicate question(s) will be archived to ensure exactly 10 questions per level:`);
+      legacyToRetire.forEach(l => console.log(`  - [ID: ${l._id}] L${l.levelNumber} Q${l.order}: "${l.title}"`));
+    } else {
+      const retired = await Question.updateMany(
+        {
+          levelNumber: { $in: [1, 2, 3] },
+          _id: { $nin: processedIds },
+          isActive: true
+        },
+        {
+          $set: { isActive: false, status: 'Archived' }
+        }
+      );
+      console.log(`[ARCHIVED] Deactivated ${retired.modifiedCount} legacy/duplicate questions in Levels 1-3.`);
+    }
+  }
+
+  console.log(`\n[SUMMARY] Intended Questions: 30 | To Insert: ${insertedCount} | To Update: ${updatedCount}`);
+
+  if (isDryRun) {
+    console.log('\n[DRY RUN COMPLETE] Zero database writes performed.');
+    console.log('To execute migration on production, rerun with:');
+    console.log('  node server/scripts/seed-30-questions.js --confirm --target-db=' + dbName);
+    console.log('====================================================\n');
+    return { dryRun: true, dbName, insertedCount, updatedCount };
+  }
+
+  // 5. Comprehensive Verification
   console.log('\n--- Running Post-Seed Integrity Verification ---');
 
   for (let lvl = 1; lvl <= 3; lvl++) {
@@ -626,7 +751,11 @@ async function seed30Questions() {
     }
   }
 
-  const allQuestions = await Question.find({ levelNumber: { $in: [1, 2, 3] } })
+  const allQuestions = await Question.find({
+    levelNumber: { $in: [1, 2, 3] },
+    status: 'Published',
+    isActive: true
+  })
     .sort({ levelNumber: 1, order: 1 })
     .select('+flag');
 
@@ -688,6 +817,21 @@ async function seed30Questions() {
 
   console.log('[SUCCESS] All 30 questions verified with 100% integrity.');
   console.log('====================================================\n');
+  return { dryRun: false, dbName, insertedCount, updatedCount, verified: true };
+}
+
+function resolveCliOptions() {
+  const args = process.argv.slice(2);
+  const targetDbArg = args.find(a => a.startsWith('--target-db='));
+  const targetDb = targetDbArg ? targetDbArg.split('=')[1].trim() : (args.includes('--target-db') ? args[args.indexOf('--target-db') + 1] : null);
+
+  const uriArg = args.find(a => a.startsWith('--uri='));
+  const uri = uriArg ? uriArg.split('=')[1].trim() : (args.includes('--uri') ? args[args.indexOf('--uri') + 1] : null);
+
+  const isConfirm = args.includes('--confirm') || args.includes('--execute') || args.includes('--commit');
+  const isDryRun = args.includes('--dry-run') || !isConfirm;
+
+  return { targetDb, uri, isConfirm, isDryRun };
 }
 
 if (require.main === module) {

@@ -26,6 +26,10 @@ function safeContent(value, answers = []) {
 
 // Explicit DTO: never serialize entire private question documents, hints or metadata.
 async function privateAnswers(questionId = null) {
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState !== 1) {
+    return [];
+  }
   const query = questionId ? { _id: questionId } : {};
   const keys = await require('../models').Question.find(query).select('flag').lean();
   return keys

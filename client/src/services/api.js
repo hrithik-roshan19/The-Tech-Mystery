@@ -154,6 +154,15 @@ const getSafeToken = async () => {
   }
 
   if (!sessionTokenGetter || typeof sessionTokenGetter !== 'function') {
+    if (typeof window !== 'undefined') {
+      const startWait = Date.now();
+      while ((!sessionTokenGetter || typeof sessionTokenGetter !== 'function') && (Date.now() - startWait < 400)) {
+        await new Promise((resolve) => setTimeout(resolve, 15));
+      }
+    }
+  }
+
+  if (!sessionTokenGetter || typeof sessionTokenGetter !== 'function') {
     return null;
   }
 
@@ -297,10 +306,28 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Clear token only if request actually carried an Authorization header that was rejected
       if (config?.headers?.Authorization) {
+        if (isClerkMode() && !config._retry401 && typeof sessionTokenGetter === 'function') {
+          config._retry401 = true;
+          cachedSessionToken = null;
+          tokenExpiresAt = 0;
+          try {
+            const freshToken = await sessionTokenGetter({ skipCache: true });
+            if (freshToken && typeof freshToken === 'string' && freshToken !== 'null' && freshToken !== 'undefined') {
+              setCachedToken(freshToken);
+              config.headers = config.headers || {};
+              config.headers.Authorization = `Bearer ${freshToken}`;
+              return api.request(config);
+            }
+          } catch {
+            // Token refresh failed; fall through to unauthenticated handling
+          }
+        }
         cachedSessionToken = null;
         tokenExpiresAt = 0;
         if (!isClerkMode()) storage.clearAll();
-        window.dispatchEvent(new Event('htg:unauthorized'));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('htg:unauthorized'));
+        }
       }
     }
     return Promise.reject(error);

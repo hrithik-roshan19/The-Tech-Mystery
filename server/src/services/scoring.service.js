@@ -25,9 +25,20 @@ function verifyAnswer(submitted, question) {
     const numSub = Number(strSubmitted.trim());
     const numExp = Number(expected.trim());
     if (!Number.isNaN(numSub) && !Number.isNaN(numExp)) {
-      return numSub === numExp;
+      if (numSub === numExp) return true;
+    } else if (strSubmitted.trim() === expected.trim()) {
+      return true;
     }
-    return strSubmitted.trim() === expected.trim();
+    // Check acceptable alternatives if defined in question metadata
+    if (Array.isArray(question.metadata?.acceptableAlternatives)) {
+      const s = strSubmitted.trim().toLowerCase();
+      for (const alt of question.metadata.acceptableAlternatives) {
+        if (typeof alt === 'string' && alt.trim() && s === alt.trim().toLowerCase()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   if (qType === 'Multiple Choice') {
@@ -55,9 +66,23 @@ function verifyAnswer(submitted, question) {
     const s = strSubmitted.trim();
     const e = expected.trim();
     if (!isCaseSensitive) {
-      return s.toLowerCase() === e.toLowerCase();
+      if (s.toLowerCase() === e.toLowerCase()) return true;
+    } else {
+      if (s === e) return true;
     }
-    return s === e;
+
+    // Check acceptable alternatives if defined in question metadata
+    if (Array.isArray(question.metadata?.acceptableAlternatives)) {
+      for (const alt of question.metadata.acceptableAlternatives) {
+        if (typeof alt === 'string' && alt.trim()) {
+          const match = !isCaseSensitive
+            ? s.toLowerCase() === alt.trim().toLowerCase()
+            : s === alt.trim();
+          if (match) return true;
+        }
+      }
+    }
+    return false;
   }
 
   return safeFlagCompare(strSubmitted, expected, isCaseSensitive);

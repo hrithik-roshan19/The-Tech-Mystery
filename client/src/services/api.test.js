@@ -188,3 +188,53 @@ it('401 response interceptor only dispatches htg:unauthorized when request inclu
   window.removeEventListener('htg:unauthorized', dispatchSpy);
 });
 
+it('waits for sessionTokenGetter registration when request starts during mount phase', async () => {
+  vi.stubEnv('VITE_AUTH_PROVIDER', 'clerk');
+  setSessionTokenGetter(null);
+
+  // Simulate token getter being registered 30ms later (during React mount/layout phase)
+  setTimeout(() => {
+    setSessionTokenGetter(async () => 'mounted-session-token');
+  }, 30);
+
+  const res = await api.get('/admin/telemetry', { adapter });
+  expect(res.data).toBe('Bearer mounted-session-token');
+});
+
+it('retries request once on 401 with fresh token and avoids dispatching htg:unauthorized', async () => {
+  vi.stubEnv('VITE_AUTH_PROVIDER', 'clerk');
+  let tokenRequestCount = 0;
+  const getterMock = vi.fn(async (opts) => {
+    tokenRequestCount++;
+    if (opts?.skipCache) {
+      return 'refreshed-token-xyz';
+    }
+    return 'initial-token-abc';
+  });
+  setSessionTokenGetter(getterMock);
+
+  const dispatchSpy = vi.fn();
+  window.addEventListener('htg:unauthorized', dispatchSpy);
+
+  let attemptCount = 0;
+  const retryAdapter = async (config) => {
+    attemptCount++;
+    if (attemptCount === 1) {
+      const error = new Error('Request failed with status code 401');
+      error.config = config;
+      error.response = { status: 401, data: { message: 'Token expired' } };
+      throw error;
+    }
+    return { data: { success: true, authHeader: config.headers.Authorization }, status: 200, statusText: 'OK', headers: {}, config };
+  };
+
+  const res = await api.get('/admin/teams', { adapter: retryAdapter });
+  expect(res.status).toBe(200);
+  expect(res.data.success).toBe(true);
+  expect(res.data.authHeader).toBe('Bearer refreshed-token-xyz');
+  expect(getterMock).toHaveBeenCalledWith({ skipCache: true });
+  expect(dispatchSpy).not.toHaveBeenCalled();
+
+  window.removeEventListener('htg:unauthorized', dispatchSpy);
+});
+

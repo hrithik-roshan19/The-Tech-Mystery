@@ -1,5 +1,5 @@
 const { safeContent, privateAnswers } = require('../utils/participantData');
-const { Checkpoint, Challenge } = require('../models');
+const { Checkpoint, Challenge, Question } = require('../models');
 const { verifyCheckpointToken } = require('../utils/crypto');
 const assignment = require('./questionAssignment.service');
 const { eventFor, teamFor } = require('./eligibility.service');
@@ -18,8 +18,19 @@ module.exports = {
         throw new Error('Checkpoint is not assigned to this team');
       }
 
-      if (!verifyCheckpointToken(checkpoint.checkpointCode, checkpoint.levelNumber, token,
-        { teamId: bound ? checkpoint.boundTeamId : null, qid: questionId })) {
+      const candidateRegisteredTokens = [checkpoint.qrToken].filter(Boolean);
+      if (questionId && /^[0-9a-fA-F]{24}$/.test(String(questionId))) {
+        const questionDoc = await Question.findById(questionId).select('qrToken');
+        if (questionDoc?.qrToken) {
+          candidateRegisteredTokens.push(questionDoc.qrToken);
+        }
+      }
+
+      if (!verifyCheckpointToken(checkpoint.checkpointCode, checkpoint.levelNumber, token, {
+        teamId: bound ? checkpoint.boundTeamId : null,
+        qid: questionId,
+        registeredToken: candidateRegisteredTokens
+      })) {
         throw new Error('A valid, unexpired signed checkpoint token is required');
       }
 

@@ -370,3 +370,105 @@ it('allows an authenticated unteamed Clerk participant to register a squad via /
   const dupeRes = await request('/teams/create', token(), { name: 'Beta Squad' });
   assert.equal(dupeRes.status, 400);
 });
+
+it('allows pre-rostered teammate to bind Clerk identity when registration is closed and blocks unrostered participants', async () => {
+  // Setup: Event is in REGISTRATION_CLOSED state
+  await EventConfig.updateOne({}, { state: 'REGISTRATION_CLOSED', maintenanceMode: false, registrationOpen: false });
+
+  // 1. Create a squad and a pre-rostered teammate record
+  const mockTeam = await Team.create({ name: 'Special Ops ' + Date.now(), leaderId: user._id, joinCode: 'HTG-SPEC' + Date.now().toString().slice(-4) });
+  const preRostered = await User.create({
+    username: 'pre_member_temp',
+    email: 'rostered_teammate@example.test',
+    fullName: 'Pre Rostered Teammate',
+    passwordHash: password,
+    role: 'TEAM_MEMBER',
+    teamId: mockTeam._id,
+    isActive: true
+  });
+
+  // Ensure user_fixture is unlinked from any previous test
+  await User.updateMany({ clerkUserId: 'user_fixture' }, { $unset: { clerkUserId: 1 } });
+
+  // 2. Pre-rostered teammate claims their account during REGISTRATION_CLOSED
+  email = 'rostered_teammate@example.test';
+  const claimRes = await request('/auth/clerk/register', token(), {
+    username: 'claimed_operative',
+    fullName: 'Claimed Operative'
+  });
+  assert.equal(claimRes.status, 201);
+
+  const verifiedUser = await User.findById(preRostered._id).select('+clerkUserId');
+  assert.equal(verifiedUser.clerkUserId, 'user_fixture');
+  assert.equal(verifiedUser.username, 'claimed_operative');
+  assert.equal(verifiedUser.fullName, 'Claimed Operative');
+  assert.equal(String(verifiedUser.teamId), String(mockTeam._id));
+  assert.equal(verifiedUser.role, 'TEAM_MEMBER');
+
+  // 3. New unrostered participant attempting register when registration is closed receives 403
+  await User.updateOne({ _id: verifiedUser._id }, { $unset: { clerkUserId: 1 } });
+  email = 'stranger_closed@example.test';
+  const strangerRes = await request('/auth/clerk/register', token(), {
+    username: 'unrostered_stranger',
+    fullName: 'Unrostered Stranger'
+  });
+  assert.equal(strangerRes.status, 403);
+  assert.equal(strangerRes.body.message, 'Registration is currently closed');
+
+  // 4. Administrative account cannot be bound or hijacked via participant registration
+  const adminAccount = await User.create({
+    username: 'target_admin_' + Date.now().toString().slice(-4),
+    email: 'admin_target@example.test',
+    fullName: 'Target Admin',
+    passwordHash: password,
+    role: 'ADMIN',
+    isActive: true
+  });
+  email = 'admin_target@example.test';
+  const adminRes = await request('/auth/clerk/register', token(), {
+    username: 'admin_hijack',
+    fullName: 'Admin Hijack'
+  });
+  assert.equal(adminRes.status, 403);
+  assert.equal(adminRes.body.message, 'Administrative accounts cannot be self-linked via participant registration');
+});
+
+it('differentiates unlinked admin identity with CLERK_ADMIN_UNLINKED and permits mapped admin', async () => {
+  const adminUser = await User.create({
+    username: 'audit_admin_' + Date.now().toString().slice(-4),
+    email: 'audit_admin@example.test',
+    fullName: 'Audit Admin',
+    passwordHash: password,
+    role: 'ADMIN',
+    isActive: true
+  });
+
+  // Ensure user_fixture is unlinked from any previous records
+  await User.updateMany({ clerkUserId: 'user_fixture' }, { $unset: { clerkUserId: 1 } });
+  email = 'audit_admin@example.test';
+
+  const unlinkedRes = await request('/auth/me');
+  assert.equal(unlinkedRes.status, 403);
+  assert.equal(unlinkedRes.body.errorCode, 'CLERK_ADMIN_UNLINKED');
+  assert.match(unlinkedRes.body.message, /Organizer-assisted admin account linking required/);
+
+  // Link Clerk ID to admin record
+  await User.updateOne({ _id: adminUser._id }, { clerkUserId: 'user_fixture' });
+  const linkedRes = await request('/auth/me');
+  assert.equal(linkedRes.status, 200);
+  assert.equal(linkedRes.body.data.user.role, 'ADMIN');
+  assert.equal(linkedRes.body.data.user.username, adminUser.username);
+});
+
+it('allows local dev Vite origins (including port 5174) with correct CORS headers', async () => {
+  const res = await fetch(base + '/auth/me', {
+    method: 'OPTIONS',
+    headers: {
+      Origin: 'http://localhost:5174',
+      'Access-Control-Request-Method': 'GET'
+    }
+  });
+  assert.equal(res.status, 204);
+  assert.equal(res.headers.get('access-control-allow-origin'), 'http://localhost:5174');
+  assert.equal(res.headers.get('access-control-allow-credentials'), 'true');
+});

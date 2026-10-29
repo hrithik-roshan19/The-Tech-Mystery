@@ -16,8 +16,9 @@ class QrGeneratorService {
    */
   getFrontendUrl() {
     const rawOrigin = config.cors?.origin || 'http://localhost:5173';
-    // If comma-separated (e.g. multiple authorized parties), pick first valid URL
-    const primary = rawOrigin.split(',')[0].trim();
+    // If array or comma-separated (e.g. multiple authorized parties), pick first valid URL
+    const raw = Array.isArray(rawOrigin) ? (rawOrigin[0] || 'http://localhost:5173') : rawOrigin;
+    const primary = raw.includes(',') ? raw.split(',')[0].trim() : raw.trim();
     return primary.replace(/\/+$/, '');
   }
 

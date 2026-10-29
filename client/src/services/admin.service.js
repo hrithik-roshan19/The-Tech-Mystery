@@ -120,7 +120,7 @@ export const adminService = {
   },
 
   getQuestions: async (params = {}) => {
-    const res = await api.get('/admin/questions', { params });
+    const res = await api.get('/admin/questions', { params, timeout: 25000 });
     return res.data;
   },
 

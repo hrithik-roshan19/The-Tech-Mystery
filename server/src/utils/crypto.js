@@ -81,13 +81,37 @@ const verifyCheckpointToken = (checkpointCode, levelNumber, token, options = {})
   if (!crypto.timingSafeEqual(Buffer.from(parts[1], 'hex'), Buffer.from(expected, 'hex'))) return false;
   try {
     const payload = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'));
-    const isBasicMatch = payload.v === 1 && payload.code === checkpointCode && payload.level === levelNumber &&
-      Number.isSafeInteger(payload.exp) && payload.exp > Math.floor(Date.now() / 1000) &&
+    if (!payload || typeof payload !== 'object') return false;
+
+    const isBasicMatch = payload.v === 1 &&
+      String(payload.code).trim().toUpperCase() === String(checkpointCode).trim().toUpperCase() &&
+      Number(payload.level) === Number(levelNumber) &&
       payload.team === (options.teamId ? String(options.teamId) : '*');
     if (!isBasicMatch) return false;
     if (options.qid && payload.qid && payload.qid !== String(options.qid)) return false;
+
+    // Check expiration against current wall-clock time
+    const isUnexpired = Number.isSafeInteger(payload.exp) && payload.exp > Math.floor(Date.now() / 1000);
+
+    // Check if token matches an authoritative registered token anchored in the database
+    let isRegisteredToken = false;
+    if (options.registeredToken) {
+      const candidates = Array.isArray(options.registeredToken)
+        ? options.registeredToken
+        : [options.registeredToken];
+      for (const candidate of candidates) {
+        if (typeof candidate === 'string' && candidate.length > 0 && safeFlagCompare(token, candidate, true)) {
+          isRegisteredToken = true;
+          break;
+        }
+      }
+    }
+
+    if (!isUnexpired && !isRegisteredToken) return false;
     return true;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 };
 
 module.exports = {

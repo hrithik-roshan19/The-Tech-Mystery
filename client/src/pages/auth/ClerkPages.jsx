@@ -349,7 +349,7 @@ export function AuthCompletePage() {
   const { user: clerkUser } = useUser();
   const isFromRegister = location.state?.from?.pathname === '/register' ||
     sessionStorage.getItem('htg_auth_return') === '/register';
-  const [mode, setMode] = useState(isFromRegister ? 'register' : 'link');
+  const [mode, setMode] = useState('register');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -379,7 +379,10 @@ export function AuthCompletePage() {
     sessionStorage.removeItem('htg_auth_return');
 
     if (user.role === 'ADMIN') {
-      return <Navigate to="/admin/dashboard" replace />;
+      const adminDestination = stored?.startsWith('/admin') && !stored.startsWith('//')
+        ? stored
+        : '/admin/dashboard';
+      return <Navigate to={adminDestination} replace />;
     }
 
     // Requirement 1 & 4: New users who complete Clerk signup must be redirected to /register, not directly to /dashboard
@@ -387,8 +390,9 @@ export function AuthCompletePage() {
       return <Navigate to="/register" replace />;
     }
 
-    // Requirement 2 & 3: Existing users who log in must go directly to /dashboard and never back to /register
-    const destination = stored?.startsWith('/') && !stored.startsWith('//') && !stored.startsWith('/auth/') && stored !== '/register'
+    // Requirement 2 & 3: Existing users who log in must go directly to /dashboard and never back to /register.
+    // Never redirect a participant to an admin route.
+    const destination = stored?.startsWith('/') && !stored.startsWith('//') && !stored.startsWith('/auth/') && !stored.startsWith('/admin') && stored !== '/register'
       ? stored
       : '/dashboard';
     return <Navigate to={destination} replace />;
@@ -424,25 +428,51 @@ export function AuthCompletePage() {
             <p>Link your operative identity to your The Tech Mystery profile.</p>
           </div>
 
-          {authError === 'CLERK_ACCOUNT_UNLINKED' ? (
+          {authError === 'CLERK_ADMIN_UNLINKED' ? (
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              <div style={{ color: '#ffd166', fontSize: '36px', marginBottom: '12px' }}>🔒</div>
+              <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
+                ADMINISTRATIVE ACCOUNT DETECTED
+              </h3>
+              <p role="alert" style={{ color: '#c0c5c1', fontSize: '13.5px', lineHeight: 1.6, marginBottom: '20px' }}>
+                This account is recognized as an <strong>Administrator</strong>. Administrative accounts cannot be self-linked or registered via participant forms.
+              </p>
+              <div style={{ background: 'rgba(255, 209, 102, 0.08)', border: '1px solid rgba(255, 209, 102, 0.3)', borderRadius: '8px', padding: '16px', marginBottom: '24px', textAlign: 'left' }}>
+                <p style={{ color: '#ffd166', fontSize: '12.5px', fontWeight: 600, marginBottom: '6px' }}>
+                  Action Required:
+                </p>
+                <p style={{ color: '#e0e5e1', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
+                  Organizer-assisted admin account linking required. Please run the administrative terminal linking utility or contact the lead organizer to bind your Clerk identity to your database admin record.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="login-submit"
+                onClick={refreshUser}
+                style={{ width: '100%' }}
+              >
+                Re-check Account Status
+              </button>
+            </div>
+          ) : authError === 'CLERK_ACCOUNT_UNLINKED' ? (
             <>
               <p style={{ color: '#c0c5c1', fontSize: '13.5px', lineHeight: 1.5, marginBottom: '20px' }}>
-                Link your existing account to preserve your team and history. New participants can register only when event registration is open.
+                Link your existing account to preserve your team and history. Pre-rostered members and new participants can complete registration below.
               </p>
               <div className="login-tabs" style={{ marginBottom: '20px' }}>
-                <button
-                  type="button"
-                  className={mode === 'link' ? 'selected' : ''}
-                  onClick={() => setMode('link')}
-                >
-                  Link existing account
-                </button>
                 <button
                   type="button"
                   className={mode === 'register' ? 'selected' : ''}
                   onClick={() => setMode('register')}
                 >
                   New participant
+                </button>
+                <button
+                  type="button"
+                  className={mode === 'link' ? 'selected' : ''}
+                  onClick={() => setMode('link')}
+                >
+                  Link existing account
                 </button>
               </div>
               <form onSubmit={submit}>
@@ -498,6 +528,33 @@ export function AuthCompletePage() {
                 Administrator accounts and recovery cases require organizer-assisted identity verification.
               </p>
             </>
+          ) : authError === 'NETWORK_ERROR' ? (
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              <p role="alert" style={{ color: '#ff8595', background: 'rgba(255, 75, 75, 0.12)', border: '1px solid rgba(255, 75, 75, 0.35)', borderRadius: '6px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>
+                Network connection unavailable. Please check your connection and retry.
+              </p>
+              <button type="button" className="login-submit" onClick={refreshUser} style={{ width: '100%' }}>
+                Retry Connection
+              </button>
+            </div>
+          ) : authError === 'SESSION_EXPIRED' ? (
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              <p role="alert" style={{ color: '#ff8595', background: 'rgba(255, 75, 75, 0.12)', border: '1px solid rgba(255, 75, 75, 0.35)', borderRadius: '6px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>
+                Your security session has expired. Please sign out and log in again.
+              </p>
+              <button type="button" className="login-submit" onClick={logout} style={{ width: '100%' }}>
+                Sign Out & Log In
+              </button>
+            </div>
+          ) : authError === 'TOKEN_ACQUISITION_FAILED' ? (
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              <p role="alert" style={{ color: '#ff8595', background: 'rgba(255, 75, 75, 0.12)', border: '1px solid rgba(255, 75, 75, 0.35)', borderRadius: '6px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>
+                Authentication session initialization timed out. Click below to retry.
+              </p>
+              <button type="button" className="login-submit" onClick={refreshUser} style={{ width: '100%' }}>
+                Retry Verification
+              </button>
+            </div>
           ) : (
             <>
               <p role="alert" style={{ color: '#ff8595', background: 'rgba(255, 75, 75, 0.12)', border: '1px solid rgba(255, 75, 75, 0.35)', borderRadius: '6px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>

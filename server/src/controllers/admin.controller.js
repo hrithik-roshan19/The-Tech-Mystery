@@ -566,58 +566,58 @@ class AdminController {
         .populate('checkpointId', 'checkpointCode name locationDescription status mode')
         .populate('claimedByTeamId', 'name teamCode')
         .populate('completedByTeamId', 'name teamCode')
-        .sort({ levelNumber: 1, order: 1, createdAt: 1 });
+        .sort({ levelNumber: 1, order: 1 })
+        .lean();
 
-      if (req.query.includeFlag === 'true' || req.query.withFlag === 'true') {
+      if (req.query.includeFlag === 'true' || req.query.withFlag === 'true' || req.query.includeAnswers === 'true') {
         query.select('+flag');
       } else {
         query.select('-flag');
       }
 
-      const questions = await query;
-      const questionsWithAssignments = await Promise.all(
-        questions.map(async (q) => {
-          if (!q.qrCodeDataUrl) {
-            try {
-              const cp = q.checkpointId || await Checkpoint.findOne({ levelNumber: q.levelNumber });
-              const qrInfo = await qrGenerator.generateQuestionQr(q, cp);
-              q.qrCodeDataUrl = qrInfo.qrCodeDataUrl;
-              q.qrScanUrl = qrInfo.scanUrl;
-              q.qrToken = qrInfo.token;
-              q.checkpointCode = qrInfo.checkpointCode;
-              await Question.updateOne(
-                { _id: q._id },
-                {
-                  $set: {
-                    qrCodeDataUrl: qrInfo.qrCodeDataUrl,
-                    qrScanUrl: qrInfo.scanUrl,
-                    qrToken: qrInfo.token,
-                    checkpointCode: qrInfo.checkpointCode,
-                    ...(q.checkpointId ? {} : (cp ? { checkpointId: cp._id } : {}))
-                  }
-                }
-              );
-            } catch (err) {
-              logger.warn(`Lazy QR generation error for question ${q._id}: ${err.message}`);
-            }
-          }
+      // Project out the heavy base64 QR payload unless explicitly requested (shrinks bulk payload by ~90%)
+      if (req.query.includeQr !== 'true') {
+        query.select('-qrCodeDataUrl');
+      }
 
-          const assignments = await TeamChallenge.find({ assignedQuestionId: q._id }).populate('teamId', 'name totalScore currentLevel isDisqualified');
-          const qObj = q.toObject();
-          qObj.assignedTeams = assignments.map(a => ({
-            teamId: a.teamId?._id,
-            teamName: a.teamId?.name || 'Unknown Team',
-            status: a.status,
-            attemptsCount: a.attemptsCount,
-            checkpointScanned: a.checkpointScanned,
-            solvedAt: a.solvedAt,
-            pointsAwarded: a.pointsAwarded
-          }));
-          qObj.assignedCount = assignments.length;
-          qObj.solvedCount = assignments.filter(a => a.status === 'SOLVED').length;
-          return qObj;
-        })
-      );
+      const questions = await query;
+      if (!questions || questions.length === 0) {
+        return success(res, { questions: [] });
+      }
+
+      // Single batched query for all assignments across matched questions (O(1) database queries instead of O(N))
+      const questionIds = questions.map(q => q._id);
+      const assignments = await TeamChallenge.find({ assignedQuestionId: { $in: questionIds } })
+        .populate('teamId', 'name totalScore currentLevel isDisqualified')
+        .lean();
+
+      const assignmentsByQuestionId = new Map();
+      for (const a of assignments) {
+        if (!a.assignedQuestionId) continue;
+        const qIdStr = String(a.assignedQuestionId);
+        let list = assignmentsByQuestionId.get(qIdStr);
+        if (!list) {
+          list = [];
+          assignmentsByQuestionId.set(qIdStr, list);
+        }
+        list.push(a);
+      }
+
+      const questionsWithAssignments = questions.map((q) => {
+        const qAssignments = assignmentsByQuestionId.get(String(q._id)) || [];
+        q.assignedTeams = qAssignments.map(a => ({
+          teamId: a.teamId?._id,
+          teamName: a.teamId?.name || 'Unknown Team',
+          status: a.status,
+          attemptsCount: a.attemptsCount,
+          checkpointScanned: a.checkpointScanned,
+          solvedAt: a.solvedAt,
+          pointsAwarded: a.pointsAwarded
+        }));
+        q.assignedCount = qAssignments.length;
+        q.solvedCount = qAssignments.filter(a => a.status === 'SOLVED').length;
+        return q;
+      });
 
       return success(res, { questions: questionsWithAssignments });
     } catch (error) {

@@ -1,6 +1,32 @@
+const path = require('path');
+const fs = require('fs');
 const dotenv = require('dotenv');
-dotenv.config();
-dotenv.config({ path: require('path').resolve(__dirname, '../../.env') });
+
+// Capture pre-existing process.env to ensure CLI flags and test harnesses are preserved
+const originalEnv = { ...process.env };
+
+// Resolve paths: server/.env takes precedence over repository root .env
+const serverEnvPath = path.resolve(__dirname, '../../.env');
+const rootEnvPath = path.resolve(__dirname, '../../../.env');
+
+// 1. Load server/.env first so server-specific configuration (e.g. Atlas URI) takes priority
+if (fs.existsSync(serverEnvPath)) {
+  dotenv.config({ path: serverEnvPath });
+}
+
+// 2. Load root .env as fallback for shared variables not defined in server/.env
+if (fs.existsSync(rootEnvPath)) {
+  dotenv.config({ path: rootEnvPath });
+} else {
+  dotenv.config();
+}
+
+// 3. Re-apply pre-existing environment variables (CLI flags, CI runners)
+for (const [key, value] of Object.entries(originalEnv)) {
+  if (value !== undefined) {
+    process.env[key] = value;
+  }
+}
 
 /**
  * Validated Environment Variables Configuration
@@ -42,8 +68,27 @@ const config = {
   // CORS
   cors: {
     origin: (() => {
+      const origins = new Set();
       const raw = process.env.CLIENT_URL || process.env.CORS_ORIGIN || 'http://localhost:5173';
-      return raw.includes(',') ? raw.split(',').map(s => s.trim()).filter(Boolean) : raw;
+      (raw.includes(',') ? raw.split(',') : [raw]).forEach(s => {
+        const trimmed = (s || '').trim();
+        if (trimmed) {
+          origins.add(trimmed);
+          origins.add(trimmed.replace(/\/+$/, ''));
+        }
+      });
+      // In non-production environments, permit standard local Vite development ports
+      if (process.env.NODE_ENV !== 'production') {
+        origins.add('http://localhost:5173');
+        origins.add('http://localhost:5174');
+        origins.add('http://localhost:5175');
+        origins.add('http://localhost:5176');
+        origins.add('http://127.0.0.1:5173');
+        origins.add('http://127.0.0.1:5174');
+        origins.add('http://127.0.0.1:5175');
+        origins.add('http://127.0.0.1:5176');
+      }
+      return Array.from(origins);
     })()
   },
 
@@ -81,6 +126,12 @@ if (config.eventState && !Object.values(EVENT_STATES).includes(config.eventState
 }
 
 if (!['jwt', 'clerk'].includes(config.authProvider)) throw new Error('Unsupported AUTH_PROVIDER');
+if (process.env.VITE_AUTH_PROVIDER && config.env !== 'test') {
+  const clientProvider = process.env.VITE_AUTH_PROVIDER.trim().toLowerCase();
+  if (clientProvider !== config.authProvider) {
+    throw new Error(`Authentication provider mismatch: Server is configured for '${config.authProvider}', but VITE_AUTH_PROVIDER is '${clientProvider}'`);
+  }
+}
 if (config.authProvider === 'clerk') {
   if (!/^sk_(test|live)_[A-Za-z0-9]+$/.test(config.clerk.secretKey || '') ||
       /replace|placeholder/i.test(config.clerk.secretKey || '')) throw new Error('Clerk mode requires CLERK_SECRET_KEY');

@@ -1,10 +1,28 @@
 const path = require('path');
+const fs = require('fs');
 const dotenv = require('dotenv');
 
-// Load environment from server/.env and root .env
-dotenv.config();
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Capture pre-existing process.env to ensure CLI flags and test harnesses are preserved
+const originalEnv = { ...process.env };
+
+// Resolve paths: server/.env takes precedence over repository root .env
+const serverEnvPath = path.resolve(__dirname, '../.env');
+const rootEnvPath = path.resolve(__dirname, '../../.env');
+
+if (fs.existsSync(serverEnvPath)) {
+  dotenv.config({ path: serverEnvPath });
+}
+if (fs.existsSync(rootEnvPath)) {
+  dotenv.config({ path: rootEnvPath });
+} else {
+  dotenv.config();
+}
+
+for (const [key, value] of Object.entries(originalEnv)) {
+  if (value !== undefined) {
+    process.env[key] = value;
+  }
+}
 
 const mongoose = require('mongoose');
 const readline = require('readline');
@@ -31,6 +49,18 @@ async function promptForClerkId() {
   });
 }
 
+function resolveTargetDb(args) {
+  const targetDbArg = args.find(a => a.startsWith('--target-db='));
+  if (targetDbArg) {
+    return targetDbArg.split('=')[1].trim();
+  }
+  const idx = args.indexOf('--target-db');
+  if (idx !== -1 && args[idx + 1] && !args[idx + 1].startsWith('--')) {
+    return args[idx + 1].trim();
+  }
+  return null;
+}
+
 async function resolveClerkId() {
   // 1. Check environment variable
   let clerkId = (process.env.CLERK_ADMIN_USER_ID || '').trim();
@@ -53,10 +83,15 @@ async function main() {
   const args = process.argv.slice(2);
   const isConfirm = args.includes('--confirm') || args.includes('--execute') || args.includes('--commit');
   const isDryRun = args.includes('--dry-run') || !isConfirm;
+  const isRelink = args.includes('--relink') || args.includes('--rotate') || args.includes('--force');
+  const targetDb = resolveTargetDb(args);
 
   console.log('='.repeat(60));
-  console.log('THE TECH MYSTERY \u2014 ADMIN CLERK MAPPING UTILITY');
-  console.log(`Mode: ${isDryRun ? 'DRY-RUN (Safe Read-Only Audit)' : 'CONFIRMED (Live Write)'}`);
+  console.log('THE TECH MYSTERY — ADMIN CLERK MAPPING UTILITY');
+  console.log(`Mode: ${isDryRun ? 'DRY-RUN (Safe Read-Only Audit)' : 'CONFIRMED (Live Write)'}${isRelink ? ' [RELINK/ROTATE]' : ''}`);
+  if (targetDb) {
+    console.log(`Target Database: ${targetDb}`);
+  }
   console.log('='.repeat(60));
 
   const rawClerkId = await resolveClerkId();
@@ -84,7 +119,12 @@ async function main() {
   }
 
   const dbName = mongoose.connection.name;
-  console.log(`[\u2713] Connected to MongoDB database: ${dbName}`);
+  const host = mongoose.connection.host || 'unknown-host';
+  console.log(`[✓] Connected to MongoDB database: ${dbName} on host: ${host}`);
+
+  if (targetDb && dbName !== targetDb) {
+    throw new Error(`Database target mismatch: Expected database '${targetDb}', but connected to '${dbName}'. Aborting.`);
+  }
 
   // 1. Verify unique sparse index on clerkUserId exists
   const indexes = await User.collection.indexes();
@@ -187,7 +227,12 @@ async function main() {
       console.log(`[i] Admin account '${ADMIN_USERNAME}' is already mapped to this Clerk user ID.`);
       return;
     }
-    throw new Error(`Admin account '${ADMIN_USERNAME}' already has a different Clerk ID mapped. Refusing to overwrite.`);
+    if (!isRelink) {
+      throw new Error(
+        `Admin account '${ADMIN_USERNAME}' already has a different Clerk ID mapped. To safely re-link/rotate to this verified Clerk ID, re-run with --relink (or --relink --confirm).`
+      );
+    }
+    console.log(`[!] Notice: Admin account '${ADMIN_USERNAME}' has existing mapping; --relink authorized.`);
   }
 
   console.log(`[\u2713] Target admin account '${ADMIN_USERNAME}' verified and eligible for mapping`);
@@ -202,31 +247,35 @@ async function main() {
     console.log(`- Role: ${adminUser.role}`);
     console.log(`- Active: ${adminUser.isActive}`);
     console.log(`- Password Hash Preserved: ${hasPasswordHash}`);
-    console.log(`- Current clerkUserId: null (unmapped)`);
+    console.log(`- Current clerkUserId: ${adminUser.clerkUserId ? 'mapped (rotation authorized via --relink)' : 'null (unmapped)'}`);
     console.log(`- Clerk Identity Status: Verified & Eligible`);
     console.log(`- All Pre-flight Guards: PASSED`);
     console.log('-'.repeat(60));
     console.log('\n[!] DRY-RUN COMPLETE: No changes were written to MongoDB.');
     console.log('To execute the confirmed atomic mapping, re-run with --confirm:');
-    console.log('  $env:CLERK_ADMIN_USER_ID = $clerkId; node server/scripts/link-admin-clerk.js --confirm');
-    console.log('  OR: node server/scripts/link-admin-clerk.js $clerkId --confirm\n');
+    console.log(`  $env:CLERK_ADMIN_USER_ID = $clerkId; node server/scripts/link-admin-clerk.js ${isRelink ? '--relink ' : ''}--confirm`);
+    console.log(`  OR: node server/scripts/link-admin-clerk.js $clerkId ${isRelink ? '--relink ' : ''}--confirm\n`);
     return;
   }
 
   // 6. Confirmed Atomic Mapping
   console.log(`[*] Executing atomic mapping for '${ADMIN_USERNAME}'...`);
+  const updateFilter = {
+    _id: adminUser._id,
+    username: ADMIN_USERNAME,
+    email: ADMIN_EMAIL,
+    role: 'ADMIN',
+    isActive: true
+  };
+  if (!isRelink) {
+    updateFilter.$or = [
+      { clerkUserId: { $exists: false } },
+      { clerkUserId: null }
+    ];
+  }
+
   const updateResult = await User.updateOne(
-    {
-      _id: adminUser._id,
-      username: ADMIN_USERNAME,
-      email: ADMIN_EMAIL,
-      role: 'ADMIN',
-      isActive: true,
-      $or: [
-        { clerkUserId: { $exists: false } },
-        { clerkUserId: null }
-      ]
-    },
+    updateFilter,
     {
       $set: {
         clerkUserId: clerkId,

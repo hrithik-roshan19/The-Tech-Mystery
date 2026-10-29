@@ -862,13 +862,13 @@ export default function QuestionManagementPage() {
           <article>
             <span className="q-stat-icon lime">☷</span>
             <div>
-              <strong>{questions.length}</strong>
+              <strong>{loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : questions.length}</strong>
               <small>Total Questions</small>
             </div>
             <div className="q-meter">
               <i
                 style={{
-                  width: `${Math.min(100, questions.length * 10)}%`,
+                  width: `${loading || apiError ? 0 : Math.min(100, questions.length * 10)}%`,
                 }}
               />
             </div>
@@ -876,14 +876,14 @@ export default function QuestionManagementPage() {
           <article>
             <span className="q-stat-icon lime">✓</span>
             <div>
-              <strong>{published}</strong>
+              <strong>{loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : published}</strong>
               <small>Published</small>
             </div>
             <div className="q-meter">
               <i
                 style={{
                   width: `${
-                    questions.length ? (published / questions.length) * 100 : 0
+                    !loading && !apiError && questions.length ? (published / questions.length) * 100 : 0
                   }%`,
                 }}
               />
@@ -892,14 +892,14 @@ export default function QuestionManagementPage() {
           <article>
             <span className="q-stat-icon amber">◷</span>
             <div>
-              <strong>{drafts}</strong>
+              <strong>{loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : drafts}</strong>
               <small>Drafts</small>
             </div>
             <div className="q-meter amber">
               <i
                 style={{
                   width: `${
-                    questions.length ? (drafts / questions.length) * 100 : 0
+                    !loading && !apiError && questions.length ? (drafts / questions.length) * 100 : 0
                   }%`,
                 }}
               />
@@ -908,14 +908,14 @@ export default function QuestionManagementPage() {
           <article>
             <span className="q-stat-icon muted">Ⅱ</span>
             <div>
-              <strong>{paused}</strong>
+              <strong>{loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : paused}</strong>
               <small>Paused</small>
             </div>
             <div className="q-meter muted">
               <i
                 style={{
                   width: `${
-                    questions.length ? (paused / questions.length) * 100 : 0
+                    !loading && !apiError && questions.length ? (paused / questions.length) * 100 : 0
                   }%`,
                 }}
               />
@@ -924,11 +924,11 @@ export default function QuestionManagementPage() {
           <article>
             <span className="q-stat-icon purple">✦</span>
             <div>
-              <strong>{totalPoints.toLocaleString("en-IN")}</strong>
+              <strong>{loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : totalPoints.toLocaleString("en-IN")}</strong>
               <small>Available Points</small>
             </div>
             <div className="q-meter purple">
-              <i style={{ width: "70%" }} />
+              <i style={{ width: loading || apiError ? "0%" : "70%" }} />
             </div>
           </article>
         </section>
@@ -959,7 +959,7 @@ export default function QuestionManagementPage() {
                   color: levelFilter === "All Levels" ? "var(--qr-lime)" : "#a5b0a7"
                 }}
               >
-                All Levels
+                All Levels <span style={{ opacity: 0.7, fontSize: "10px" }}>({loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : questions.length})</span>
               </button>
               {Array.from({ length: 10 }, (_, idx) => {
                 const lvl = idx + 1;
@@ -981,7 +981,7 @@ export default function QuestionManagementPage() {
                       color: isSelected ? "var(--qr-lime)" : "#a5b0a7"
                     }}
                   >
-                    Level {lvl} <span style={{ opacity: 0.7, fontSize: "10px" }}>({count})</span>
+                    Level {lvl} <span style={{ opacity: 0.7, fontSize: "10px" }}>({loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : count})</span>
                   </button>
                 );
               })}
@@ -1044,25 +1044,31 @@ export default function QuestionManagementPage() {
                   <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "12px" }}>
                     <div>
                       <span style={{ color: "#a5b0a7" }}>Question Bank: </span>
-                      <strong style={{ color: "#fff" }}>{lvlQuestions.length} variations</strong>
+                      <strong style={{ color: "#fff" }}>
+                        {loading && questions.length === 0 ? "Loading..." : apiError && questions.length === 0 ? "—" : `${lvlQuestions.length} variations`}
+                      </strong>
                     </div>
                     <div>
                       <span style={{ color: "#a5b0a7" }}>Teams Assigned: </span>
-                      <strong style={{ color: "var(--qr-lime)" }}>{assignedCount}</strong>
+                      <strong style={{ color: "var(--qr-lime)" }}>
+                        {loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : assignedCount}
+                      </strong>
                     </div>
                     <div>
                       <span style={{ color: "#a5b0a7" }}>Teams Solved: </span>
-                      <strong style={{ color: "#10b981" }}>{solvedCount}</strong>
+                      <strong style={{ color: "#10b981" }}>
+                        {loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : solvedCount}
+                      </strong>
                     </div>
                     <div>
                       <span style={{ color: "#a5b0a7" }}>Available Unassigned: </span>
                       <strong style={{ color: unassignedCount > 0 ? "var(--qr-lime)" : "#ef4444" }}>
-                        {unassignedCount} ready
+                        {loading && questions.length === 0 ? "..." : apiError && questions.length === 0 ? "—" : `${unassignedCount} ready`}
                       </strong>
                     </div>
                   </div>
 
-                  {unassignedCount === 0 && lvlQuestions.length > 0 && (
+                  {!loading && !apiError && unassignedCount === 0 && lvlQuestions.length > 0 && (
                     <div style={{ marginTop: "8px", fontSize: "11px", color: "#fca5a5", background: "rgba(239, 68, 68, 0.15)", border: "1px solid #ef4444", padding: "4px 8px", borderRadius: "4px" }}>
                       ⚠ QUESTION POOL EXHAUSTED: Add more questions to Level {activeLevelNum} so newly arrived teams receive unique challenges.
                     </div>
@@ -1217,6 +1223,12 @@ export default function QuestionManagementPage() {
                       <tr>
                         <td colSpan="11" className="q-empty">
                           Loading challenge questions...
+                        </td>
+                      </tr>
+                    ) : apiError && questions.length === 0 ? (
+                      <tr>
+                        <td colSpan="11" className="q-empty" style={{ color: "#fca5a5" }}>
+                          ⚠ Failed to load challenge questions. Please click "Retry" above.
                         </td>
                       </tr>
                     ) : filtered.length === 0 ? (
@@ -1422,6 +1434,10 @@ export default function QuestionManagementPage() {
                   <div className="q-empty" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px" }}>
                     Loading challenge questions...
                   </div>
+                ) : apiError && questions.length === 0 ? (
+                  <div className="q-empty" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px", color: "#fca5a5" }}>
+                    ⚠ Failed to load challenge questions. Please click "Retry" above.
+                  </div>
                 ) : filtered.length === 0 ? (
                   <div className="q-empty" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px" }}>
                     {questions.length === 0
@@ -1498,9 +1514,11 @@ export default function QuestionManagementPage() {
                   QUESTION INSPECTOR
                 </small>
                 <div className="q-detail-empty-icon">🎯</div>
-                <h3>No Question Selected</h3>
+                <h3>{apiError && questions.length === 0 ? "Questions Unavailable" : "No Question Selected"}</h3>
                 <p>
-                  {questions.length === 0
+                  {apiError && questions.length === 0
+                    ? "Challenge questions could not be loaded. Click Retry in the notification banner above."
+                    : questions.length === 0
                     ? "No questions have been configured yet. Create or upload your first challenge question to get started."
                     : "Select a question from the table or card grid to preview its prompt, answers, and station QR beacon."}
                 </p>

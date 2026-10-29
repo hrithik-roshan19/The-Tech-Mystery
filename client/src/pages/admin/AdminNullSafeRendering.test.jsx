@@ -149,6 +149,29 @@ describe('Admin Questions & Submissions Null-Safety and Resilient Rendering', ()
         expect(screen.getByRole('button', { name: /Retry/i })).toBeDefined();
       });
     });
+
+    it('displays error indicators rather than deceptive zeros when getQuestions fails or times out', async () => {
+      mockAdminService.getQuestions.mockRejectedValue(new Error('timeout of 10000ms exceeded'));
+      mockAdminService.getChallenges.mockResolvedValue({ data: { challenges: [] } });
+      mockAdminService.getCheckpoints.mockResolvedValue({ data: { checkpoints: [] } });
+
+      render(
+        <MemoryRouter>
+          <QuestionManagementPage />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toBeDefined();
+        expect(screen.getByText(/timeout of 10000ms exceeded/i)).toBeDefined();
+        // Check that stat counters show '—' instead of '0'
+        const dashedCounters = screen.getAllByText('—');
+        expect(dashedCounters.length).toBeGreaterThanOrEqual(4);
+        // Table and Inspector show clear error messaging
+        expect(screen.getByText(/Failed to load challenge questions/i)).toBeDefined();
+        expect(screen.getByText(/Questions Unavailable/i)).toBeDefined();
+      });
+    });
   });
 
   describe('SubmissionManagementPage (/admin/submissions)', () => {

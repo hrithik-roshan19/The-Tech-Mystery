@@ -62,23 +62,22 @@ module.exports = {
       await requireMappingIndex();
       const email = await clerk.verifiedEmail(req.clerkIdentity);
       await transaction(async () => {
-        await eventFor('registration');
-
-        if (await User.exists({ clerkUserId: req.clerkIdentity.clerkUserId })) {
-          throw clerk.failure(409, 'Identity already linked');
-        }
-
         const existingUserByEmail = await User.findOne({ email }).select('+clerkUserId +tokenVersion');
         if (existingUserByEmail) {
-          const isPreRosteredTeammate = Boolean(existingUserByEmail.teamId && !existingUserByEmail.clerkUserId);
-          if (!isPreRosteredTeammate) {
-            throw clerk.failure(409, 'An account already exists. Link the existing account or contact an organizer.');
-          }
           if (existingUserByEmail.role === 'ADMIN') {
             throw clerk.failure(403, 'Administrative accounts cannot be self-linked via participant registration');
           }
           if (!existingUserByEmail.isActive) {
             throw clerk.failure(403, 'Account is inactive. Contact an event organizer.');
+          }
+
+          const isPreRosteredTeammate = Boolean(existingUserByEmail.teamId && !existingUserByEmail.clerkUserId);
+          if (!isPreRosteredTeammate) {
+            throw clerk.failure(409, 'An account already exists. Link the existing account or contact an organizer.');
+          }
+
+          if (await User.exists({ clerkUserId: req.clerkIdentity.clerkUserId })) {
+            throw clerk.failure(409, 'Identity already linked');
           }
 
           const conflictUser = await User.findOne({ username, _id: { $ne: existingUserByEmail._id } });
@@ -95,6 +94,13 @@ module.exports = {
           }
           await existingUserByEmail.save();
         } else {
+          // Brand new participant registration requires open event registration
+          await eventFor('registration');
+
+          if (await User.exists({ clerkUserId: req.clerkIdentity.clerkUserId })) {
+            throw clerk.failure(409, 'Identity already linked');
+          }
+
           if (await User.exists({ username })) {
             throw clerk.failure(409, 'An account already exists. Link the existing account or contact an organizer.');
           }
