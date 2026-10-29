@@ -937,7 +937,7 @@ export const ChallengeViewPage = () => {
                       question.type === 'Flag'
                         ? 'HTG{captured_flag_string}'
                         : question.type === 'Multiple Choice'
-                        ? 'Select an option above or type answer'
+                        ? 'Select an option above or enter option (A, B, C, D)'
                         : question.isCaseSensitive
                         ? 'Enter exact answer (case-sensitive)'
                         : 'Enter answer (case-insensitive)'

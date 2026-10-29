@@ -1012,7 +1012,7 @@ export function QRCheckpointPage() {
                               onChange={(e) => setSubmissionFlag(e.target.value)}
                               placeholder={
                                 verifyResult.data.question.type === "Multiple Choice"
-                                  ? "Select an option above or type answer"
+                                  ? "Select an option above or enter option (A, B, C, D)"
                                   : verifyResult.data.question.type === "Text Answer" || verifyResult.data.question.type === "Short Text"
                                   ? (verifyResult.data.question.isCaseSensitive ? "Enter text answer (case-sensitive)" : "Enter text answer (case-insensitive)")
                                   : "HTG{flag_here}"
