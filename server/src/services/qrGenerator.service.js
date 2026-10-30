@@ -15,8 +15,25 @@ class QrGeneratorService {
    * Determine frontend origin for scan URLs.
    */
   getFrontendUrl() {
+    // 1. Explicit canonical override
+    if (process.env.CANONICAL_FRONTEND_URL) {
+      return process.env.CANONICAL_FRONTEND_URL.replace(/\/+$/, '');
+    }
+
+    // 2. In production mode, always enforce the official production origin
+    const PROD_CANONICAL = 'https://the-tech-mystery.vercel.app';
+    if (config.isProduction || process.env.NODE_ENV === 'production') {
+      const rawOrigin = config.cors?.origin;
+      const raw = Array.isArray(rawOrigin) ? (rawOrigin[0] || '') : (rawOrigin || '');
+      const primary = raw.includes(',') ? raw.split(',')[0].trim() : raw.trim();
+      if (primary && !primary.includes('localhost') && !primary.includes('127.0.0.1')) {
+        return primary.replace(/\/+$/, '');
+      }
+      return PROD_CANONICAL;
+    }
+
+    // 3. In non-production, check if CLIENT_URL has a non-localhost domain
     const rawOrigin = config.cors?.origin || 'http://localhost:5173';
-    // If array or comma-separated (e.g. multiple authorized parties), pick first valid URL
     const raw = Array.isArray(rawOrigin) ? (rawOrigin[0] || 'http://localhost:5173') : rawOrigin;
     const primary = raw.includes(',') ? raw.split(',')[0].trim() : raw.trim();
     return primary.replace(/\/+$/, '');

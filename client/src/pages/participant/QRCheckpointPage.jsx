@@ -21,6 +21,31 @@ const navLinks = [
 ];
 
 /**
+ * Normalizes scanned raw text, rewriting legacy or local development URLs
+ * to canonical origin if needed so participants never see localhost URLs.
+ */
+function normalizeScannedPayload(raw) {
+  if (!raw || typeof raw !== "string") return raw || "";
+  const trimmed = raw.trim();
+  if (
+    trimmed.startsWith("http://localhost") ||
+    trimmed.startsWith("http://127.0.0.1") ||
+    trimmed.startsWith("https://localhost")
+  ) {
+    try {
+      const parsed = new URL(trimmed);
+      const origin = typeof window !== "undefined" && window.location.origin
+        ? window.location.origin
+        : "https://the-tech-mystery.vercel.app";
+      return `${origin}${parsed.pathname}${parsed.search}`;
+    } catch {
+      return trimmed;
+    }
+  }
+  return trimmed;
+}
+
+/**
  * Extracts code and token from various QR payload formats:
  * - URL: /checkpoint/scan?code=CP-01&token=xyz or https://domain/checkpoint/scan?...
  * - JSON: {"code":"CP-01","token":"xyz"}
@@ -364,7 +389,8 @@ export function QRCheckpointPage() {
           if (hasScannedRef.current) return;
           hasScannedRef.current = true;
 
-          setDecodedValue(decodedText);
+          const normalized = normalizeScannedPayload(decodedText);
+          setDecodedValue(normalized);
           setScanMessage("QR code detected! Verify this checkpoint with the event server before awarding points.");
           stopLiveScan();
         },
@@ -426,7 +452,8 @@ export function QRCheckpointPage() {
       const decodedText = await fileScanner.scanFile(file, false);
       try { fileScanner.clear(); } catch {}
       if (decodedText) {
-        setDecodedValue(decodedText);
+        const normalized = normalizeScannedPayload(decodedText);
+        setDecodedValue(normalized);
         setScanMessage("QR code successfully detected in uploaded image! Verify with server below.");
       }
     } catch {

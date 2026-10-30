@@ -108,6 +108,27 @@ const startServer = async () => {
       logger.error(`[Database] EventConfig initialization error: ${configError.message}`);
     }
 
+    // Checkpoint Production QR Verification & Regeneration Audit
+    try {
+      const { Checkpoint } = require('./models');
+      const qrGenerator = require('./services/qrGenerator.service');
+      const checkpoints = await Checkpoint.find({ isActive: true });
+      for (const cp of checkpoints) {
+        const isObsolete = cp.qrScanUrl && cp.qrScanUrl.includes('localhost') && (config.isProduction || process.env.NODE_ENV === 'production');
+        if (!cp.qrToken || !cp.qrCodeDataUrl || isObsolete) {
+          logger.info(`[Checkpoints] Regenerating obsolete/missing checkpoint QR for Level ${cp.levelNumber} (${cp.checkpointCode})...`);
+          const qrData = await qrGenerator.generateCheckpointQr(cp);
+          cp.qrCodeDataUrl = qrData.qrCodeDataUrl;
+          cp.qrScanUrl = qrData.scanUrl;
+          cp.qrToken = qrData.token;
+          await cp.save();
+          logger.info(`[Checkpoints] Successfully updated Checkpoint ${cp.checkpointCode} with canonical QR token and scan URL.`);
+        }
+      }
+    } catch (cpError) {
+      logger.warn(`[Checkpoints] Checkpoint startup audit warning: ${cpError.message}`);
+    }
+
     const server = app.listen(config.port, () => {
       logger.info(`=======================================================`);
       logger.info(`  THE TECH MYSTERY - CTF CORE ENGINE READY`);

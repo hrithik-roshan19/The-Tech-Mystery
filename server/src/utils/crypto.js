@@ -77,8 +77,30 @@ const verifyCheckpointToken = (checkpointCode, levelNumber, token, options = {})
   if (typeof token !== 'string' || token.length > 1024) return false;
   const parts = token.split('.');
   if (parts.length !== 2 || !/^[A-Za-z0-9_-]+$/.test(parts[0]) || !/^[a-f0-9]{64}$/.test(parts[1])) return false;
+  
+  // Verify HMAC signature with server secret
   const expected = crypto.createHmac('sha256', config.qrSecretSalt).update(parts[0]).digest('hex');
-  if (!crypto.timingSafeEqual(Buffer.from(parts[1], 'hex'), Buffer.from(expected, 'hex'))) return false;
+  let signatureValid = crypto.timingSafeEqual(Buffer.from(parts[1], 'hex'), Buffer.from(expected, 'hex'));
+
+  // Dual verification: If primary production salt check fails, but candidate registered tokens exist from DB,
+  // allow fallback validation against recognized development/bootstrap salts.
+  let isFallbackSigned = false;
+  if (!signatureValid && options.registeredToken) {
+    const candidateSalts = [
+      'cyber_qr_hmac_salt_for_tamperproof_verification_token',
+      'hack_the_grid_qr_hmac_secret_salt_key_default'
+    ];
+    for (const altSalt of candidateSalts) {
+      const altExpected = crypto.createHmac('sha256', altSalt).update(parts[0]).digest('hex');
+      if (crypto.timingSafeEqual(Buffer.from(parts[1], 'hex'), Buffer.from(altExpected, 'hex'))) {
+        signatureValid = true;
+        isFallbackSigned = true;
+        break;
+      }
+    }
+  }
+
+  if (!signatureValid) return false;
   try {
     const payload = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'));
     if (!payload || typeof payload !== 'object') return false;
@@ -107,6 +129,7 @@ const verifyCheckpointToken = (checkpointCode, levelNumber, token, options = {})
       }
     }
 
+    if (isFallbackSigned && !isRegisteredToken) return false;
     if (!isUnexpired && !isRegisteredToken) return false;
     return true;
   } catch {

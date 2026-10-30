@@ -1176,12 +1176,13 @@ class AdminController {
 
           let qrDataUrl = cp.qrCodeDataUrl;
           let scanUrl = cp.qrScanUrl || (token ? `/checkpoint/scan?code=${cp.checkpointCode}&token=${token}` : null);
-          if (!qrDataUrl && token) {
+          const isObsolete = scanUrl && scanUrl.includes('localhost') && (config.isProduction || process.env.NODE_ENV === 'production');
+          if ((!qrDataUrl || isObsolete) && token) {
             try {
               const qrArtifacts = await qrGenerator.generateCheckpointQr(cp);
               qrDataUrl = qrArtifacts.qrCodeDataUrl;
               scanUrl = qrArtifacts.scanUrl;
-              await Checkpoint.updateOne({ _id: cp._id }, { $set: { qrCodeDataUrl: qrDataUrl, qrScanUrl: scanUrl, qrToken: token } });
+              await Checkpoint.updateOne({ _id: cp._id }, { $set: { qrCodeDataUrl: qrDataUrl, qrScanUrl: scanUrl, qrToken: qrArtifacts.token } });
             } catch (err) {
               logger.warn(`QR generation for checkpoint ${cp._id} failed: ${err.message}`);
             }
@@ -2337,7 +2338,10 @@ class AdminController {
       const checkpoint = await Checkpoint.findById(checkpointId);
       if (!checkpoint) return notFound(res, 'Checkpoint not found');
 
-      if (!checkpoint.qrCodeDataUrl) {
+      const isObsolete = checkpoint.qrScanUrl && checkpoint.qrScanUrl.includes('localhost') && (config.isProduction || process.env.NODE_ENV === 'production');
+      const forceRegenerate = req.query.force === 'true' || req.query.regenerate === 'true';
+
+      if (!checkpoint.qrCodeDataUrl || isObsolete || forceRegenerate) {
         const qrData = await qrGenerator.generateCheckpointQr(checkpoint);
         checkpoint.qrCodeDataUrl = qrData.qrCodeDataUrl;
         checkpoint.qrScanUrl = qrData.scanUrl;
@@ -2364,8 +2368,20 @@ class AdminController {
       const checkpoint = await Checkpoint.findById(checkpointId);
       if (!checkpoint) return notFound(res, 'Checkpoint not found');
 
-      const qrData = await qrGenerator.generateCheckpointQr(checkpoint);
-      const buffer = await qrGenerator.generatePngBuffer(qrData.scanUrl, 800);
+      const isObsolete = checkpoint.qrScanUrl && checkpoint.qrScanUrl.includes('localhost') && (config.isProduction || process.env.NODE_ENV === 'production');
+      const forceRegenerate = req.query.force === 'true' || req.query.regenerate === 'true';
+
+      let scanUrl = checkpoint.qrScanUrl;
+      if (!scanUrl || isObsolete || forceRegenerate) {
+        const qrData = await qrGenerator.generateCheckpointQr(checkpoint);
+        checkpoint.qrCodeDataUrl = qrData.qrCodeDataUrl;
+        checkpoint.qrScanUrl = qrData.scanUrl;
+        checkpoint.qrToken = qrData.token;
+        await checkpoint.save();
+        scanUrl = qrData.scanUrl;
+      }
+
+      const buffer = await qrGenerator.generatePngBuffer(scanUrl, 800);
 
       const filename = `HTG-Checkpoint-${checkpoint.checkpointCode}.png`;
       res.setHeader('Content-Type', 'image/png');

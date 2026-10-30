@@ -152,7 +152,12 @@ export default function QuestionManagementPage() {
       link.click();
       setNotice(`Downloaded official level QR code for Level ${cp.levelNumber} (${code}).`);
     } else {
-      QRCode.toDataURL(cp.qrScanUrl || `${window.location.origin}/checkpoint/scan?code=${code}`, {
+      let targetScanUrl = cp.qrScanUrl;
+      if (!targetScanUrl || targetScanUrl.includes("localhost")) {
+        const tokenPart = cp.qrToken ? `&token=${encodeURIComponent(cp.qrToken)}` : "";
+        targetScanUrl = `${window.location.origin}/checkpoint/scan?code=${encodeURIComponent(code)}${tokenPart}`;
+      }
+      QRCode.toDataURL(targetScanUrl, {
         width: 600,
         margin: 2
       }).then((url) => {
@@ -996,7 +1001,10 @@ export default function QuestionManagementPage() {
             const assignedCount = lvlQuestions.reduce((sum, q) => sum + (q.assignedCount || 0), 0);
             const solvedCount = lvlQuestions.reduce((sum, q) => sum + (q.solvedCount || 0), 0);
             const unassignedCount = lvlQuestions.filter(q => !q.isCompleted && (!q.assignedCount || q.assignedCount === 0)).length;
-            const qrUrl = cp?.qrScanUrl || (cp?.checkpointCode ? `${window.location.origin}/checkpoint/scan?code=${cp.checkpointCode}` : null);
+            const rawQrUrl = cp?.qrScanUrl;
+            const qrUrl = (rawQrUrl && !rawQrUrl.includes("localhost"))
+              ? rawQrUrl
+              : (cp?.checkpointCode ? `${window.location.origin}/checkpoint/scan?code=${encodeURIComponent(cp.checkpointCode)}${cp.qrToken ? `&token=${encodeURIComponent(cp.qrToken)}` : ''}` : null);
 
             return (
               <div style={{

@@ -315,7 +315,8 @@ export default function QRCheckpointManagementPage() {
 
   const handleDownloadQr = (item) => {
     if (!item) return;
-    if (item.qrCodeDataUrl) {
+    const isObsoleteDataUrl = item.qrScanUrl && item.qrScanUrl.includes("localhost");
+    if (item.qrCodeDataUrl && !isObsoleteDataUrl) {
       const link = document.createElement("a");
       link.href = item.qrCodeDataUrl;
       link.download = `HTG-Checkpoint-${item.code}.png`;

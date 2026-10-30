@@ -428,5 +428,53 @@ describe('QR Checkpoint Token Validation & Physical Sticker Preservation', () =>
         /A valid, unexpired signed checkpoint token is required/
       );
     });
+
+    it('accepts token signed with bootstrap salt when anchored to registered checkpoint token', async () => {
+      // Simulate Render production environment where config.qrSecretSalt differs from bootstrap salt
+      const origSalt = config.qrSecretSalt;
+      try {
+        config.qrSecretSalt = 'render_prod_secret_salt_distinct_key_12345';
+        const fallbackSalt = 'cyber_qr_hmac_salt_for_tamperproof_verification_token';
+        const payloadBase64 = Buffer.from(JSON.stringify({
+          v: 1,
+          code: 'HTG-CP04',
+          level: 4,
+          team: '*',
+          exp: Math.floor(Date.now() / 1000) + 86400
+        })).toString('base64url');
+        const sig = crypto.createHmac('sha256', fallbackSalt).update(payloadBase64).digest('hex');
+        const bootstrapToken = `${payloadBase64}.${sig}`;
+
+        // When registeredToken matches bootstrapToken, verification succeeds
+        const isValid = verifyCheckpointToken('HTG-CP04', 4, bootstrapToken, {
+          registeredToken: bootstrapToken
+        });
+        assert.equal(isValid, true, 'Registered bootstrap token must be verified');
+
+        // Without matching registeredToken, it fails closed
+        const isRejected = verifyCheckpointToken('HTG-CP04', 4, bootstrapToken, {
+          registeredToken: 'different_token'
+        });
+        assert.equal(isRejected, false, 'Unregistered bootstrap token must fail closed');
+      } finally {
+        config.qrSecretSalt = origSalt;
+      }
+    });
+
+    it('ensures qrGenerator resolves canonical production domain and never localhost', () => {
+      const qrGenerator = require('../src/services/qrGenerator.service');
+      const origEnv = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = 'production';
+        config.isProduction = true;
+        const url = qrGenerator.getFrontendUrl();
+        assert.ok(!url.includes('localhost'), 'Production QR URL must not include localhost');
+        assert.ok(!url.includes('127.0.0.1'), 'Production QR URL must not include 127.0.0.1');
+        assert.equal(url, 'https://the-tech-mystery.vercel.app', 'Production QR URL must match canonical Vercel deployment');
+      } finally {
+        process.env.NODE_ENV = origEnv;
+        config.isProduction = origEnv === 'production';
+      }
+    });
   });
 });
