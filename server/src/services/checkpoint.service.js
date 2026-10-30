@@ -34,12 +34,26 @@ module.exports = {
         throw new Error('A valid, unexpired signed checkpoint token is required');
       }
 
-      const challenge = await Challenge.findOne({
-        _id: checkpoint.associatedChallengeId,
-        levelNumber: checkpoint.levelNumber,
-        isActive: true,
-        status: 'Published'
-      });
+      let challenge = null;
+      if (checkpoint.associatedChallengeId) {
+        challenge = await Challenge.findOne({
+          _id: checkpoint.associatedChallengeId,
+          levelNumber: checkpoint.levelNumber,
+          isActive: true,
+          status: 'Published'
+        });
+      }
+      if (!challenge) {
+        challenge = await Challenge.findOne({
+          levelNumber: checkpoint.levelNumber,
+          isActive: true,
+          status: 'Published'
+        });
+        if (challenge && !checkpoint.associatedChallengeId) {
+          checkpoint.associatedChallengeId = challenge._id;
+          await Checkpoint.updateOne({ _id: checkpoint._id }, { $set: { associatedChallengeId: challenge._id } });
+        }
+      }
       if (!challenge) throw new Error('Checkpoint challenge is not published or active');
       if (team.currentLevel < checkpoint.levelNumber) throw new Error('Checkpoint locked. Solve prior levels first.');
       if (team.currentLevel > checkpoint.levelNumber) throw new Error('This level has already been cleared by your team.');

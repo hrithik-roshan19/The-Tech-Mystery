@@ -138,6 +138,7 @@ export const ChallengeViewPage = () => {
         pointsAwarded: pointsWon,
         isLevelComplete,
         isEventComplete,
+        nextCheckpoint: res.data?.nextCheckpoint || null,
         nextCheckpointLocation: nextCpLocation,
         nextLocationName: nextCpLocation,
         locationInstructions: locInstructions,
@@ -165,6 +166,7 @@ export const ChallengeViewPage = () => {
           ...prev,
           isLevelComplete: true,
           isEventComplete,
+          nextCheckpoint: res.data?.nextCheckpoint || null,
           nextCheckpointLocation: nextCpLocation,
           nextLocationName: nextCpLocation,
           locationInstructions: locInstructions,
@@ -583,18 +585,21 @@ export const ChallengeViewPage = () => {
 
   if (isLevelCompleted) {
     const completedLevel = data?.levelNumber || targetLevel || 1;
+    const nextCp = resultMsg?.nextCheckpoint || data?.nextCheckpoint || null;
     const nextLoc =
       resultMsg?.nextLocationName ||
       resultMsg?.nextCheckpointLocation ||
       data?.nextLocationName ||
       data?.nextCheckpointLocation ||
-      data?.nextCheckpoint?.locationDescription ||
-      data?.nextCheckpoint?.name ||
+      nextCp?.locationDescription ||
+      nextCp?.name ||
       null;
+    const nextCode = nextCp?.code || (completedLevel < 10 ? `HTG-CP${String(completedLevel + 1).padStart(2, '0')}` : null);
+    const nextStationName = nextCp?.name || (completedLevel < 10 ? `Station Beacon Level ${completedLevel + 1}` : null);
     const instructions =
       resultMsg?.locationInstructions ||
       data?.locationInstructions ||
-      data?.nextCheckpoint?.instructions;
+      nextCp?.instructions;
     const pointsWon = resultMsg?.pointsAwarded;
 
     return (
@@ -626,16 +631,37 @@ export const ChallengeViewPage = () => {
                   <span>🎯 NEXT LOCATION UNLOCKED</span>
                 </div>
 
-                <div className="space-y-2 pl-2">
-                  <span className="text-xs uppercase text-cyber-muted block font-semibold">
-                    YOUR NEXT LOCATION:
-                  </span>
-                  <div className="text-xl md:text-2xl font-heading font-black text-white tracking-wide flex items-center gap-2 text-cyber-cyan">
-                    📍 {nextLoc ? nextLoc : (
-                      <span className="text-amber-400 font-sans text-base">
-                        Location not configured <em className="text-xs text-amber-200/80">(Coordinates pending from event staff)</em>
+                <div className="space-y-3 pl-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2 border-b border-cyber-border/50">
+                    <div>
+                      <span className="text-[10px] uppercase text-cyber-muted block font-semibold">
+                        NEXT CHECKPOINT CODE:
                       </span>
-                    )}
+                      <span className="text-sm font-bold text-cyber-cyan font-mono">
+                        {nextCode || `HTG-CP${String(completedLevel + 1).padStart(2, '0')}`}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase text-cyber-muted block font-semibold">
+                        STATION BEACON:
+                      </span>
+                      <span className="text-sm font-bold text-white">
+                        {nextStationName || `Checkpoint Level ${completedLevel + 1}`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-xs uppercase text-cyber-muted block font-semibold mb-1">
+                      YOUR NEXT LOCATION:
+                    </span>
+                    <div className="text-xl md:text-2xl font-heading font-black text-white tracking-wide flex items-center gap-2 text-cyber-cyan">
+                      📍 {nextLoc ? nextLoc : (
+                        <span className="text-amber-400 font-sans text-base">
+                          Location not configured <em className="text-xs text-amber-200/80">(Coordinates pending from event staff)</em>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -662,7 +688,7 @@ export const ChallengeViewPage = () => {
               <div className="pt-2 flex flex-col sm:flex-row gap-3">
                 <Link to={completedLevel + 1 > 10 ? ROUTES.FINAL_FLAG : ROUTES.QR_CHECKPOINT} className="flex-1">
                   <CyberButton variant="cyan" size="lg" icon={QrCode} className="w-full justify-center">
-                    NAVIGATE TO NEXT LOCATION →
+                    GO TO NEXT LEVEL // OPEN QR SCANNER →
                   </CyberButton>
                 </Link>
                 <Link to={ROUTES.PORTAL_DASHBOARD} className="flex-1">

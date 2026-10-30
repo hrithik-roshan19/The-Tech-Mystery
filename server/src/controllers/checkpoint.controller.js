@@ -76,6 +76,17 @@ class CheckpointController {
         cp = await Checkpoint.findOne({ checkpointCode: String(cpId).toUpperCase() }).populate('associatedChallengeId', 'title levelNumber description points status');
       }
       if (!cp) return notFound(res, 'Checkpoint not found');
+
+      let challengeData = cp.associatedChallengeId;
+      if (!challengeData) {
+        const { Challenge } = require('../models');
+        challengeData = await Challenge.findOne({
+          levelNumber: cp.levelNumber,
+          isActive: true,
+          status: 'Published'
+        }).select('title levelNumber description points status');
+      }
+
       return success(res, {
         checkpointId: cp._id,
         name: cp.name,
@@ -86,7 +97,7 @@ class CheckpointController {
         mode: cp.mode,
         token: cp.qrToken,
         qrScanUrl: cp.qrScanUrl,
-        challenge: cp.associatedChallengeId
+        challenge: challengeData
       });
     } catch (err) {
       return next(err);

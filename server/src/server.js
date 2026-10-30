@@ -108,12 +108,23 @@ const startServer = async () => {
       logger.error(`[Database] EventConfig initialization error: ${configError.message}`);
     }
 
-    // Checkpoint Production QR Verification & Regeneration Audit
+    // Checkpoint Production QR Verification & Challenge Linkage Audit
     try {
-      const { Checkpoint } = require('./models');
+      const { Checkpoint, Challenge } = require('./models');
       const qrGenerator = require('./services/qrGenerator.service');
       const checkpoints = await Checkpoint.find({ isActive: true });
       for (const cp of checkpoints) {
+        // 1. Ensure checkpoint is associated with an active published challenge for its level
+        if (!cp.associatedChallengeId) {
+          const targetCh = await Challenge.findOne({ levelNumber: cp.levelNumber, isActive: true, status: 'Published' });
+          if (targetCh) {
+            cp.associatedChallengeId = targetCh._id;
+            await cp.save();
+            logger.info(`[Checkpoints] Linked Checkpoint ${cp.checkpointCode} to Challenge "${targetCh.title}" (${targetCh._id})`);
+          }
+        }
+
+        // 2. Ensure canonical QR token and scan URL
         const isObsolete = cp.qrScanUrl && cp.qrScanUrl.includes('localhost') && (config.isProduction || process.env.NODE_ENV === 'production');
         if (!cp.qrToken || !cp.qrCodeDataUrl || isObsolete) {
           logger.info(`[Checkpoints] Regenerating obsolete/missing checkpoint QR for Level ${cp.levelNumber} (${cp.checkpointCode})...`);

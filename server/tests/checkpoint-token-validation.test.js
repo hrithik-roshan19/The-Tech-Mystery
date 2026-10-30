@@ -476,5 +476,80 @@ describe('QR Checkpoint Token Validation & Physical Sticker Preservation', () =>
         config.isProduction = origEnv === 'production';
       }
     });
+
+    it('recovers and self-heals challenge linkage when associatedChallengeId is null', async () => {
+      const challengeL4 = await Challenge.create({
+        title: 'Level 4 Challenge - Digital Footprint',
+        levelNumber: 4,
+        description: 'Level 4 test challenge',
+        category: 'OSINT',
+        difficulty: 'MEDIUM',
+        points: 400,
+        status: 'Published',
+        isActive: true,
+        type: 'FLAG'
+      });
+      await Question.create({
+        challengeId: challengeL4._id,
+        levelNumber: 4,
+        title: 'L4 Question 1',
+        prompt: 'Solve L4 Q1',
+        category: 'OSINT',
+        difficulty: 'MEDIUM',
+        flag: 'HTG{lvl4_test_flag}',
+        points: 400,
+        status: 'Published',
+        isActive: true,
+        type: 'Flag'
+      });
+
+      const tokenL4 = generateCheckpointToken('HTG-CP04', 4);
+      const cp4 = await Checkpoint.create({
+        checkpointCode: 'HTG-CP04',
+        name: 'Station Beacon Level 4',
+        levelNumber: 4,
+        qrToken: tokenL4,
+        locationDescription: 'Auditorium - Level 4 Station',
+        associatedChallengeId: null, // intentionally unlinked
+        status: 'Active',
+        isActive: true
+      });
+
+      // Advance testTeam to Level 4 to make them eligible
+      testTeam.currentLevel = 4;
+      await testTeam.save();
+
+      const result = await checkpointService.processScan({
+        checkpointCode: 'HTG-CP04',
+        token: tokenL4,
+        teamId: testTeam._id,
+        userId: leaderUser._id
+      });
+
+      assert.equal(result.checkpoint.name, 'Station Beacon Level 4');
+      assert.equal(result.checkpoint.levelNumber, 4);
+      assert.equal(result.question.title, 'L4 Question 1');
+
+      // Verify self-healing in database
+      const updatedCp4 = await Checkpoint.findById(cp4._id);
+      assert.equal(String(updatedCp4.associatedChallengeId), String(challengeL4._id));
+    });
+
+    it('rejects an ineligible team from scanning a locked future level', async () => {
+      // Set testTeam to Level 1 so Level 4 is locked
+      testTeam.currentLevel = 1;
+      await testTeam.save();
+
+      const cp4 = await Checkpoint.findOne({ checkpointCode: 'HTG-CP04' });
+      await assert.rejects(
+        checkpointService.processScan({
+          checkpointCode: 'HTG-CP04',
+          token: cp4.qrToken,
+          teamId: testTeam._id,
+          userId: leaderUser._id
+        }),
+        /Checkpoint locked. Solve prior levels first./
+      );
+    });
   });
 });

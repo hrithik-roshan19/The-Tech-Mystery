@@ -1162,6 +1162,15 @@ class AdminController {
 
   async getCheckpoints(req, res, next) {
     try {
+      // Auto-heal any checkpoint missing associatedChallengeId
+      const unlinked = await Checkpoint.find({ associatedChallengeId: null, isActive: true });
+      for (const cp of unlinked) {
+        const targetCh = await Challenge.findOne({ levelNumber: cp.levelNumber, isActive: true, status: 'Published' });
+        if (targetCh) {
+          await Checkpoint.updateOne({ _id: cp._id }, { $set: { associatedChallengeId: targetCh._id } });
+        }
+      }
+
       const checkpoints = await Checkpoint.find()
         .populate('associatedChallengeId', 'levelNumber title category difficulty points status isActive')
         .sort({ levelNumber: 1, createdAt: 1 });
