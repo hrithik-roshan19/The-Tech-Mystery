@@ -623,7 +623,7 @@ export const ChallengeViewPage = () => {
               <div className="bg-cyber-panel/90 border-2 border-cyber-cyan p-6 space-y-4 rounded-none shadow-panel-glow">
                 <div className="flex items-center gap-2 text-cyber-cyan text-xs font-bold uppercase tracking-widest border-b border-cyber-border pb-2">
                   <MapPin className="w-5 h-5 shrink-0 animate-bounce text-cyber-cyan" />
-                  <span>NEXT PHYSICAL CHECKPOINT OBJECTIVE</span>
+                  <span>🎯 NEXT LOCATION UNLOCKED</span>
                 </div>
 
                 <div className="space-y-2 pl-2">
@@ -660,9 +660,9 @@ export const ChallengeViewPage = () => {
               </div>
 
               <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                <Link to={ROUTES.QR_CHECKPOINT} className="flex-1">
+                <Link to={completedLevel + 1 > 10 ? ROUTES.FINAL_FLAG : ROUTES.QR_CHECKPOINT} className="flex-1">
                   <CyberButton variant="cyan" size="lg" icon={QrCode} className="w-full justify-center">
-                    OPEN QR SCANNER →
+                    NAVIGATE TO NEXT LOCATION →
                   </CyberButton>
                 </Link>
                 <Link to={ROUTES.PORTAL_DASHBOARD} className="flex-1">
@@ -784,18 +784,18 @@ export const ChallengeViewPage = () => {
           <div className="bg-cyber-cyan/10 border-2 border-cyber-cyan p-5 rounded-none font-mono space-y-2 animate-pulse">
             <div className="flex items-center gap-2 text-cyber-cyan font-bold text-sm uppercase tracking-wider">
               <MapPin className="w-5 h-5 shrink-0" />
-              <span>LEVEL CONQUERED — NEXT CHECKPOINT UNLOCKED</span>
+              <span>🎯 NEXT LOCATION UNLOCKED</span>
             </div>
             <div className="text-lg font-bold text-white pl-7">
               📍 NEXT CHECKPOINT: {resultMsg.nextCheckpointLocation}
             </div>
             <p className="text-xs text-cyber-muted pl-7">
-              All questions in Level {levelNumber} have been solved. Proceed to the physical beacon above and scan to unlock Level {levelNumber + 1}.
+              Level {levelNumber} conquered! Proceed to the physical beacon above and scan to unlock Level {levelNumber + 1}.
             </p>
             <div className="pl-7 pt-2">
-              <Link to={ROUTES.QR_CHECKPOINT}>
+              <Link to={levelNumber + 1 > 10 ? ROUTES.FINAL_FLAG : ROUTES.QR_CHECKPOINT}>
                 <CyberButton variant="cyan" size="sm" icon={QrCode}>
-                  OPEN QR SCANNER →
+                  NAVIGATE TO NEXT LOCATION →
                 </CyberButton>
               </Link>
             </div>
@@ -887,7 +887,7 @@ export const ChallengeViewPage = () => {
                   <span>NEXT CHECKPOINT (LEVEL {levelNumber + 1}) LOCKED</span>
                 </div>
                 <p className="text-cyber-warning/90 leading-relaxed text-[11px]">
-                  Checkpoint Level {levelNumber + 1} is locked. Solve the remaining {Math.max(1, (totalQuestions || 1) - (solvedCount || 0))} question(s) in Level {levelNumber} to unlock the next campus QR station.
+                  Checkpoint Level {levelNumber + 1} is locked. Solve your assigned challenge question in Level {levelNumber} to unlock the next campus QR station.
                 </p>
               </div>
             )}

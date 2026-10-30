@@ -130,7 +130,7 @@ describe('30 Questions (3 Levels x 10 Questions) Sequential System Test Suite', 
     }
   });
 
-  test('5. Sequential solve progression: solving Q1 advances to Q2 until Level 1 completes at Q10', async () => {
+  test('5. Single question solve progression: solving assigned question completes Level 1 and advances to Level 2', async () => {
     // Create leader, member, and team
     const leader = await User.create({
       username: 'leader_30q',
@@ -165,47 +165,31 @@ describe('30 Questions (3 Levels x 10 Questions) Sequential System Test Suite', 
       .sort({ order: 1 })
       .select('+flag');
 
-    // Initial assignment: Q1
+    // Initial assignment: assigns 1 question from Level 1 question bank
     const p1 = await assignment.getOrAssignQuestion(team._id, 1);
     assert.equal(p1.sequenceNumber, 1, 'Initial question must be sequence 1');
-    assert.equal(String(p1.question._id), String(l1Questions[0]._id));
-    assert.equal(p1.totalQuestions, 10, 'Total questions for Level 1 must be 10');
+    assert.ok(p1.question, 'Must assign a valid question from the pool');
+    assert.equal(p1.totalQuestions, 1, 'Total assigned questions for team in Level 1 is 1');
 
-    // Solve Q1 through Q9 sequentially
-    for (let i = 0; i < 9; i++) {
-      const q = l1Questions[i];
-      const res = await scoring.submit({
-        teamId: team._id,
-        userId: leader._id,
-        levelNumber: 1,
-        flag: q.flag,
-        questionId: q._id
-      });
+    const assignedDoc = l1Questions.find(q => String(q._id) === String(p1.question._id));
+    assert.ok(assignedDoc, 'Assigned question must exist in Level 1 question bank');
 
-      assert.equal(res.isCorrect, true, `Submission for Q${i + 1} must be correct`);
-      assert.equal(res.isLevelComplete, false, `Level 1 must not be complete at Q${i + 1}`);
-      assert.ok(res.nextQuestion, `Must return nextQuestion after Q${i + 1}`);
-      assert.equal(res.nextQuestion.levelNumber, 1);
-      assert.equal(String(res.nextQuestion._id), String(l1Questions[i + 1]._id));
-    }
-
-    // Solve Q10 (final question of Level 1)
-    const q10 = l1Questions[9];
-    const finalRes = await scoring.submit({
+    // Solve assigned question
+    const res = await scoring.submit({
       teamId: team._id,
       userId: leader._id,
       levelNumber: 1,
-      flag: q10.flag,
-      questionId: q10._id
+      flag: assignedDoc.flag,
+      questionId: assignedDoc._id
     });
 
-    assert.equal(finalRes.isCorrect, true, 'Q10 submission must be correct');
-    assert.equal(finalRes.isLevelComplete, true, 'Level 1 must be complete after solving Q10');
-    assert.ok(finalRes.nextCheckpointLocation, 'Must return nextCheckpointLocation after completing Level 1');
+    assert.equal(res.isCorrect, true, 'Submission for assigned question must be correct');
+    assert.equal(res.isLevelComplete, true, 'One correct answer completes Level 1 immediately');
+    assert.ok(res.nextCheckpointLocation, 'Must return nextCheckpointLocation after completing Level 1');
 
     // Verify team score and level advancement
     const updatedTeam = await Team.findById(team._id);
-    assert.equal(updatedTeam.currentLevel, 2, 'Team must advance to Level 2 after completing all 10 questions of Level 1');
-    assert.equal(updatedTeam.totalScore, 1000, 'Team must have 10 x 100 = 1000 points');
+    assert.equal(updatedTeam.currentLevel, 2, 'Team must advance to Level 2 after completing Level 1');
+    assert.equal(updatedTeam.totalScore, 100, 'Team must receive 100 points for completing Level 1');
   });
 });

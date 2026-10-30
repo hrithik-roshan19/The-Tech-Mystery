@@ -320,7 +320,7 @@ module.exports = {
         };
       }
 
-      // Answer is correct!
+      // Answer is correct! One correct answer completes the team's current level immediately.
       const alreadySolvedThisQuestion = (claimed.solvedQuestionIds || []).some(
         (id) => String(id) === String(question._id)
       );
@@ -331,7 +331,7 @@ module.exports = {
         team.totalScore = (team.totalScore || 0) + pointsAwarded;
         team.lastSolveTimestamp = now;
         claimed.pointsAwarded = (claimed.pointsAwarded || 0) + pointsAwarded;
-        claimed.attemptsCount = 0; // reset attempts for next question
+        claimed.attemptsCount = 0;
         submission.status = 'CORRECT';
         submission.pointsDelta = pointsAwarded;
       } else {
@@ -344,60 +344,34 @@ module.exports = {
       submission.reviewedAt = now;
       await submission.save();
 
-      // Check remaining questions in this level
-      const allLevelQuestions = await Question.find({
-        challengeId: challenge._id,
-        levelNumber,
-        status: 'Published',
-        isActive: true
-      }).sort({ order: 1, createdAt: 1 });
+      // Enforce 1 question per level rule: a single correct answer completes the level immediately!
+      const isLevelComplete = true;
+      claimed.status = 'SOLVED';
+      claimed.solvedAt = claimed.solvedAt || now;
+      claimed.scoringSubmissionId = submission._id;
+      if (team.currentLevel <= levelNumber) {
+        team.currentLevel = levelNumber + 1;
+      }
+      await claimed.save();
+      await team.save();
 
-      const solvedIds = (claimed.solvedQuestionIds || []).map((id) => String(id));
-      const remainingQuestions = allLevelQuestions.filter((q) => !solvedIds.includes(String(q._id)));
-
-      let isLevelComplete = false;
-      let nextQuestion = null;
       let nextCheckpoint = null;
       let nextLocationName = null;
       let locationInstructions = null;
 
-      if (remainingQuestions.length > 0) {
-        // More questions remain in this level!
-        const nextQ = remainingQuestions[0];
-        claimed.assignedQuestionId = nextQ._id;
-        claimed.currentSequenceNumber = allLevelQuestions.findIndex((q) => String(q._id) === String(nextQ._id)) + 1;
-        await claimed.save();
-        await team.save();
+      if (team.currentLevel <= 10) {
+        const currentCp = await Checkpoint.findOne({ levelNumber });
+        nextCheckpoint = (await Checkpoint.findOne({ levelNumber: team.currentLevel, isActive: true }))
+          || (await Checkpoint.findOne({ levelNumber: team.currentLevel }));
 
-        // Never reveal next location before the final question is solved
-        nextCheckpoint = null;
-        nextLocationName = null;
-        locationInstructions = null;
-        nextQuestion = await participantQuestion(nextQ);
-      } else {
-        // All questions in this level solved! Final question conquered!
-        isLevelComplete = true;
-        claimed.status = 'SOLVED';
-        claimed.solvedAt = now;
-        claimed.scoringSubmissionId = submission._id;
-        team.currentLevel = levelNumber + 1;
-        await claimed.save();
-        await team.save();
+        nextLocationName = (currentCp?.nextLocationName && currentCp.nextLocationName.trim())
+          || (nextCheckpoint?.name && nextCheckpoint.name.trim())
+          || (nextCheckpoint?.locationDescription && nextCheckpoint.locationDescription.trim())
+          || null;
 
-        if (team.currentLevel <= 10) {
-          const currentCp = await Checkpoint.findOne({ levelNumber });
-          nextCheckpoint = (await Checkpoint.findOne({ levelNumber: team.currentLevel, isActive: true }))
-            || (await Checkpoint.findOne({ levelNumber: team.currentLevel }));
-
-          nextLocationName = (currentCp?.nextLocationName && currentCp.nextLocationName.trim())
-            || (nextCheckpoint?.name && nextCheckpoint.name.trim())
-            || (nextCheckpoint?.locationDescription && nextCheckpoint.locationDescription.trim())
-            || null;
-
-          locationInstructions = (currentCp?.locationInstructions && currentCp.locationInstructions.trim())
-            || (nextCheckpoint?.notes && nextCheckpoint.notes.trim())
-            || null;
-        }
+        locationInstructions = (currentCp?.locationInstructions && currentCp.locationInstructions.trim())
+          || (nextCheckpoint?.notes && nextCheckpoint.notes.trim())
+          || null;
       }
 
       const isEventComplete = team.currentLevel > 10;
@@ -435,23 +409,21 @@ module.exports = {
       return {
         ...attempts,
         isCorrect: true,
-        message: isLevelComplete
-          ? 'Level completed! All questions conquered.'
-          : 'Correct answer!',
+        message: 'Level completed! Checkpoint unlocked.',
         pointsAwarded,
         newTotalScore: team.totalScore,
-        isLevelComplete,
+        isLevelComplete: true,
         isEventComplete,
-        levelCleared: isLevelComplete ? levelNumber : null,
-        nextLevel: isLevelComplete ? team.currentLevel : levelNumber,
-        nextQuestion,
-        sequenceNumber: claimed.currentSequenceNumber,
-        totalQuestionsInLevel: allLevelQuestions.length,
-        solvedQuestionsCount: claimed.solvedQuestionIds.length,
-        nextCheckpointLocation: isLevelComplete && !isEventComplete ? nextLocationName : null,
-        nextLocationName: isLevelComplete && !isEventComplete ? nextLocationName : null,
-        locationInstructions: isLevelComplete && !isEventComplete ? locationInstructions : null,
-        nextCheckpoint: isLevelComplete && !isEventComplete && nextCheckpoint
+        levelCleared: levelNumber,
+        nextLevel: team.currentLevel,
+        nextQuestion: null,
+        sequenceNumber: 1,
+        totalQuestionsInLevel: 1,
+        solvedQuestionsCount: 1,
+        nextCheckpointLocation: !isEventComplete ? nextLocationName : null,
+        nextLocationName: !isEventComplete ? nextLocationName : null,
+        locationInstructions: !isEventComplete ? locationInstructions : null,
+        nextCheckpoint: !isEventComplete && nextCheckpoint
           ? {
               code: nextCheckpoint.checkpointCode || `HTG-CP${String(nextCheckpoint.levelNumber).padStart(2, '0')}`,
               name: nextLocationName || nextCheckpoint.name || `Checkpoint Level ${nextCheckpoint.levelNumber}`,

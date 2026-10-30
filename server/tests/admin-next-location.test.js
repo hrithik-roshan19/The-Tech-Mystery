@@ -369,36 +369,14 @@ describe('Admin-Controlled Next Location After Correct Answer Test Suite', () =>
     assert.equal(teamRecord.currentLevel, 1);
   });
 
-  it('5. Participant answering non-final question correctly does NOT receive next location yet', async () => {
-    // Submit correct answer to Question 1 of Level 1 (Question 2 still remains)
+  it('5. Participant answering assigned question of Level 1 correctly unlocks admin-configured next location immediately', async () => {
+    // Submit correct answer to assigned Question 1 of Level 1
     const submitRes = await scoringService.submit({
       teamId: testTeam._id,
       userId: teamLeader._id,
       levelNumber: 1,
       flag: 'HTG{port_80}',
       questionId: q1_1._id
-    });
-
-    assert.equal(submitRes.isCorrect, true);
-    assert.equal(submitRes.isLevelComplete, false);
-    assert.equal(submitRes.sequenceNumber, 2);
-    // Crucial check: Location is NOT revealed on intermediate questions
-    assert.equal(submitRes.nextCheckpointLocation, null);
-    assert.equal(submitRes.nextLocationName, null);
-    assert.equal(submitRes.locationInstructions, null);
-    assert.equal(submitRes.nextCheckpoint, null);
-    assert.ok(submitRes.nextQuestion);
-    assert.equal(submitRes.nextQuestion._id.toString(), q1_2._id.toString());
-  });
-
-  it('6. Participant answering final question of Level 1 correctly unlocks admin-configured next location', async () => {
-    // Submit correct answer to Question 2 of Level 1 (final question of Level 1!)
-    const submitRes = await scoringService.submit({
-      teamId: testTeam._id,
-      userId: teamLeader._id,
-      levelNumber: 1,
-      flag: 'HTG{port_443}',
-      questionId: q1_2._id
     });
 
     assert.equal(submitRes.isCorrect, true);
@@ -419,6 +397,21 @@ describe('Admin-Controlled Next Location After Correct Answer Test Suite', () =>
     assert.equal(
       submitRes.nextCheckpoint.instructions,
       'Take the staircase near the fountain to the 3rd floor, room 302.'
+    );
+  });
+
+  it('6. Re-submitting for already solved Level 1 is rejected', async () => {
+    await assert.rejects(
+      async () => {
+        await scoringService.submit({
+          teamId: testTeam._id,
+          userId: teamLeader._id,
+          levelNumber: 1,
+          flag: 'HTG{port_80}',
+          questionId: q1_1._id
+        });
+      },
+      /Cannot submit for a locked or already solved level/
     );
   });
 

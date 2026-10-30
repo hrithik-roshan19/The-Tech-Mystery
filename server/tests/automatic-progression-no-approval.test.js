@@ -176,7 +176,7 @@ describe('Automatic Level Progression & Non-Manual Submission Approval Test Suit
   test('1. Initial state assigns Question 1 and team starts on Level 1 with 0 points', async () => {
     const prog = await assignment.getOrAssignQuestion(team._id, 1);
     assert.equal(prog.sequenceNumber, 1);
-    assert.equal(prog.totalQuestions, 2);
+    assert.equal(prog.totalQuestions, 1);
     assert.equal(String(prog.question._id), String(q1._id));
     assert.equal(prog.isLevelComplete, false);
 
@@ -213,7 +213,7 @@ describe('Automatic Level Progression & Non-Manual Submission Approval Test Suit
     assert.equal(sub.pointsDelta, 0);
   });
 
-  test('3. Correct answer awards points once and automatically unlocks Question 2 without manual approval', async () => {
+  test('3. Correct answer awards points once and automatically completes Level 1 without manual approval', async () => {
     const res = await scoring.submit({
       teamId: team._id,
       userId: leader._id,
@@ -225,16 +225,15 @@ describe('Automatic Level Progression & Non-Manual Submission Approval Test Suit
     assert.equal(res.isCorrect, true);
     assert.equal(res.pointsAwarded, 100);
     assert.equal(res.newTotalScore, 100);
-    assert.equal(res.isLevelComplete, false, 'Level 1 has 2 questions, so Level 1 is not complete yet');
-    assert.ok(res.nextQuestion, 'Must return next question (Q2)');
-    assert.equal(String(res.nextQuestion._id), String(q2._id));
-    assert.equal(res.sequenceNumber, 2);
+    assert.equal(res.isLevelComplete, true, 'One correct answer completes Level 1 immediately');
+    assert.equal(res.nextQuestion, null);
+    assert.equal(res.sequenceNumber, 1);
     assert.equal(res.solvedQuestionsCount, 1);
 
-    // Team state verification
+    // Team state verification: Level 2 unlocked
     const t = await Team.findById(team._id);
     assert.equal(t.totalScore, 100);
-    assert.equal(t.currentLevel, 1, 'Current level remains 1 until all questions in level are solved');
+    assert.equal(t.currentLevel, 2, 'Current level advances to Level 2');
 
     // Submission audit record is immediately auto-graded and reviewed
     const sub = await Submission.findOne({ teamId: team._id, submittedAnswer: '32' });
@@ -245,53 +244,36 @@ describe('Automatic Level Progression & Non-Manual Submission Approval Test Suit
     assert.equal(sub.pointsDelta, 100);
     assert.ok(sub.reviewedAt);
 
-    // TeamChallenge state verification: Q2 is assigned
+    // TeamChallenge state verification: Level 1 is SOLVED
     const tc = await TeamChallenge.findOne({ teamId: team._id, levelNumber: 1 });
-    assert.equal(tc.status, 'UNLOCKED');
-    assert.equal(String(tc.assignedQuestionId), String(q2._id));
+    assert.equal(tc.status, 'SOLVED');
     assert.equal(tc.solvedQuestionIds.length, 1);
     assert.equal(String(tc.solvedQuestionIds[0]), String(q1._id));
   });
 
   test('4. Duplicate submission is idempotent and does NOT award duplicate points', async () => {
-    // Member submits correct answer for currently assigned Question 2
-    const res1 = await scoring.submit({
-      teamId: team._id,
-      userId: member._id,
-      levelNumber: 1,
-      flag: 'HTTPS',
-      questionId: q2._id
-    });
-
-    assert.equal(res1.isCorrect, true);
-    assert.equal(res1.pointsAwarded, 100);
-    assert.equal(res1.isLevelComplete, true, 'Solving Q2 completes Level 1');
-
-    const scoreAfterFirst = (await Team.findById(team._id)).totalScore;
-    assert.equal(scoreAfterFirst, 200);
-
-    // Now re-submitting for an already solved level/question is strictly rejected
+    // Re-submitting for an already solved level is strictly rejected
     await assert.rejects(
       async () => {
         await scoring.submit({
           teamId: team._id,
-          userId: leader._id,
+          userId: member._id,
           levelNumber: 1,
-          flag: 'HTTPS',
-          questionId: q2._id
+          flag: '32',
+          questionId: q1._id
         });
       },
       /Cannot submit for a locked or already solved level/
     );
 
     const scoreAfterDuplicate = (await Team.findById(team._id)).totalScore;
-    assert.equal(scoreAfterDuplicate, 200, 'Score must not increase on duplicate solve');
+    assert.equal(scoreAfterDuplicate, 100, 'Score must not increase on duplicate solve');
   });
 
   test('5. Level 1 completion advances team to Level 2 and unlocks next checkpoint location', async () => {
     const t = await Team.findById(team._id);
     assert.equal(t.currentLevel, 2, 'Team must be on Level 2');
-    assert.equal(t.totalScore, 200);
+    assert.equal(t.totalScore, 100);
 
     // TeamChallenge for Level 1 must be SOLVED
     const tc1 = await TeamChallenge.findOne({ teamId: team._id, levelNumber: 1 });
@@ -317,7 +299,7 @@ describe('Automatic Level Progression & Non-Manual Submission Approval Test Suit
 
     // Zero pending reviews for auto-graded questions
     assert.equal(stats.pending, 0, 'Pending submissions count must be 0 for auto-graded questions');
-    assert.equal(stats.correct, 2, 'Two correct submissions must be counted');
+    assert.equal(stats.correct, 1, 'One correct submission must be counted');
     assert.equal(stats.incorrect, 1, 'One incorrect submission must be counted');
 
     // Check individual submission representations
@@ -352,6 +334,6 @@ describe('Automatic Level Progression & Non-Manual Submission Approval Test Suit
   test('8. Team-based progression: Member 2 sees Question 1 solved and is on Level 2', async () => {
     const memberProg = await assignment.getOrAssignQuestion(team._id, 1);
     assert.equal(memberProg.isLevelComplete, true, 'Member 2 must see Level 1 as complete');
-    assert.equal(memberProg.solvedCount, 2);
+    assert.equal(memberProg.solvedCount, 1);
   });
 });

@@ -360,7 +360,7 @@ describe('Sequential QR Challenge System — 15 Scenarios', () => {
 
     assert.equal(scanResult.teamChallenge.checkpointScanned, true);
     assert.equal(scanResult.sequenceNumber, 1);
-    assert.equal(scanResult.totalQuestions, 3);
+    assert.equal(scanResult.totalQuestions, 1);
     assert.equal(scanResult.solvedCount, 0);
     assert.equal(scanResult.question._id.toString(), q1_1._id.toString());
   });
@@ -385,7 +385,7 @@ describe('Sequential QR Challenge System — 15 Scenarios', () => {
     assert.equal(prog.question._id.toString(), q1_1._id.toString());
   });
 
-  it('Scenario 6: Correct answer returns "Correct answer!", awards points, and advances to Question #2', async () => {
+  it('Scenario 6: Correct answer completes Level 1, awards points, and advances team to Level 2', async () => {
     const result = await scoringService.submit({
       teamId: teamA._id,
       userId: leaderA._id,
@@ -395,33 +395,34 @@ describe('Sequential QR Challenge System — 15 Scenarios', () => {
     });
 
     assert.equal(result.isCorrect, true);
-    assert.equal(result.message, 'Correct answer!');
+    assert.equal(result.message, 'Level completed! Checkpoint unlocked.');
     assert.equal(result.pointsAwarded, 50);
-    assert.equal(result.isLevelComplete, false);
-    assert.ok(result.nextQuestion);
-    assert.equal(result.nextQuestion._id.toString(), q1_2._id.toString());
-    assert.equal(result.sequenceNumber, 2);
-    assert.equal(result.solvedQuestionsCount, 1);
+    assert.equal(result.isLevelComplete, true);
+    assert.equal(result.nextLevel, 2);
+    assert.equal(result.nextQuestion, null);
+    assert.equal(result.nextCheckpointLocation, 'Central Library Block');
 
     const updatedTeam = await Team.findById(teamA._id);
+    assert.equal(updatedTeam.currentLevel, 2);
     assert.equal(updatedTeam.totalScore, 50);
   });
 
-  it('Scenario 7: Re-scanning the same Level 1 QR code after solving Q1 returns Question #2', async () => {
+  it('Scenario 7: Re-scanning Level 1 QR code after completing Level 1 is rejected (fails closed)', async () => {
     const qr1 = await qrGenerator.generateCheckpointQr(cpLevel1);
-    const rescanResult = await checkpointService.processScan({
-      checkpointCode: cpLevel1.checkpointCode,
-      token: qr1.token,
-      teamId: teamA._id,
-      userId: leaderA._id
-    });
-
-    assert.equal(rescanResult.sequenceNumber, 2);
-    assert.equal(rescanResult.question._id.toString(), q1_2._id.toString());
-    assert.equal(rescanResult.solvedCount, 1);
+    await assert.rejects(
+      async () => {
+        await checkpointService.processScan({
+          checkpointCode: cpLevel1.checkpointCode,
+          token: qr1.token,
+          teamId: teamA._id,
+          userId: leaderA._id
+        });
+      },
+      /This level has already been cleared by your team/
+    );
   });
 
-  it('Scenario 8: Independent progression — Team B scanning receives Question #1 while Team A is on Question #2', async () => {
+  it('Scenario 8: Independent progression — Team B scanning receives its assigned Question on Level 1', async () => {
     const qr1 = await qrGenerator.generateCheckpointQr(cpLevel1);
     const scanB = await checkpointService.processScan({
       checkpointCode: cpLevel1.checkpointCode,
@@ -431,47 +432,36 @@ describe('Sequential QR Challenge System — 15 Scenarios', () => {
     });
 
     assert.equal(scanB.sequenceNumber, 1);
-    assert.equal(scanB.question._id.toString(), q1_1._id.toString());
+    assert.ok(scanB.question);
     assert.equal(scanB.solvedCount, 0);
 
     const progA = await questionAssignmentService.getOrAssignQuestion(teamA._id, 1);
-    assert.equal(progA.sequenceNumber, 2);
+    assert.equal(progA.isLevelComplete, true);
     assert.equal(progA.solvedCount, 1);
   });
 
-  it('Scenario 9: Solving all questions in Level 1 completes level and returns next checkpoint location', async () => {
-    // Team A solves Question #2 (443)
-    const solve2 = await scoringService.submit({
-      teamId: teamA._id,
-      userId: leaderA._id,
-      levelNumber: 1,
-      flag: '443',
-      questionId: q1_2._id
-    });
-    assert.equal(solve2.isCorrect, true);
-    assert.equal(solve2.isLevelComplete, false);
-    assert.equal(solve2.sequenceNumber, 3);
+  it('Scenario 9: Team B solving their assigned question completes Level 1 and returns next checkpoint location', async () => {
+    const progB = await questionAssignmentService.getOrAssignQuestion(teamB._id, 1);
+    const assignedQ = await Question.findById(progB.teamChallenge.assignedQuestionId).select('+flag');
 
-    // Team A solves Question #3 (UDP) - final question of Level 1!
-    const solve3 = await scoringService.submit({
-      teamId: teamA._id,
-      userId: leaderA._id,
+    const solveB = await scoringService.submit({
+      teamId: teamB._id,
+      userId: leaderB._id,
       levelNumber: 1,
-      flag: 'UDP',
-      questionId: q1_3._id
+      flag: assignedQ.flag,
+      questionId: assignedQ._id
     });
 
-    assert.equal(solve3.isCorrect, true);
-    assert.equal(solve3.isLevelComplete, true);
-    assert.equal(solve3.levelCleared, 1);
-    assert.equal(solve3.nextLevel, 2);
-    assert.equal(solve3.nextCheckpointLocation, 'Central Library Block');
-    assert.ok(solve3.nextCheckpoint);
-    assert.equal(solve3.nextCheckpoint.name, 'Central Library Block');
+    assert.equal(solveB.isCorrect, true);
+    assert.equal(solveB.isLevelComplete, true);
+    assert.equal(solveB.levelCleared, 1);
+    assert.equal(solveB.nextLevel, 2);
+    assert.equal(solveB.nextCheckpointLocation, 'Central Library Block');
+    assert.ok(solveB.nextCheckpoint);
 
-    const alphaFinal = await Team.findById(teamA._id);
-    assert.equal(alphaFinal.currentLevel, 2);
-    assert.equal(alphaFinal.totalScore, 150);
+    const bFinal = await Team.findById(teamB._id);
+    assert.equal(bFinal.currentLevel, 2);
+    assert.equal(bFinal.totalScore, 50);
   });
 
   it('Scenario 10: Physical checkpoint scan lock: Level 2 challenge is locked until Level 2 QR is scanned', async () => {
@@ -584,20 +574,8 @@ describe('Sequential QR Challenge System — 15 Scenarios', () => {
     assert.equal(JSON.stringify(sanitized).includes('HELLO WORLD'), false);
   });
 
-  it('Scenario 14: Submitting correct answer repeatedly does not award duplicate points', async () => {
-    const solveB1 = await scoringService.submit({
-      teamId: teamB._id,
-      userId: leaderB._id,
-      levelNumber: 1,
-      flag: 'HELLO WORLD',
-      questionId: q1_1._id
-    });
-    assert.equal(solveB1.isCorrect, true);
-
-    const scoreAfterFirstSolve = (await Team.findById(teamB._id)).totalScore;
-    assert.equal(scoreAfterFirstSolve, 50);
-
-    // Team B attempts to submit Question #1 again on Level 1 — rejected as already solved / out-of-order
+  it('Scenario 14: Submitting correct answer repeatedly does not award duplicate points and is rejected', async () => {
+    // Team B attempts to submit again on already solved Level 1 — strictly rejected
     let duplicateError = null;
     try {
       await scoringService.submit({
@@ -611,11 +589,11 @@ describe('Sequential QR Challenge System — 15 Scenarios', () => {
       duplicateError = err;
     }
 
-    assert.ok(duplicateError, 'Re-submitting previously solved question must be rejected');
-    assert.match(duplicateError.message, /does not match your team current assigned question/);
+    assert.ok(duplicateError, 'Re-submitting for already solved level must be rejected');
+    assert.match(duplicateError.message, /Cannot submit for a locked or already solved level/);
 
     const scoreAfterDuplicate = (await Team.findById(teamB._id)).totalScore;
-    assert.equal(scoreAfterDuplicate, scoreAfterFirstSolve, 'Score must not increase on duplicate solve');
+    assert.equal(scoreAfterDuplicate, 50, 'Score must not increase on duplicate solve');
   });
 
   it('Scenario 15: Leaderboard ranks teams by score with tie-breaker on earliest solve timestamp', async () => {
@@ -626,6 +604,6 @@ describe('Sequential QR Challenge System — 15 Scenarios', () => {
     assert.equal(teams[0].name, 'Team Charlie');
     assert.equal(teams[0].totalScore, 3000);
     assert.equal(teams[1].name, 'Team Alpha');
-    assert.equal(teams[1].totalScore, 150);
+    assert.equal(teams[1].totalScore, 50);
   });
 });

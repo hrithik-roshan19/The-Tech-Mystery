@@ -1027,7 +1027,7 @@ export function QRCheckpointPage() {
                       </div>
                     )}
 
-                    {/* Issue 2: Dedicated Next QR Checkpoint Panel (When Level Complete) */}
+                    {/* Dedicated Next QR Checkpoint Panel (When Level Complete) */}
                     {(solveResult?.isLevelComplete || verifyResult?.data?.isLevelComplete) && (
                       <div
                         className="htg-qr-next-checkpoint-panel"
@@ -1042,16 +1042,16 @@ export function QRCheckpointPage() {
                       >
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
                           <span style={{
-                            fontSize: "10.5px",
+                            fontSize: "11px",
                             fontWeight: 800,
                             letterSpacing: "0.08em",
                             textTransform: "uppercase",
-                            padding: "3px 8px",
+                            padding: "4px 9px",
                             borderRadius: "4px",
                             background: "#06b6d4",
                             color: "#031018"
                           }}>
-                            NEXT CHECKPOINT UNLOCKED
+                            🎯 NEXT LOCATION UNLOCKED
                           </span>
                           <span style={{ fontSize: "11px", fontWeight: 700, color: "#22d3ee" }}>
                             Status: Unlocked ✓
@@ -1072,14 +1072,14 @@ export function QRCheckpointPage() {
                               `HTG-CP${String((solveResult?.currentLevel || verifyResult?.data?.checkpoint?.levelNumber || team?.currentLevel || 1) + 1).padStart(2, "0")}`}
                           </span>
                           <span>
-                            <strong>Level:</strong> Level {(solveResult?.nextCheckpoint?.levelNumber || verifyResult?.data?.nextCheckpoint?.levelNumber) ||
+                            <strong>Next Level:</strong> Level {(solveResult?.nextCheckpoint?.levelNumber || verifyResult?.data?.nextCheckpoint?.levelNumber) ||
                               ((solveResult?.currentLevel || verifyResult?.data?.checkpoint?.levelNumber || team?.currentLevel || 1) + 1)}
                           </span>
                         </div>
 
                         {/* Verified Campus Location */}
                         <div style={{ fontSize: "13px", marginBottom: "10px" }}>
-                          <span>📍 <strong>Campus Location:</strong> </span>
+                          <span>📍 <strong>Location:</strong> </span>
                           {(solveResult?.nextCheckpointLocation || solveResult?.nextLocationName || verifyResult?.data?.nextCheckpoint?.locationDescription) ? (
                             <span style={{ color: "#67e8f9", fontWeight: 600 }}>
                               {solveResult?.nextCheckpointLocation || solveResult?.nextLocationName || verifyResult?.data?.nextCheckpoint?.locationDescription}
@@ -1148,7 +1148,7 @@ export function QRCheckpointPage() {
                                 cursor: "pointer"
                               }}
                             >
-                              VIEW NEXT CHECKPOINT →
+                              NAVIGATE TO NEXT LOCATION →
                             </button>
                           )}
                           <Link
@@ -1192,7 +1192,7 @@ export function QRCheckpointPage() {
                           <span>NEXT CHECKPOINT (LEVEL {(solveResult.currentLevel || targetLevel) + 1}) LOCKED</span>
                         </div>
                         <p style={{ margin: 0, fontSize: "12px", color: "#fef3c7", lineHeight: 1.55 }}>
-                          Checkpoint Level {(solveResult.currentLevel || targetLevel) + 1} is locked. Solve the remaining {Math.max(1, (solveResult.totalQuestions || verifyResult.data.totalQuestions || 1) - (solveResult.solvedQuestionsCount || verifyResult.data.solvedCount || 0))} question(s) in Level {solveResult.currentLevel || targetLevel} to unlock the next campus QR station.
+                          Checkpoint Level {(solveResult.currentLevel || targetLevel) + 1} is locked. Solve your assigned challenge question in Level {solveResult.currentLevel || targetLevel} to unlock the next campus QR station.
                         </p>
                       </div>
                     )}
@@ -1283,7 +1283,7 @@ export function QRCheckpointPage() {
                 )}
 
                 <div className="htg-qr-points-notice" style={{ marginTop: "12px" }}>
-                  ℹ Active Level Checkpoint Station. Solve questions in sequence to advance your squad.
+                  ℹ Active Level Checkpoint Station. Solve your assigned challenge question to advance your squad.
                 </div>
 
                 <div className="htg-qr-unlocked-actions">
@@ -1308,7 +1308,7 @@ export function QRCheckpointPage() {
                         className="htg-qr-proceed-btn"
                         style={{ border: "none", cursor: "pointer" }}
                       >
-                        VIEW NEXT CHECKPOINT →
+                        NAVIGATE TO NEXT LOCATION →
                       </button>
                     )
                   ) : null}

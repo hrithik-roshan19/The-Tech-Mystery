@@ -268,7 +268,7 @@ describe('Level Progression, Next Checkpoint Location & Multi-Question Flow Test
     if (mongod) await mongod.stop();
   });
 
-  test('1. Initial scan unlocks Level 1 and assigns Question 1 of 3 without level advance', async () => {
+  test('1. Initial scan unlocks Level 1 and assigns 1 question from pool', async () => {
     const scanRes = await checkpointService.processScan({
       checkpointCode: 'HTG-CP01',
       token: tok1,
@@ -278,7 +278,7 @@ describe('Level Progression, Next Checkpoint Location & Multi-Question Flow Test
 
     assert.equal(scanRes.checkpoint.code, 'HTG-CP01');
     assert.equal(scanRes.sequenceNumber, 1);
-    assert.equal(scanRes.totalQuestions, 3);
+    assert.equal(scanRes.totalQuestions, 1);
     assert.equal(scanRes.solvedCount, 0);
     assert.equal(scanRes.isLevelComplete, false);
     assert.equal(scanRes.nextCheckpoint || null, null);
@@ -289,72 +289,13 @@ describe('Level Progression, Next Checkpoint Location & Multi-Question Flow Test
     assert.equal(t.totalScore, 0);
   });
 
-  test('2. Solving Question 1 in multi-question level advances to Question 2, awards points, but does NOT advance level or unlock checkpoint', async () => {
+  test('2. Solving the 1 assigned question in Level 1 completes Level 1 immediately, advances team to Level 2, and unlocks next checkpoint', async () => {
     const submitRes = await scoring.submit({
       teamId: team._id,
       userId: leader._id,
       levelNumber: 1,
       flag: '32',
       questionId: q1_1._id
-    });
-
-    assert.equal(submitRes.isCorrect, true);
-    assert.equal(submitRes.pointsAwarded, 100);
-    assert.equal(submitRes.isLevelComplete, false);
-    assert.equal(submitRes.sequenceNumber, 2);
-    assert.equal(submitRes.solvedQuestionsCount, 1);
-    assert.equal(submitRes.totalQuestionsInLevel, 3);
-    assert.equal(submitRes.nextQuestion._id.toString(), q1_2._id.toString());
-    assert.equal(submitRes.nextCheckpoint, null);
-    assert.equal(submitRes.nextLocationName, null);
-
-    const t = await Team.findById(team._id);
-    assert.equal(t.currentLevel, 1); // Stays on Level 1
-    assert.equal(t.totalScore, 100);
-  });
-
-  test('3. Submitting Question 2 advances to Question 3, and re-submitting an already solved question is rejected', async () => {
-    const submitRes = await scoring.submit({
-      teamId: team._id,
-      userId: leader._id,
-      levelNumber: 1,
-      flag: '443',
-      questionId: q1_2._id
-    });
-
-    assert.equal(submitRes.isCorrect, true);
-    assert.equal(submitRes.pointsAwarded, 100);
-    assert.equal(submitRes.isLevelComplete, false);
-    assert.equal(submitRes.sequenceNumber, 3);
-    assert.equal(submitRes.solvedQuestionsCount, 2);
-    assert.equal(submitRes.nextQuestion._id.toString(), q1_3._id.toString());
-
-    // Re-submitting for already solved question is rejected
-    await assert.rejects(
-      async () => {
-        await scoring.submit({
-          teamId: team._id,
-          userId: leader._id,
-          levelNumber: 1,
-          flag: '32',
-          questionId: q1_1._id
-        });
-      },
-      /does not match your team current assigned question/
-    );
-
-    const t = await Team.findById(team._id);
-    assert.equal(t.currentLevel, 1); // Still on Level 1
-    assert.equal(t.totalScore, 200); // 100 + 100 = 200
-  });
-
-  test('4. Answering Question 3 completes Level 1, advances team to Level 2, and unlocks next checkpoint with structured data', async () => {
-    const submitRes = await scoring.submit({
-      teamId: team._id,
-      userId: leader._id,
-      levelNumber: 1,
-      flag: '101',
-      questionId: q1_3._id
     });
 
     assert.equal(submitRes.isCorrect, true);
@@ -375,7 +316,45 @@ describe('Level Progression, Next Checkpoint Location & Multi-Question Flow Test
 
     const t = await Team.findById(team._id);
     assert.equal(t.currentLevel, 2);
-    assert.equal(t.totalScore, 300);
+    assert.equal(t.totalScore, 100);
+  });
+
+  test('3. Re-submitting for already solved Level 1 is strictly rejected (fails closed)', async () => {
+    await assert.rejects(
+      async () => {
+        await scoring.submit({
+          teamId: team._id,
+          userId: leader._id,
+          levelNumber: 1,
+          flag: '32',
+          questionId: q1_1._id
+        });
+      },
+      /Cannot submit for a locked or already solved level/
+    );
+
+    const t = await Team.findById(team._id);
+    assert.equal(t.currentLevel, 2);
+    assert.equal(t.totalScore, 100);
+  });
+
+  test('4. Submitting an unassigned or invalid question for already solved Level 1 is rejected', async () => {
+    await assert.rejects(
+      async () => {
+        await scoring.submit({
+          teamId: team._id,
+          userId: leader._id,
+          levelNumber: 1,
+          flag: '443',
+          questionId: q1_2._id
+        });
+      },
+      /does not match your team current assigned question|already solved/
+    );
+
+    const t = await Team.findById(team._id);
+    assert.equal(t.currentLevel, 2);
+    assert.equal(t.totalScore, 100);
   });
 
   test('5. Cannot submit for Level 1 after Level 1 is solved (fails closed)', async () => {
